@@ -1,0 +1,6 @@
+GCC_PREPROCESSOR_DEFINITIONS = $(inherited) COCOAPODS=1
+HEADER_SEARCH_PATHS = "${PODS_ROOT}/Headers/Public" "${PODS_ROOT}/Headers/Public/FMDB" "${PODS_ROOT}/Headers/Public/PEPhotoCropEditor" "${PODS_ROOT}/Headers/Public/REMenu"
+OTHER_CFLAGS = $(inherited) -isystem "${PODS_ROOT}/Headers/Public" -isystem "${PODS_ROOT}/Headers/Public/FMDB" -isystem "${PODS_ROOT}/Headers/Public/PEPhotoCropEditor" -isystem "${PODS_ROOT}/Headers/Public/REMenu"
+OTHER_LDFLAGS = -ObjC -l"Pods-WhoYu-FMDB" -l"Pods-WhoYu-PEPhotoCropEditor" -l"Pods-WhoYu-REMenu" -l"sqlite3" -framework "AVFoundation" -framework "QuartzCore"
+OTHER_LIBTOOLFLAGS = $(OTHER_LDFLAGS)
+PODS_ROOT = ${SRCROOT}/Pods

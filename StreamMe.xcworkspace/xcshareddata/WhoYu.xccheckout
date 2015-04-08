@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>2F421FF2-25F2-42E3-928A-3433B6FF5E70</string>
+	<key>IDESourceControlProjectName</key>
+	<string>WhoYu</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>083F97F892EF701D350C6342221F4615A8B5B563</key>
+		<string>https://github.com/streamme/iOSStreamMe.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>WhoYu.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>083F97F892EF701D350C6342221F4615A8B5B563</key>
+		<string>..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>https://github.com/streamme/iOSStreamMe.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>083F97F892EF701D350C6342221F4615A8B5B563</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>083F97F892EF701D350C6342221F4615A8B5B563</string>
+			<key>IDESourceControlWCCName</key>
+			<string>iOSStreamMe</string>
+		</dict>
+	</array>
+</dict>
+</plist>
