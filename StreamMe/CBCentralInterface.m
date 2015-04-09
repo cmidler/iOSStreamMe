@@ -168,7 +168,7 @@
 ////////////////////////////////////////////////
 
 - (void)centralManagerDidUpdateState:(CBCentralManager *)central {
-        [PFCloud callFunctionInBackground:@"consoleLogFunction" withParameters:@{@"field":[NSNumber numberWithInt:central.state]} block:^(id object, NSError *error) {}];
+        //[PFCloud callFunctionInBackground:@"consoleLogFunction" withParameters:@{@"field":[NSNumber numberWithInt:central.state]} block:^(id object, NSError *error) {}];
     
         // Display new state of central manager
         NSString *state = nil;

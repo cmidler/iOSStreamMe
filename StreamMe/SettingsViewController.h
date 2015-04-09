@@ -15,6 +15,7 @@
 @interface SettingsViewController : UIViewController<MFMailComposeViewControllerDelegate>
 {
     NSArray* settings;
+    NSArray* images;
 }
 
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *sidebarButton;

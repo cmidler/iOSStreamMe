@@ -23,6 +23,16 @@
     streams = [[NSMutableArray alloc] init];
     for(Stream* s in [appDelegate streams])
     {
+        //check to see if the match is still valid
+        NSDate* date = [s.stream objectForKey:@"endTime"];
+        NSTimeInterval interval = [date timeIntervalSinceDate:[NSDate date]];
+        if(isnan(interval) || interval<=0)
+        {
+            continue;
+        }
+
+        
+        
         NSMutableArray* stream = [[NSMutableArray alloc]init];
         [stream addObject:s];
         [stream addObject:[NSNumber numberWithBool:NO]];

@@ -8,8 +8,6 @@
 
 #import <Foundation/Foundation.h>
 #import <CoreBluetooth/CoreBluetooth.h>
-#import "UserProfile.h"
-#import "ProfessionalProfile.h"
 #define RSSI_COUNT 25
 
 @interface BluetoothProfile : NSObject //<NSCoding>

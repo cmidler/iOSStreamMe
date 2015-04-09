@@ -101,6 +101,10 @@
                                              selector:@selector(mainNotification:)
                                                  name:@"countTimerFired"
                                                object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(mainNotification:)
+                                                 name:@"newUserStreams"
+                                               object:nil];
     
     
     //Adding pull to refresh
@@ -174,7 +178,19 @@
         NSMutableArray* streams = [appDelegate streams];
         
         //there are streams so open camera automatically
-        if(streams.count)
+        bool shouldCreate = YES;
+        for(Stream* s in streams)
+        {
+            //check to see if the match is still valid
+            NSDate* date = [s.stream objectForKey:@"endTime"];
+            NSTimeInterval interval = [date timeIntervalSinceDate:[NSDate date]];
+            if(!isnan(interval) && interval>0)
+            {
+                shouldCreate = NO;
+                break;
+            }
+        }
+        if(!shouldCreate)
         {
             //open the camera
             _openedWithShake = YES;
@@ -209,6 +225,7 @@
     }
     else if ([[notification name] isEqualToString:@"dismissCameraEvent"])
     {
+        _openedWithShake = NO;
         [self dismissImagePickerView];
     }
     else if ([[notification name] isEqualToString:@"countTimerFired"])
@@ -227,6 +244,39 @@
         }
         
         [self countStreamShares:streamIds];
+    }
+    else if ([[notification name] isEqualToString:@"newUserStreams"])
+    {
+        //get the total amount of streams
+        PFQuery* countStreamsQuery = [PFQuery queryWithClassName:@"UserStreams"];
+        [countStreamsQuery whereKey:@"user" equalTo:[PFUser currentUser]];
+        [countStreamsQuery whereKey:@"isIgnored" equalTo:[NSNumber numberWithBool:NO]];
+        [countStreamsQuery countObjectsInBackgroundWithBlock:^(int number, NSError *error) {
+            if(error)
+            {
+                NSLog(@"error in counting streams");
+                return;
+            }
+            else
+            {
+                _totalValidStreams = number;
+                NSLog(@"total valid streams is %d", _totalValidStreams);
+                //total pages is 1 if there aren't any streams
+                if(!_totalValidStreams)
+                {
+                    _totalPages = 1;
+                    return;
+                }
+                _totalPages = (number/STREAMS_PER_PAGE)+1;
+            }
+        }];
+        UILabel* newLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, TOOLBAR_HEIGHT/2)];
+        newLabel.text = @"Pull To Refresh New Nearby Streams";
+        newLabel.textAlignment = NSTextAlignmentCenter;
+        newLabel.font = [UIFont systemFontOfSize:12];
+        newLabel.textColor = [UIColor grayColor];
+        [self.refreshControl addSubview:newLabel];
+        [streamsTableView setContentOffset:CGPointMake(0, -self.refreshControl.frame.size.height-self.navigationController.navigationBar.frame.size.height+(TOOLBAR_HEIGHT/2)) animated:YES];
     }
 }
 
@@ -310,6 +360,12 @@
 //look for new subscribers
 -(void) pullToRefresh
 {
+    for(UIView* view in [self.refreshControl subviews])
+    {
+        if([view isKindOfClass:[UILabel class]])
+            [view removeFromSuperview];
+    }
+    self.refreshControl.attributedTitle = [[NSAttributedString alloc] initWithString:@""];
     NSLog(@"calling pull to refresh with downloadingStream = %d", _downloadingStreams);
     //need to protect critical section
     @synchronized(self){
@@ -591,7 +647,19 @@
     AppDelegate* appDelegate = [[UIApplication sharedApplication] delegate];
     NSMutableArray* streams = [appDelegate streams];
     
-    //NSLog(@"streams is %@ in sort streams", streams);
+    //loop through and get streams that have been expired for 30 minutes and remove them
+    for(Stream* s in streams)
+    {
+        
+        //check to see if the match is still valid
+        NSDate* date = [s.stream objectForKey:@"endTime"];
+        NSTimeInterval interval = [[NSDate date] timeIntervalSinceDate:date];
+        if(interval>1800)
+        {
+            [streams removeObject:s];
+            NSLog(@"removing stream");
+        }
+    }
     
     //sort the stream
     
@@ -752,6 +820,7 @@
                     if(error)
                         return;
                     s.totalViewers = ((NSNumber*)object).integerValue;
+                    NSLog(@"total viewers is %d", (int)s.totalViewers);
                 }];
             }
         }
@@ -1088,7 +1157,7 @@
             cellImageView.file = [share objectForKey:@"file"];
             [cellImageView loadInBackground:^(UIImage *image, NSError *error) {
                 CGRect rect = CGRectMake(image.size.width/2-cell.frame.size.width/2, image.size.height/2-cell.frame.size.height/2, cell.frame.size.width, cell.frame.size.height);
-                UIImage* tmpImage = [self fixOrientation:image];
+                UIImage* tmpImage = [self fixOrientation:image withOrientation:image.imageOrientation];
                 CGImageRef imageRef = CGImageCreateWithImageInRect([tmpImage CGImage], rect);
                 UIImage *newImage = [UIImage imageWithCGImage:imageRef];
                 
@@ -1333,7 +1402,7 @@
         [cell.shareImageView loadInBackground:^(UIImage *image, NSError *error) {
             [cell setUserInteractionEnabled:YES];
             CGRect rect = CGRectMake(image.size.width/2-cell.frame.size.width/2, image.size.height/2-cell.frame.size.height/2, cell.frame.size.width, cell.frame.size.height);
-            UIImage* tmpImage = [self fixOrientation:image];
+            UIImage* tmpImage = [self fixOrientation:image withOrientation:image.imageOrientation];
             CGImageRef imageRef = CGImageCreateWithImageInRect([tmpImage CGImage], rect);
             UIImage *newImage = [UIImage imageWithCGImage:imageRef];
             cell.shareImageView.image = newImage;
@@ -1513,10 +1582,18 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     [toolBar setBarStyle:UIBarStyleBlack];
     [toolBar setBackgroundColor:[UIColor blackColor]];
     
+    //check if I have to redo caption height
+    if(caption.frame.size.height < TABLE_VIEW_BAR_HEIGHT)
+    {
+        caption.frame = CGRectMake(0, toolBar.frame.origin.y-TABLE_VIEW_BAR_HEIGHT, screenWidth, TABLE_VIEW_BAR_HEIGHT);
+    }
+    
     //add the subviews
     [customPicker.view addSubview:cameraOverlayView];
     [customPicker.view addSubview:caption];
     [customPicker.view addSubview:toolBar];
+    
+    NSLog(@"textview height is %f", caption.frame.size.height);
     
     // animate the fade in after the shutter opens
     [UIView beginAnimations:nil context:NULL];
@@ -1540,22 +1617,40 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     
     //figure out the image
     UIImage* image =[info objectForKey:UIImagePickerControllerOriginalImage];
+    //NSNumber* orientation = [((NSDictionary*)[info objectForKey:UIImagePickerControllerMediaMetadata]) objectForKey:@"Orientation"];
+    //NSLog(@"image metadata is %@", [info objectForKey:UIImagePickerControllerMediaMetadata]);
+    
+    //NSLog(@"image orientation is %d", orientation.intValue);
+    
    /* NSLog(@"image is %f, %f", image.size.width, image.size.height);
     NSLog(@"overlay is %f, %f, %f, %f", cameraOverlayView.frame.origin.x, cameraOverlayView.frame.origin.y, cameraOverlayView.frame.size.width, cameraOverlayView.frame.size.height);
     CGRect rect = CGRectMake(image.size.width/2-screenWidth/2, TOOLBAR_HEIGHT, screenWidth, screenWidth*4.0/3.0);
     CGImageRef imageRef = CGImageCreateWithImageInRect([image CGImage], rect);
     UIImage *newImage = [UIImage imageWithCGImage:imageRef];*/
+    NSLog(@"image orientation is = %d", (int)image.imageOrientation);
+    int imageOrientation = 3 - image.imageOrientation;
+    if(image.imageOrientation == 1)
+        imageOrientation = 3;
+    UIImage* fixedImage = [self fixOrientation:image withOrientation:imageOrientation];
     CGSize destinationSize = CGSizeMake(screenWidth, 4.0/3.0*screenWidth);
     UIGraphicsBeginImageContext(destinationSize);
-    [image drawInRect:CGRectMake(0,0,destinationSize.width,destinationSize.height)];
+    [fixedImage drawInRect:CGRectMake(0,0,destinationSize.width,destinationSize.height)];
     UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
     
     //if the image is from front camera, need to flip horizontally
     if(customPicker.cameraDevice == UIImagePickerControllerCameraDeviceFront)
-        newImage = [UIImage imageWithCGImage:newImage.CGImage
-                                                scale:newImage.scale
-                                          orientation:UIImageOrientationUpMirrored];
+    {
+        //depending on the orientation is how we flip it
+        if(image.imageOrientation == 3 || image.imageOrientation == 0 || image.imageOrientation == 1)
+            newImage = [UIImage imageWithCGImage:newImage.CGImage
+                                       scale:newImage.scale
+                                 orientation:UIImageOrientationUpMirrored];
+        else
+            newImage = [UIImage imageWithCGImage:newImage.CGImage
+                                           scale:newImage.scale
+                                     orientation:UIImageOrientationRightMirrored];
+    }
     //set the image data
     _imageData = UIImageJPEGRepresentation(newImage, 1.0f);
     cameraOverlayView.image = newImage;
@@ -2163,16 +2258,19 @@ shouldChangeTextInRange:(NSRange)range
     [textView resignFirstResponder];
 }
 
-- (UIImage *)fixOrientation:(UIImage*)image {
+- (UIImage *)fixOrientation:(UIImage*)image withOrientation:(int)orientation {
+    
+    //NSLog(@"image orientation is %d", orientation);
+    NSLog(@"up = %d, down = %d, right = %d, left = %d", (int)UIImageOrientationUp, (int)UIImageOrientationDown, (int)UIImageOrientationRight, (int)UIImageOrientationLeft);
     
     // No-op if the orientation is already correct
-    if (image.imageOrientation == UIImageOrientationUp) return image;
+    if (orientation == UIImageOrientationUp) return image;
     
     // We need to calculate the proper transformation to make the image upright.
     // We do it in 2 steps: Rotate if Left/Right/Down, and then flip if Mirrored.
     CGAffineTransform transform = CGAffineTransformIdentity;
     
-    switch (image.imageOrientation) {
+    switch (orientation) {
         case UIImageOrientationDown:
         case UIImageOrientationDownMirrored:
             transform = CGAffineTransformTranslate(transform, image.size.width, image.size.height);
@@ -2195,7 +2293,7 @@ shouldChangeTextInRange:(NSRange)range
             break;
     }
     
-    switch (image.imageOrientation) {
+    switch (orientation) {
         case UIImageOrientationUpMirrored:
         case UIImageOrientationDownMirrored:
             transform = CGAffineTransformTranslate(transform, image.size.width, 0);
@@ -2221,7 +2319,7 @@ shouldChangeTextInRange:(NSRange)range
                                              CGImageGetColorSpace(image.CGImage),
                                              CGImageGetBitmapInfo(image.CGImage));
     CGContextConcatCTM(ctx, transform);
-    switch (image.imageOrientation) {
+    switch (orientation) {
         case UIImageOrientationLeft:
         case UIImageOrientationLeftMirrored:
         case UIImageOrientationRight:

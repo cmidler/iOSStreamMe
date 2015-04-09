@@ -30,6 +30,13 @@
     return YES;
 }
 
+- (BOOL)shouldAutorotate
+{
+    [super shouldAutorotate];
+    return NO;
+}
+
+
 - (void)motionEnded:(UIEventSubtype)motion withEvent:(UIEvent *)event
 {
     //shake gesture

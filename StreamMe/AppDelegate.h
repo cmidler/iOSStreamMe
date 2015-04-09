@@ -11,7 +11,6 @@
 #import "MainNavigationViewController.h"
 #import "CBCentralInterface.h"
 #import "CBPeripheralInterface.h"
-#import "PrivateProfile.h"
 #import "MainDatabase.h"
 
 #define GET_COUNT_TIMER 60

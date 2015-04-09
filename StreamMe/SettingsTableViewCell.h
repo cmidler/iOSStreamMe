@@ -10,6 +10,7 @@
 
 @interface SettingsTableViewCell : UITableViewCell
 @property (weak, nonatomic) IBOutlet UILabel *settingsLabel;
+@property (weak, nonatomic) IBOutlet UIImageView *settingsImageView;
 
 
 @end

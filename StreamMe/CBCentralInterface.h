@@ -10,8 +10,7 @@
 #import "MainDatabase.h"
 #import "SERVICES.h"
 #import "BluetoothProfile.h"
-#import "StoreUserProfile.h"
-#import "CBPeripheralSubclass.h"
+#import <Parse/Parse.h>
 //#import "Poll.h"
 //#import "Event.h"
 

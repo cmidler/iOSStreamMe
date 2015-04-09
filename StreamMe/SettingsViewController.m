@@ -33,6 +33,7 @@
     self.settingsTableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     
     settings = @[@"Contact StreamMe",@"Logout"];
+    images = @[[UIImage imageNamed:@"email.png"],[UIImage imageNamed:@"logout.png"]];
     [settingsTableView reloadData];
 }
 
@@ -70,7 +71,7 @@
     SettingsTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"settingsCell" forIndexPath:indexPath];
     cell.separatorInset = UIEdgeInsetsZero;
     cell.settingsLabel.text = settings[indexPath.row];
-    
+    cell.settingsImageView.image = images[indexPath.row];
     return cell;
 }
 

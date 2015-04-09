@@ -355,6 +355,7 @@
                                                 PFInstallation *installation = [PFInstallation currentInstallation];
                                                 [installation setValue:@"ios" forKey:@"deviceType"];
                                                 installation[@"user"] = newUser;
+                                                installation[@"badge"] = [NSNumber numberWithInt:0];
                                                 PFACL *defaultACL = [PFACL ACL];
                                                 [defaultACL setReadAccess:true forUser:newUser];
                                                 [defaultACL setWriteAccess:true forUser:newUser];
@@ -532,6 +533,7 @@
                                             PFInstallation *installation = [PFInstallation currentInstallation];
                                             [installation setValue:@"ios" forKey:@"deviceType"];
                                             installation[@"user"] = newUser;
+                                            installation[@"badge"] = [NSNumber numberWithInt:0];
                                             PFACL *defaultACL = [PFACL ACL];
                                             [defaultACL setReadAccess:true forUser:newUser];
                                             [defaultACL setWriteAccess:true forUser:newUser];

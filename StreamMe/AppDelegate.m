@@ -50,6 +50,7 @@
     //setting up variables
     _streams = [[NSMutableArray alloc] init];
     _timer =[NSTimer scheduledTimerWithTimeInterval:GET_COUNT_TIMER target:self selector:@selector(countTimer) userInfo:nil repeats:YES];
+    _periodicTimer =[NSTimer scheduledTimerWithTimeInterval:CHECK_FOR_USERS target:self selector:@selector(resetCentralAndPeripheral) userInfo:nil repeats:YES];
     _central = [[CBCentralInterface alloc]init];
     _peripheral = [[CBPeripheralInterface alloc] init];
     
@@ -70,6 +71,7 @@
     
     
     NSLog(@"did finish launching");
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"reloadSection" object:self];
     return YES;
 }
 
@@ -82,6 +84,7 @@
 
 - (void) resetCentralAndPeripheral
 {
+    NSLog(@"resetting central");
     _central = [[CBCentralInterface alloc]init];
     _peripheral = [[CBPeripheralInterface alloc] init];
     [_central startScanningForUserProfiles];
@@ -122,8 +125,8 @@
 - (void)application:(UIApplication *)application
 didReceiveRemoteNotification:(NSDictionary *)userInfo
 fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))handler {
-    
-
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"newUserStreams" object:self userInfo:nil];
+    NSLog(@"new stream detected");
 }
 
 -(void) setupDB
@@ -158,9 +161,9 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))handler {
 - (void)applicationDidEnterBackground:(UIApplication *)application
 {
     //Turning central off and make sure peripheral is still advertising
-    /*if(!_central)
+    if(!_central)
         _central = [[CBCentralInterface alloc]init];
-    [_central startScanningForUserProfiles];*/
+    [_central startScanningForUserProfiles];
     [_timer invalidate];
     [_periodicTimer invalidate];
     [[NSNotificationCenter defaultCenter] postNotificationName:@"updateTimeElapsed" object:self userInfo:nil];
@@ -171,9 +174,9 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))handler {
 
 - (void)applicationWillEnterForeground:(UIApplication *)application
 {
-    //_periodicTimer =[NSTimer scheduledTimerWithTimeInterval:CHECK_FOR_USERS target:self selector:@selector(resetCentralAndPeripheral) userInfo:nil repeats:YES];
+    _periodicTimer =[NSTimer scheduledTimerWithTimeInterval:CHECK_FOR_USERS target:self selector:@selector(resetCentralAndPeripheral) userInfo:nil repeats:YES];
     //Fire immediately every time we launch
-    //[_periodicTimer fire];
+    [_periodicTimer fire];
     _timer =[NSTimer scheduledTimerWithTimeInterval:GET_COUNT_TIMER target:self selector:@selector(countTimer) userInfo:nil repeats:YES];
     [[NSNotificationCenter defaultCenter] postNotificationName:@"reloadSection" object:self];
     //Turning central and peripheral on
