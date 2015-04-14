@@ -4,17 +4,14 @@ PODS:
   - FMDB/common (2.5)
   - FMDB/standard (2.5):
     - FMDB/common
-  - PEPhotoCropEditor (1.3.1)
   - REMenu (1.10)
 
 DEPENDENCIES:
   - FMDB
-  - PEPhotoCropEditor
   - REMenu (~> 1.10)
 
 SPEC CHECKSUMS:
   FMDB: 96e8f1bcc1329e269330f99770ad4285d9003e52
-  PEPhotoCropEditor: 613292fce009efd085e7aed975f1ebb3fec8bb7b
   REMenu: 30dad195930adf6c5eeb8041e3257aa60bf9fa49
 
 COCOAPODS: 0.35.0

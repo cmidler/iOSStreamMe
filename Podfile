@@ -3,13 +3,12 @@ platform :ios, '8.0'
 
 source 'https://github.com/CocoaPods/Specs.git'
 
-target 'WhoYu' do
-	pod 'PEPhotoCropEditor'
+target 'StreamMe' do
 	pod 'FMDB'
 	pod 'REMenu', '~> 1.10'
 end
 
-target 'WhoYuTests' do
+target 'StreamMeTests' do
 
 end
 

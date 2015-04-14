@@ -50,7 +50,7 @@
     //setting up variables
     _streams = [[NSMutableArray alloc] init];
     _timer =[NSTimer scheduledTimerWithTimeInterval:GET_COUNT_TIMER target:self selector:@selector(countTimer) userInfo:nil repeats:YES];
-    _periodicTimer =[NSTimer scheduledTimerWithTimeInterval:CHECK_FOR_USERS target:self selector:@selector(resetCentralAndPeripheral) userInfo:nil repeats:YES];
+    _periodicTimer =[NSTimer scheduledTimerWithTimeInterval:CHECK_FOR_USERS target:self selector:@selector(resetPeripheral) userInfo:nil repeats:YES];
     _central = [[CBCentralInterface alloc]init];
     _peripheral = [[CBPeripheralInterface alloc] init];
     
@@ -91,6 +91,23 @@
     [_peripheral startAdvertisingProfile];
 }
 
+//reset central
+-(void) resetCentral
+{
+    NSLog(@"resetting central");
+    _central = [[CBCentralInterface alloc]init];
+    [_central startScanningForUserProfiles];
+}
+
+//reset peripheral
+-(void) resetPeripheral
+{
+    NSLog(@"resetting peripheral");
+    _peripheral = [[CBPeripheralInterface alloc] init];
+    [_peripheral startAdvertisingProfile];
+}
+
+
 /* Setting up push notifications through parse*/
 - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
     // Store the deviceToken in the current installation and save it to Parse.
@@ -109,6 +126,7 @@
     if (application.applicationState != UIApplicationStateActive)
     {
         NSLog(@"handle push");
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"newUserStreams" object:self userInfo:nil];
         [PFPush handlePush:userInfo];
         return;
     }
@@ -174,7 +192,7 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))handler {
 
 - (void)applicationWillEnterForeground:(UIApplication *)application
 {
-    _periodicTimer =[NSTimer scheduledTimerWithTimeInterval:CHECK_FOR_USERS target:self selector:@selector(resetCentralAndPeripheral) userInfo:nil repeats:YES];
+    _periodicTimer =[NSTimer scheduledTimerWithTimeInterval:CHECK_FOR_USERS target:self selector:@selector(resetPeripheral) userInfo:nil repeats:YES];
     //Fire immediately every time we launch
     [_periodicTimer fire];
     _timer =[NSTimer scheduledTimerWithTimeInterval:GET_COUNT_TIMER target:self selector:@selector(countTimer) userInfo:nil repeats:YES];

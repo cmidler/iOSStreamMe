@@ -4,22 +4,17 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
-		<key>Pods-WhoYu-FMDB.xcscheme</key>
+		<key>Pods-StreamMe-FMDB.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
 		</dict>
-		<key>Pods-WhoYu-PEPhotoCropEditor.xcscheme</key>
+		<key>Pods-StreamMe-REMenu.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
 		</dict>
-		<key>Pods-WhoYu-REMenu.xcscheme</key>
-		<dict>
-			<key>isShown</key>
-			<false/>
-		</dict>
-		<key>Pods-WhoYu.xcscheme</key>
+		<key>Pods-StreamMe.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
@@ -27,22 +22,17 @@
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
-		<key>4FB610DA31A1B4798234759B</key>
+		<key>A616D13AA08921BE4CF3B094</key>
 		<dict>
 			<key>primary</key>
 			<true/>
 		</dict>
-		<key>7BCC71CA53565A7244D73EB3</key>
+		<key>BE947423F5939C1E57CF9DA7</key>
 		<dict>
 			<key>primary</key>
 			<true/>
 		</dict>
-		<key>BA1CD79249B5E17853A04566</key>
-		<dict>
-			<key>primary</key>
-			<true/>
-		</dict>
-		<key>CFD92C306DF3F9A0E3352234</key>
+		<key>CECF448BB485A67D4DAEED38</key>
 		<dict>
 			<key>primary</key>
 			<true/>
