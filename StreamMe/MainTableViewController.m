@@ -105,6 +105,10 @@
                                              selector:@selector(mainNotification:)
                                                  name:@"newUserStreams"
                                                object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(mainNotification:)
+                                                 name:@"countStreams"
+                                               object:nil];
     
     
     //Adding pull to refresh
@@ -278,6 +282,11 @@
         [self.refreshControl addSubview:newLabel];
         [streamsTableView setContentOffset:CGPointMake(0, -self.refreshControl.frame.size.height-self.navigationController.navigationBar.frame.size.height+(TOOLBAR_HEIGHT/2)) animated:YES];
     }
+    else if ([[notification name] isEqualToString:@"countStreams"])
+    {
+        NSDictionary* userInfo = [notification userInfo];
+        [self countStreamShares:[userInfo objectForKey:@"streamIds"]];
+    }
 }
 
 - (UIViewController *)pageViewController:(UIPageViewController *)pageViewController viewControllerBeforeViewController:(UIViewController *)viewController
@@ -410,75 +419,191 @@
         }
     }];
     
-    [PFCloud callFunctionInBackground:@"getStreamsForUser" withParameters:@{@"currentStreamsIds":streamIds, @"limit":[NSNumber numberWithInt:STREAMS_PER_PAGE]} block:^(id object, NSError *error) {
-        if(error)
+    
+    
+    //get nearby user streams first
+    MainDatabase* md = [MainDatabase shared];
+    __block bool inQueue = YES;
+    NSMutableArray* userIds = [[NSMutableArray alloc] init];
+    [md.queue inDatabase:^(FMDatabase *db) {
+        
+        
+        //need to delete the peripherals that are about to expire
+        NSString *userSQL = @"SELECT DISTINCT user_id FROM user WHERE is_me != ?";
+        NSArray* values = @[[NSNumber numberWithInt:1]];
+        FMResultSet *s = [db executeQuery:userSQL withArgumentsInArray:values];
+        //get the peripheral ids
+        while([s next])
         {
+            NSLog(@"found user");
+            [userIds addObject:[s stringForColumnIndex:0]];
+        }
+        inQueue = NO;
+    }];
+    
+    //busy loop
+    while(inQueue)
+        ;
+    
+    //count the user ids
+    if(userIds.count)
+    {
+        NSLog(@"calling new streams from nearby users");
+        [PFCloud callFunctionInBackground:@"getNewStreamsFromNearbyUsers" withParameters:@{@"userIds":userIds} block:^(id object, NSError *error) {
+            //error
+            if(error)
+            {
+                NSLog(@"error for nearby user streams is %@", error);
+            }
+            
+            
+            //either way call get streams for user
+            [PFCloud callFunctionInBackground:@"getStreamsForUser" withParameters:@{@"currentStreamsIds":streamIds, @"limit":[NSNumber numberWithInt:STREAMS_PER_PAGE]} block:^(id object, NSError *error) {
+                if(error)
+                {
+                    _tableFirstLoad = NO;
+                    _downloadingStreams = NO;
+                    NSLog(@"error is %@", error);
+                    [self.refreshControl endRefreshing];
+                    [self sortStreams];
+                    return;
+                }
+                
+                NSArray* newStreams = object;
+                NSLog(@"new streams = %@", newStreams);
+                
+                //see if the array already contains it before we add it
+                for(NSDictionary* dict in newStreams)
+                {
+                    PFObject* stream = [dict objectForKey:@"stream"];
+                    PFObject* share = [dict objectForKey:@"share"];
+                    PFObject* streamShare = [dict objectForKey:@"stream_share"];
+                    streamShare[@"share"] = share;
+                    NSString* username = [dict objectForKey:@"username"];
+                    //add id to the streamids array
+                    [streamIds addObject:stream.objectId];
+                    
+                    //get array of all of the stream objects we have
+                    NSMutableArray* streamObjects = [[NSMutableArray alloc] init];
+                    
+                    //have array of streams in streams array
+                    for(Stream* s in streams)
+                        [streamObjects addObject:s.stream];
+                    
+                    //if the stream isn't in the array then add it
+                    if(![streamObjects containsObject:stream])
+                    {
+                        //initialize a new stream
+                        Stream* newStream = [[Stream alloc] init];
+                        newStream.stream = stream;
+                        
+                        //want to create an array of shares so we can lazy load the next ones
+                        [newStream.streamShares addObject:streamShare];
+                        
+                        
+                        //if I am the creator then just me otherwise someone had to share it with me
+                        if([((PFUser*)[stream objectForKey:@"creator"]).objectId isEqualToString: [PFUser currentUser].objectId])
+                            newStream.totalViewers = 1;
+                        else
+                            newStream.totalViewers = 2;
+                        //add the username
+                        newStream.username = username;
+                        //newest time of streamShare
+                        newStream.newestShareCreationTime = streamShare.createdAt;
+                        //add the new stream object to the streams array
+                        [streams addObject:newStream];
+                        //get first share
+                        NSString* firstShareId = ((PFObject*)[stream objectForKey:@"firstShare"]).objectId;
+                        if([firstShareId isEqualToString:share.objectId])
+                            [self loadSharesRight:stream limitOf:SHARES_PER_PAGE];
+                        else
+                            [self loadSharesCenter:stream];
+                    }
+                }
+                _tableFirstLoad = NO;
+                _downloadingStreams = NO;
+                [self countStreamShares:streamIds];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self sortStreams];
+                });
+            }];
+            
+            
+        }];
+    }
+    else
+    {
+    
+        [PFCloud callFunctionInBackground:@"getStreamsForUser" withParameters:@{@"currentStreamsIds":streamIds, @"limit":[NSNumber numberWithInt:STREAMS_PER_PAGE]} block:^(id object, NSError *error) {
+            if(error)
+            {
+                _tableFirstLoad = NO;
+                _downloadingStreams = NO;
+                NSLog(@"error is %@", error);
+                [self.refreshControl endRefreshing];
+                [self sortStreams];
+                return;
+            }
+            
+            NSArray* newStreams = object;
+            NSLog(@"new streams = %@", newStreams);
+            
+            //see if the array already contains it before we add it
+            for(NSDictionary* dict in newStreams)
+            {
+                PFObject* stream = [dict objectForKey:@"stream"];
+                PFObject* share = [dict objectForKey:@"share"];
+                PFObject* streamShare = [dict objectForKey:@"stream_share"];
+                streamShare[@"share"] = share;
+                NSString* username = [dict objectForKey:@"username"];
+                //add id to the streamids array
+                [streamIds addObject:stream.objectId];
+                
+                //get array of all of the stream objects we have
+                NSMutableArray* streamObjects = [[NSMutableArray alloc] init];
+                
+                //have array of streams in streams array
+                for(Stream* s in streams)
+                    [streamObjects addObject:s.stream];
+                
+                //if the stream isn't in the array then add it
+                if(![streamObjects containsObject:stream])
+                {
+                    //initialize a new stream
+                    Stream* newStream = [[Stream alloc] init];
+                    newStream.stream = stream;
+                    
+                    //want to create an array of shares so we can lazy load the next ones
+                    [newStream.streamShares addObject:streamShare];
+                    
+                    
+                    //if I am the creator then just me otherwise someone had to share it with me
+                    if([((PFUser*)[stream objectForKey:@"creator"]).objectId isEqualToString: [PFUser currentUser].objectId])
+                        newStream.totalViewers = 1;
+                    else
+                        newStream.totalViewers = 2;
+                    //add the username
+                    newStream.username = username;
+                    //newest time of streamShare
+                    newStream.newestShareCreationTime = streamShare.createdAt;
+                    //add the new stream object to the streams array
+                    [streams addObject:newStream];
+                    //get first share
+                    NSString* firstShareId = ((PFObject*)[stream objectForKey:@"firstShare"]).objectId;
+                    if([firstShareId isEqualToString:share.objectId])
+                        [self loadSharesRight:stream limitOf:SHARES_PER_PAGE];
+                    else
+                        [self loadSharesCenter:stream];
+                }
+            }
             _tableFirstLoad = NO;
             _downloadingStreams = NO;
-            NSLog(@"error is %@", error);
-            [self.refreshControl endRefreshing];
-            [self sortStreams];
-            return;
-        }
-        
-        NSArray* newStreams = object;
-        NSLog(@"new streams = %@", newStreams);
-        
-        //see if the array already contains it before we add it
-        for(NSDictionary* dict in newStreams)
-        {
-            PFObject* stream = [dict objectForKey:@"stream"];
-            PFObject* share = [dict objectForKey:@"share"];
-            PFObject* streamShare = [dict objectForKey:@"stream_share"];
-            streamShare[@"share"] = share;
-            NSString* username = [dict objectForKey:@"username"];
-            //add id to the streamids array
-            [streamIds addObject:stream.objectId];
-            
-            //get array of all of the stream objects we have
-            NSMutableArray* streamObjects = [[NSMutableArray alloc] init];
-            
-            //have array of streams in streams array
-            for(Stream* s in streams)
-                [streamObjects addObject:s.stream];
-            
-            //if the stream isn't in the array then add it
-            if(![streamObjects containsObject:stream])
-            {
-                //initialize a new stream
-                Stream* newStream = [[Stream alloc] init];
-                newStream.stream = stream;
-                
-                //want to create an array of shares so we can lazy load the next ones
-                [newStream.streamShares addObject:streamShare];
-                
-                
-                //if I am the creator then just me otherwise someone had to share it with me
-                if([((PFUser*)[stream objectForKey:@"creator"]).objectId isEqualToString: [PFUser currentUser].objectId])
-                    newStream.totalViewers = 1;
-                else
-                    newStream.totalViewers = 2;
-                //add the username
-                newStream.username = username;
-                //newest time of streamShare
-                newStream.newestShareCreationTime = streamShare.createdAt;
-                //add the new stream object to the streams array
-                [streams addObject:newStream];
-                //get first share
-                NSString* firstShareId = ((PFObject*)[stream objectForKey:@"firstShare"]).objectId;
-                if([firstShareId isEqualToString:share.objectId])
-                    [self loadSharesRight:stream limitOf:SHARES_PER_PAGE];
-                else
-                    [self loadSharesCenter:stream];
-            }
-        }
-        _tableFirstLoad = NO;
-        _downloadingStreams = NO;
-        [self countStreamShares:streamIds];
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self sortStreams];
-        });
-    }];
+            [self countStreamShares:streamIds];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self sortStreams];
+            });
+        }];
+    }
     
 }
 
@@ -646,7 +771,7 @@
     }
     AppDelegate* appDelegate = [[UIApplication sharedApplication] delegate];
     NSMutableArray* streams = [appDelegate streams];
-    
+    NSMutableArray* removeStreams = [[NSMutableArray alloc] init];
     //loop through and get streams that have been expired for 30 minutes and remove them
     for(Stream* s in streams)
     {
@@ -656,10 +781,14 @@
         NSTimeInterval interval = [[NSDate date] timeIntervalSinceDate:date];
         if(interval>1800)
         {
-            [streams removeObject:s];
+            [removeStreams addObject:s];
             NSLog(@"removing stream");
         }
     }
+    
+    //now remove the streams
+    if(removeStreams.count)
+        [streams removeObjectsInArray:removeStreams];
     
     //sort the stream
     
@@ -883,7 +1012,7 @@
         }
     }
     _isPoppingBack = NO;
-    //[self sortStreams];
+    [self sortStreams];
 }
 
 
@@ -1887,7 +2016,25 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         [self createStream];
     else if(_openedWithShake)
     {
-        [self dismissImagePickerView];
+        //check if there is 1 stream only
+        int count = 0;
+        AppDelegate* appDelegate = [[UIApplication sharedApplication] delegate];
+        NSMutableArray* streams = [appDelegate streams];
+        for(Stream* s in streams)
+        {
+            //check to see if the match is still valid
+            NSDate* date = [s.stream objectForKey:@"endTime"];
+            NSTimeInterval interval = [date timeIntervalSinceDate:[NSDate date]];
+            if(!isnan(interval) && interval>0)
+            {
+                count++;
+                _selectedStream = s.stream;
+            }
+        }
+        if(count > 1)
+            [self dismissImagePickerView];
+        else
+            [self addNewShareToStream:caption.text];
     }
     else
         [self addNewShareToStream:caption.text];
@@ -1910,8 +2057,10 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     if(_openedWithShake)
     {
         _openedWithShake = NO;
-        [customPicker dismissViewControllerAnimated:NO completion:NULL];
-        [self performSegueWithIdentifier:@"chooseStreamsSegue" sender:self];
+        
+        [customPicker dismissViewControllerAnimated:NO completion:^{
+           [self performSegueWithIdentifier:@"chooseStreamsSegue" sender:self];
+        }];
     }
     else
         [customPicker dismissViewControllerAnimated:NO completion:NULL];
@@ -2119,7 +2268,33 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         [streams addObject:newStream];
         //update the user's points total
         [PFCloud callFunctionInBackground:@"createStreamUpdatePoints" withParameters:@{} block:^(id object, NSError *error) {}];
+        //send push to users
+        //get nearby user streams first
+        MainDatabase* md = [MainDatabase shared];
+        __block bool inQueue = YES;
+        NSMutableArray* userIds = [[NSMutableArray alloc] init];
+        [md.queue inDatabase:^(FMDatabase *db) {
+            
+            
+            //need to delete the peripherals that are about to expire
+            NSString *userSQL = @"SELECT DISTINCT user_id FROM user WHERE is_me != ?";
+            NSArray* values = @[[NSNumber numberWithInt:1]];
+            FMResultSet *s = [db executeQuery:userSQL withArgumentsInArray:values];
+            //get the peripheral ids
+            while([s next])
+            {
+                NSLog(@"found user");
+                [userIds addObject:[s stringForColumnIndex:0]];
+            }
+            inQueue = NO;
+        }];
         
+        while(inQueue)
+            ;
+        
+        //send push
+        if(userIds && userIds.count)
+            [PFCloud callFunctionInBackground:@"sendPushForStream" withParameters:@{@"streamId":newStream.stream.objectId, @"userIds":userIds} block:^(id object, NSError *error) {}];
         [self dismissImagePickerView];
         
     }];
@@ -2187,7 +2362,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     //upload and don't care about an error for now
     NSArray* pfObjects = [[NSArray alloc] initWithObjects:share,streamShare, nil];
     [PFObject saveAllInBackground:pfObjects block:^(BOOL succeeded, NSError *error) {
-        [self sortStreams];
+        [self countStreamShares:@[streamObj.stream.objectId]];
     }];
     [self dismissImagePickerView];
     

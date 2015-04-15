@@ -170,6 +170,7 @@
     
     //add share to pfobjects
     [pfObjects addObject:share];
+    NSMutableArray* streamIds = [[NSMutableArray alloc] init];
     //loop through all streams
     for(NSMutableArray* array in streams)
     {
@@ -195,6 +196,7 @@
         streamShare[@"isIgnored"] = [NSNumber numberWithBool:NO];
         [streamShare setACL:defaultACL];
         [pfObjects addObject:streamShare];
+        [streamIds addObject:streamObject.stream.objectId];
     }
     
     //if there are objects then save them
@@ -204,6 +206,8 @@
         [PFCloud callFunctionInBackground:@"addToStreamUpdatePoints" withParameters:@{} block:^(id object, NSError *error) {}];
         //save all streamshares
         [PFObject saveAllInBackground:pfObjects block:^(BOOL succeeded, NSError *error) {
+            NSDictionary* userInfo = @{@"streamIds":streamIds};
+            [[NSNotificationCenter defaultCenter] postNotificationName:@"countStreams" object:self userInfo:userInfo];
         }];
     }
     //pop back to main screen

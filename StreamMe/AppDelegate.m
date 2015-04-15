@@ -50,7 +50,7 @@
     //setting up variables
     _streams = [[NSMutableArray alloc] init];
     _timer =[NSTimer scheduledTimerWithTimeInterval:GET_COUNT_TIMER target:self selector:@selector(countTimer) userInfo:nil repeats:YES];
-    _periodicTimer =[NSTimer scheduledTimerWithTimeInterval:CHECK_FOR_USERS target:self selector:@selector(resetPeripheral) userInfo:nil repeats:YES];
+    //_periodicTimer =[NSTimer scheduledTimerWithTimeInterval:CHECK_FOR_USERS target:self selector:@selector(resetPeripheral) userInfo:nil repeats:YES];
     _central = [[CBCentralInterface alloc]init];
     _peripheral = [[CBPeripheralInterface alloc] init];
     
@@ -130,12 +130,74 @@
         [PFPush handlePush:userInfo];
         return;
     }
-    
-    //Set badge number to 0 if active
-    PFInstallation *currentInstallation = [PFInstallation currentInstallation];
-    if (currentInstallation.badge != 0) {
-        currentInstallation.badge = 0;
-        [currentInstallation saveEventually];
+    NSString* data = [userInfo objectForKey:@"data"];
+    //see if the push is telling me about a new userstream
+    if(data && data.length)
+    {
+        
+        //query my userstreams to see if I already have a userstream for it
+        PFQuery* query = [PFQuery queryWithClassName:@"UserStream"];
+        PFObject * stream = [PFObject objectWithoutDataWithClassName:@"Stream" objectId:data];
+        [query whereKey:@"stream" equalTo:stream];
+        [query whereKey:@"user" equalTo:[PFUser currentUser]];
+        [query findObjectsInBackgroundWithBlock:^(NSArray *objects, NSError *error) {
+            if(error || (objects && objects.count))
+            {
+                NSLog(@"Don't do anything on this push notification");
+            }
+            else
+            {
+                //create the userstream
+                [PFCloud callFunctionInBackground:@"createNewUserStream" withParameters:@{@"streamId":data} block:^(id object, NSError *error) {
+                    
+                    //send push to users
+                    //get nearby user streams first
+                    MainDatabase* md = [MainDatabase shared];
+                    __block bool inQueue = YES;
+                    NSMutableArray* userIds = [[NSMutableArray alloc] init];
+                    [md.queue inDatabase:^(FMDatabase *db) {
+                        
+                        
+                        //need to delete the peripherals that are about to expire
+                        NSString *userSQL = @"SELECT DISTINCT user_id FROM user WHERE is_me != ?";
+                        NSArray* values = @[[NSNumber numberWithInt:1]];
+                        FMResultSet *s = [db executeQuery:userSQL withArgumentsInArray:values];
+                        //get the peripheral ids
+                        while([s next])
+                        {
+                            NSLog(@"found user");
+                            [userIds addObject:[s stringForColumnIndex:0]];
+                        }
+                        inQueue = NO;
+                    }];
+                    
+                    while(inQueue)
+                        ;
+                    
+                    //send push
+                    if(userIds && userIds.count)
+                        [PFCloud callFunctionInBackground:@"sendPushForStream" withParameters:@{@"streamId":data, @"userIds":userIds} block:^(id object, NSError *error) {}];
+                    
+                    //Set badge number to 0 if active
+                    PFInstallation *currentInstallation = [PFInstallation currentInstallation];
+                    if (currentInstallation.badge != 0) {
+                        currentInstallation.badge = 0;
+                        [currentInstallation saveEventually];
+                    }
+                    [[NSNotificationCenter defaultCenter] postNotificationName:@"newUserStreams" object:self userInfo:nil];
+
+                }];
+            }
+        }];
+    }
+    else
+    {
+        //Set badge number to 0 if active
+        PFInstallation *currentInstallation = [PFInstallation currentInstallation];
+        if (currentInstallation.badge != 0) {
+            currentInstallation.badge = 0;
+            [currentInstallation saveEventually];
+        }
     }
     
 }
@@ -143,7 +205,61 @@
 - (void)application:(UIApplication *)application
 didReceiveRemoteNotification:(NSDictionary *)userInfo
 fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))handler {
-    [[NSNotificationCenter defaultCenter] postNotificationName:@"newUserStreams" object:self userInfo:nil];
+    
+    NSString* data = [userInfo objectForKey:@"data"];
+    //see if the push is telling me about a new userstream
+    if(data && data.length)
+    {
+        //query my userstreams to see if I already have a userstream for it
+        PFQuery* query = [PFQuery queryWithClassName:@"UserStream"];
+        PFObject * stream = [PFObject objectWithoutDataWithClassName:@"Stream" objectId:data];
+        [query whereKey:@"stream" equalTo:stream];
+        [query whereKey:@"user" equalTo:[PFUser currentUser]];
+        [query findObjectsInBackgroundWithBlock:^(NSArray *objects, NSError *error) {
+            if(error || (objects && objects.count))
+            {
+                NSLog(@"Don't do anything on this push notification");
+            }
+            else
+            {
+        
+                //create the userstream
+                [PFCloud callFunctionInBackground:@"createNewUserStream" withParameters:@{@"streamId":data} block:^(id object, NSError *error) {
+                    
+                    //send push to users
+                    //get nearby user streams first
+                    MainDatabase* md = [MainDatabase shared];
+                    __block bool inQueue = YES;
+                    NSMutableArray* userIds = [[NSMutableArray alloc] init];
+                    [md.queue inDatabase:^(FMDatabase *db) {
+                        
+                        
+                        //need to delete the peripherals that are about to expire
+                        NSString *userSQL = @"SELECT DISTINCT user_id FROM user WHERE is_me != ?";
+                        NSArray* values = @[[NSNumber numberWithInt:1]];
+                        FMResultSet *s = [db executeQuery:userSQL withArgumentsInArray:values];
+                        //get the peripheral ids
+                        while([s next])
+                        {
+                            NSLog(@"found user");
+                            [userIds addObject:[s stringForColumnIndex:0]];
+                        }
+                        inQueue = NO;
+                    }];
+                    
+                    while(inQueue)
+                        ;
+                    
+                    //send push
+                    if(userIds && userIds.count)
+                        [PFCloud callFunctionInBackground:@"sendPushForStream" withParameters:@{@"streamId":data, @"userIds":userIds} block:^(id object, NSError *error) {}];
+                    [[NSNotificationCenter defaultCenter] postNotificationName:@"newUserStreams" object:self userInfo:nil];
+                }];
+            }
+        }];
+    }
+    else
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"newUserStreams" object:self userInfo:nil];
     NSLog(@"new stream detected");
 }
 
@@ -183,7 +299,7 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))handler {
         _central = [[CBCentralInterface alloc]init];
     [_central startScanningForUserProfiles];
     [_timer invalidate];
-    [_periodicTimer invalidate];
+    //[_periodicTimer invalidate];
     [[NSNotificationCenter defaultCenter] postNotificationName:@"updateTimeElapsed" object:self userInfo:nil];
     if(!_peripheral)
         _peripheral = [[CBPeripheralInterface alloc] init];
@@ -192,9 +308,9 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))handler {
 
 - (void)applicationWillEnterForeground:(UIApplication *)application
 {
-    _periodicTimer =[NSTimer scheduledTimerWithTimeInterval:CHECK_FOR_USERS target:self selector:@selector(resetPeripheral) userInfo:nil repeats:YES];
+    //_periodicTimer =[NSTimer scheduledTimerWithTimeInterval:CHECK_FOR_USERS target:self selector:@selector(resetPeripheral) userInfo:nil repeats:YES];
     //Fire immediately every time we launch
-    [_periodicTimer fire];
+    //[_periodicTimer fire];
     _timer =[NSTimer scheduledTimerWithTimeInterval:GET_COUNT_TIMER target:self selector:@selector(countTimer) userInfo:nil repeats:YES];
     [[NSNotificationCenter defaultCenter] postNotificationName:@"reloadSection" object:self];
     //Turning central and peripheral on
