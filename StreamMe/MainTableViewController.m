@@ -123,14 +123,6 @@
 
     
     [self pullToRefresh];
-    //Tutorial
-    __block NSNumber *showTutorialOnLaunch =
-    [[NSUserDefaults standardUserDefaults] objectForKey:@"ShowTutorial"];
-    if (showTutorialOnLaunch == nil) {
-        [self tutorial];
-    }
-    
-    
 }
 
 -(void) setNavigationTitle
@@ -289,82 +281,6 @@
     }
 }
 
-- (UIViewController *)pageViewController:(UIPageViewController *)pageViewController viewControllerBeforeViewController:(UIViewController *)viewController
-{
-    NSUInteger index = ((MainTutorialContentViewController*) viewController).pageIndex;
-    
-    if ((index == 0) || (index == NSNotFound)) {
-        return nil;
-    }
-    
-    index--;
-    return [self viewControllerAtIndex:index];
-}
-
-- (UIViewController *)pageViewController:(UIPageViewController *)pageViewController viewControllerAfterViewController:(UIViewController *)viewController
-{
-    NSUInteger index = ((MainTutorialContentViewController*) viewController).pageIndex;
-    
-    if (index == NSNotFound) {
-        return nil;
-    }
-    
-    index++;
-    if (index == [self.pageTitles count]) {
-        return nil;
-    }
-    return [self viewControllerAtIndex:index];
-}
-
-- (MainTutorialContentViewController *)viewControllerAtIndex:(NSUInteger)index
-{
-    if (([self.pageTitles count] == 0) || (index >= [self.pageTitles count])) {
-        return nil;
-    }
-    
-    // Create a new view controller and pass suitable data.
-    MainTutorialContentViewController *pageContentViewController = [self.storyboard instantiateViewControllerWithIdentifier:@"PageContentController"];
-    pageContentViewController.imageFile = self.pageImages[index];
-    pageContentViewController.titleText = self.pageTitles[index];
-    pageContentViewController.pageIndex = index;
-    
-    return pageContentViewController;
-}
-- (NSInteger)presentationCountForPageViewController:(UIPageViewController *)pageViewController
-{
-    return [self.pageTitles count];
-}
-
-- (NSInteger)presentationIndexForPageViewController:(UIPageViewController *)pageViewController
-{
-    return 0;
-}
-
--(void) tutorial
-{
-    // Store the data
-    
-    //setup pages for tutorial
-    _pageTitles = @[@"StreamMe shares streams of pictures to those around you.  These streams are public.", @"To quickly share to one or more streams you can shake the phone to quick-open the camera.", @"If no one around you is connected to the stream within 30 minutes it will expire!"];
-    _pageImages = @[@"whoYuLogo.png", @"shake-gesture.png", @"white-slideshow.png"];
-    
-    // Create page view controller
-    self.pageViewController = [self.storyboard instantiateViewControllerWithIdentifier:@"MainTutorialPageViewController"];
-    self.pageViewController.dataSource = self;
-    
-    MainTutorialContentViewController *startingViewController = [self viewControllerAtIndex:0];
-    NSArray *viewControllers = @[startingViewController];
-    [self.pageViewController setViewControllers:viewControllers direction:UIPageViewControllerNavigationDirectionForward animated:NO completion:nil];
-    
-    // Change the size of page view controller
-    self.pageViewController.view.frame = CGRectMake(self.view.frame.size.width/16, self.view.frame.size.height/4, self.view.frame.size.width*7.0/8.0, self.view.frame.size.height/2);
-    
-    //[self addChildViewController:_pageViewController];
-    //[self.view addSubview:_pageViewController.view];
-    [self presentViewController:self.pageViewController animated:YES completion:NULL];
-    //[self.pageViewController didMoveToParentViewController:self];
-                                                                  
-}
 
 //look for new subscribers
 -(void) pullToRefresh
@@ -1127,19 +1043,10 @@
     [headerView setUserInteractionEnabled:YES];
     [headerView addGestureRecognizer:headerTap];
     
-    //create the title with the name of the stream
-    UILabel *title = [[UILabel alloc] initWithFrame:CGRectMake(5, 5, width-threeQuarterHeight, halfHeight)];
-    title.font = [UIFont boldSystemFontOfSize:17.0];
-    title.textColor = [UIColor darkTextColor];
-    title.text = [NSString stringWithFormat:@"#%@",[s.stream objectForKey:@"name"] ];
-    title.textAlignment = NSTextAlignmentLeft;
-    title.numberOfLines = 1;
-    title.minimumScaleFactor = 8./title.font.pointSize;
-    title.adjustsFontSizeToFitWidth = YES;
     
     //set when it expires
-    UILabel *expiration = [[UILabel alloc] initWithFrame:CGRectMake(5, threeQuarterHeight, width/3.0, quarterHeight)];
-    expiration.font = [UIFont boldSystemFontOfSize:10.0];
+    UILabel *expiration = [[UILabel alloc] initWithFrame:CGRectMake(5, halfHeight+10, width/3.0, halfHeight-10)];
+    expiration.font = [UIFont boldSystemFontOfSize:12.0];
     expiration.numberOfLines = 1;
     //get time left label
     NSDate* endTime = [s.stream objectForKey:@"endTime"];
@@ -1164,8 +1071,8 @@
     expiration.text = timeLeft;
     
     //creation time label
-    UILabel *creationLabel = [[UILabel alloc] initWithFrame:CGRectMake(5, halfHeight, width/3.0, quarterHeight)];
-    creationLabel.font = [UIFont systemFontOfSize:10.0];
+    UILabel *creationLabel = [[UILabel alloc] initWithFrame:CGRectMake(5, 5, width/3.0, halfHeight-5)];
+    creationLabel.font = [UIFont systemFontOfSize:12.0];
     creationLabel.numberOfLines = 1;
     NSDate* createdAt = s.stream.createdAt;
     NSDateFormatter *dateFormatter = [[NSDateFormatter alloc]init];
@@ -1174,23 +1081,23 @@
     creationLabel.text = [NSString stringWithFormat:@"Started: %@",dateString];
     
     //add image for people
-    UIImageView* peopleImageView = [[UIImageView alloc] initWithFrame:CGRectMake(width/3.0 , threeQuarterHeight, halfHeight*3.0/4.0, quarterHeight)];
+    UIImageView* peopleImageView = [[UIImageView alloc] initWithFrame:CGRectMake(width/3.0 +5, halfHeight+10, halfHeight*3.0/4.0, halfHeight-10)];
     peopleImageView.image = [UIImage imageNamed:@"people.png"];
     
     //add number of people
-    UILabel *viewers = [[UILabel alloc] initWithFrame:CGRectMake(peopleImageView.frame.origin.x+peopleImageView.frame.size.width + 5, threeQuarterHeight, width/6, quarterHeight)];
-    viewers.font = [UIFont systemFontOfSize:10.0];
+    UILabel *viewers = [[UILabel alloc] initWithFrame:CGRectMake(peopleImageView.frame.origin.x+peopleImageView.frame.size.width + 10, halfHeight+10, width/3, halfHeight-10)];
+    viewers.font = [UIFont systemFontOfSize:12.0];
     viewers.numberOfLines = 1;
     viewers.text = [NSString stringWithFormat:@"%d",(int)s.totalViewers ];
     //[viewers sizeToFit];
     
     //add image for pictures
-    UIImageView* pictureImageView = [[UIImageView alloc] initWithFrame:CGRectMake(width/3.0, halfHeight, halfHeight*3.0/4.0, quarterHeight)];
+    UIImageView* pictureImageView = [[UIImageView alloc] initWithFrame:CGRectMake(width/3.0 +5, 5, halfHeight*3.0/4.0, halfHeight-5)];
     pictureImageView.image = [UIImage imageNamed:@"pictures.png"];
     
     //add number of pictures
-    UILabel *contributions = [[UILabel alloc] initWithFrame:CGRectMake(pictureImageView.frame.origin.x + pictureImageView.frame.size.width+5, halfHeight, width/6, quarterHeight)];
-    contributions.font = [UIFont systemFontOfSize:10.0];
+    UILabel *contributions = [[UILabel alloc] initWithFrame:CGRectMake(pictureImageView.frame.origin.x + pictureImageView.frame.size.width+10, 5, width/3, halfHeight-5)];
+    contributions.font = [UIFont systemFontOfSize:12.0];
     contributions.numberOfLines = 1;
     contributions.text = [NSString stringWithFormat:@"%d",(int)s.totalShares];
     //[contributions sizeToFit];
@@ -1210,7 +1117,6 @@
     UIView *lineView = [[UIView alloc] initWithFrame:CGRectMake(0, halfHeight, width-threeQuarterHeight-10, 1)];
     lineView.backgroundColor = [UIColor lightGrayColor];
     
-    [headerView addSubview:title];
     [headerView addSubview:expiration];
     [headerView addSubview:creationLabel];
     [headerView addSubview:peopleImageView];
@@ -1251,6 +1157,19 @@
         //get the stream
         Stream* s = showStreamsArray[indexPath.section];
         
+        
+        //create the view to hold all of the other views
+        UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(cell.frame.size.width/4, cell.frame.size.height/2-HEADER_HEIGHT/2, cell.frame.size.width/2, HEADER_HEIGHT)];
+        titleLabel.backgroundColor = [UIColor whiteColor];
+        titleLabel.font = [UIFont boldSystemFontOfSize:17.0];
+        titleLabel.textColor = [UIColor darkTextColor];
+        titleLabel.textAlignment = NSTextAlignmentCenter;
+        titleLabel.numberOfLines = 0;
+        titleLabel.layer.cornerRadius = 10;
+        titleLabel.clipsToBounds = YES;
+        titleLabel.text = [NSString stringWithFormat:@"#%@",[s.stream objectForKey:@"name"] ];
+        //titleLabel.center = cell.center;
+        [cell addSubview:titleLabel];
         cell.tag = STREAM_CELL_TAG;
         cell.backgroundView = nil;
         NSDate* endTime = [s.stream objectForKey:@"endTime"];
@@ -1312,6 +1231,7 @@
             [cell addSubview:cellImageView];
             
         }
+        [cell bringSubviewToFront:titleLabel];
         
     }
     //Loading cell
@@ -2034,7 +1954,10 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         if(count > 1)
             [self dismissImagePickerView];
         else
+        {
+            _openedWithShake = NO;
             [self addNewShareToStream:caption.text];
+        }
     }
     else
         [self addNewShareToStream:caption.text];

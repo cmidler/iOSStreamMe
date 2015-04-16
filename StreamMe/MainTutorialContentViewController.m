@@ -38,10 +38,8 @@
 */
 
 - (IBAction)okAction:(id)sender {
-    NSNumber *showTutorialOnLaunch = @NO;
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    [defaults setObject:showTutorialOnLaunch forKey:@"ShowTutorial"];
-    [defaults synchronize];
-    [self dismissViewControllerAnimated:NO completion:NULL];
+    [self dismissViewControllerAnimated:NO completion:^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"showRegisterOption" object:self userInfo:nil];
+    }];
 }
 @end

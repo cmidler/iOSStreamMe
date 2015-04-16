@@ -37,8 +37,20 @@
     UITapGestureRecognizer *forgotTap =  [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(forgotTapDetected:)];
     forgotTap.numberOfTapsRequired = 1;
     [_forgotPasswordLabel addGestureRecognizer:forgotTap];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(initialNotification:)
+                                                 name:@"showRegisterOption"
+                                               object:nil];
 }
 
+/* calling load values on notification since viewwillappear is not working */
+- (void) initialNotification:(NSNotification *) notification
+{
+    if ([[notification name] isEqualToString:@"showRegisterOption"])
+    {
+        [self registerAction:self];
+    }
+}
 
 -(void) forgotTapDetected:(id) sender
 {
@@ -222,6 +234,7 @@
     {
         [self.navigationController setNavigationBarHidden:NO];
         self.forgotPasswordLabel.hidden = NO;
+        [self tutorial];
     }
 }
 
@@ -657,6 +670,84 @@
     [alertController addAction:okAction];
     [self presentViewController:alertController animated:YES completion:nil];
 }
+
+- (UIViewController *)pageViewController:(UIPageViewController *)pageViewController viewControllerBeforeViewController:(UIViewController *)viewController
+{
+    NSUInteger index = ((MainTutorialContentViewController*) viewController).pageIndex;
+    
+    if ((index == 0) || (index == NSNotFound)) {
+        return nil;
+    }
+    
+    index--;
+    return [self viewControllerAtIndex:index];
+}
+
+- (UIViewController *)pageViewController:(UIPageViewController *)pageViewController viewControllerAfterViewController:(UIViewController *)viewController
+{
+    NSUInteger index = ((MainTutorialContentViewController*) viewController).pageIndex;
+    
+    if (index == NSNotFound) {
+        return nil;
+    }
+    
+    index++;
+    if (index == [self.pageTitles count]) {
+        return nil;
+    }
+    return [self viewControllerAtIndex:index];
+}
+
+- (MainTutorialContentViewController *)viewControllerAtIndex:(NSUInteger)index
+{
+    if (([self.pageTitles count] == 0) || (index >= [self.pageTitles count])) {
+        return nil;
+    }
+    
+    // Create a new view controller and pass suitable data.
+    MainTutorialContentViewController *pageContentViewController = [self.storyboard instantiateViewControllerWithIdentifier:@"PageContentController"];
+    pageContentViewController.imageFile = self.pageImages[index];
+    pageContentViewController.titleText = self.pageTitles[index];
+    pageContentViewController.pageIndex = index;
+    
+    return pageContentViewController;
+}
+- (NSInteger)presentationCountForPageViewController:(UIPageViewController *)pageViewController
+{
+    return [self.pageTitles count];
+}
+
+- (NSInteger)presentationIndexForPageViewController:(UIPageViewController *)pageViewController
+{
+    return 0;
+}
+
+-(void) tutorial
+{
+    // Store the data
+    
+    //setup pages for tutorial
+    _pageTitles = @[@"StreamMe shares streams of pictures to those around you.  These streams are public.", @"To quickly share to one or more streams you can shake the phone to quick-open the camera."];
+    _pageImages = @[@"whoYuLogo.png", @"shake-gesture.png"];
+    
+    // Create page view controller
+    self.pageViewController = [self.storyboard instantiateViewControllerWithIdentifier:@"MainTutorialPageViewController"];
+    self.pageViewController.dataSource = self;
+    
+    MainTutorialContentViewController *startingViewController = [self viewControllerAtIndex:0];
+    NSArray *viewControllers = @[startingViewController];
+    [self.pageViewController setViewControllers:viewControllers direction:UIPageViewControllerNavigationDirectionForward animated:NO completion:nil];
+    
+    // Change the size of page view controller
+    self.pageViewController.view.frame = CGRectMake(self.view.frame.size.width/16, self.view.frame.size.height/4, self.view.frame.size.width*7.0/8.0, self.view.frame.size.height/2);
+    
+    //[self addChildViewController:_pageViewController];
+    //[self.view addSubview:_pageViewController.view];
+    [self presentViewController:self.pageViewController animated:YES completion:NULL];
+    //[self.pageViewController didMoveToParentViewController:self];
+    
+}
+
 
 //Prepare segue
 - (void) prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {

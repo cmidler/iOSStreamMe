@@ -14,7 +14,6 @@
 #import "CustomPickerViewController.h"
 #import "ViewStreamCollectionViewController.h"
 #import "SelectStreamsTableViewController.h"
-#import "MainTutorialContentViewController.h"
 #import "Stream.h"
 
 #include "REMenu.h"
@@ -35,7 +34,7 @@
 #define TABLE_VIEW_X_ORIGIN 16
 #define COLLECTION_VIEW_WIDTH 262.5 //260 for width and 2.5 for spacing between cells
 
-@interface MainTableViewController : UITableViewController <UITextFieldDelegate,UINavigationControllerDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextViewDelegate, UIPickerViewDataSource, UIPickerViewDelegate, UICollectionViewDataSource, UICollectionViewDelegate, UIPageViewControllerDataSource>
+@interface MainTableViewController : UITableViewController <UITextFieldDelegate,UINavigationControllerDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextViewDelegate, UIPickerViewDataSource, UIPickerViewDelegate, UICollectionViewDataSource, UICollectionViewDelegate>
 {
     NSArray* showStreamsArray;
 }
@@ -83,9 +82,7 @@
 @property (nonatomic, readwrite) int sortBy;
 @property (strong, nonatomic) REMenu* menu;
 @property (nonatomic, readwrite) bool menuOpened;
-@property (strong, nonatomic) UIPageViewController *pageViewController;
-@property (strong, nonatomic) NSArray *pageTitles;
-@property (strong, nonatomic) NSArray *pageImages;
+
 @property (nonatomic, readwrite) bool showingAnywhere;
 @property (nonatomic, readwrite) bool loadingViral;
 @end

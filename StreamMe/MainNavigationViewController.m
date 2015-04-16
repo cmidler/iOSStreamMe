@@ -24,8 +24,8 @@
     self.navigationItem.leftBarButtonItem = leftBarButton;
     [self.navigationItem.leftBarButtonItem setTintColor:[UIColor whiteColor]];
     [self.navigationBar setBarTintColor:[UIColor colorWithPatternImage:[UIImage imageNamed:@"BlueGradient.png"]]];
-    const CGFloat* colors = CGColorGetComponents( self.navigationBar.tintColor.CGColor );
-    NSLog(@"R = %f, G = %f, B = %f, alpha = %f", colors[0], colors[1], colors[2], colors[3]);
+    //const CGFloat* colors = CGColorGetComponents( self.navigationBar.tintColor.CGColor );
+    //NSLog(@"R = %f, G = %f, B = %f, alpha = %f", colors[0], colors[1], colors[2], colors[3]);
 }
 
 - (void)didReceiveMemoryWarning {
