@@ -201,8 +201,8 @@
                 //[[NSNotificationCenter defaultCenter] postNotificationName:@"bluetoothNotWorking" object:self];
                 break;
         }
-    if([UIApplication sharedApplication].applicationState == UIApplicationStateActive)
-        [[NSNotificationCenter defaultCenter] postNotificationName:@"reloadSection" object:self];
+    //if([UIApplication sharedApplication].applicationState == UIApplicationStateActive)
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"reloadSection" object:self];
     
 }
 

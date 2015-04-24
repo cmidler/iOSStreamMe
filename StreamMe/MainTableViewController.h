@@ -7,6 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
+#import <AVFoundation/AVFoundation.h>
 #import "MainTableViewCell.h"
 #import "AppDelegate.h"
 #import "MainDatabase.h"

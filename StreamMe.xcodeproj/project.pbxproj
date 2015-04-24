@@ -133,6 +133,7 @@
 		DED226CE1AC0987900FFE6AD /* stream-128.png in Resources */ = {isa = PBXBuildFile; fileRef = DED226CD1AC0987900FFE6AD /* stream-128.png */; };
 		DED227081AC0C97900FFE6AD /* publish@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = DED227061AC0C97900FFE6AD /* publish@2x.png */; };
 		DED227091AC0C97900FFE6AD /* publish@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = DED227071AC0C97900FFE6AD /* publish@3x.png */; };
+		DED9F56A1AE99C1200D1BF28 /* bluetooth_256.png in Resources */ = {isa = PBXBuildFile; fileRef = DED9F5691AE99C1200D1BF28 /* bluetooth_256.png */; };
 		DEE6C5E619BA9EBB00904866 /* CharacteristicData.m in Sources */ = {isa = PBXBuildFile; fileRef = DEE6C5E519BA9EBB00904866 /* CharacteristicData.m */; };
 		DEEB45151ACA5D870032F212 /* CustomFlowLayout.m in Sources */ = {isa = PBXBuildFile; fileRef = DEEB45141ACA5D870032F212 /* CustomFlowLayout.m */; };
 		DEEB451B1ACAE6F20032F212 /* PushFadeSegue.m in Sources */ = {isa = PBXBuildFile; fileRef = DEEB451A1ACAE6F20032F212 /* PushFadeSegue.m */; };
@@ -316,6 +317,7 @@
 		DED226CD1AC0987900FFE6AD /* stream-128.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "stream-128.png"; sourceTree = "<group>"; };
 		DED227061AC0C97900FFE6AD /* publish@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "publish@2x.png"; sourceTree = "<group>"; };
 		DED227071AC0C97900FFE6AD /* publish@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "publish@3x.png"; sourceTree = "<group>"; };
+		DED9F5691AE99C1200D1BF28 /* bluetooth_256.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = bluetooth_256.png; sourceTree = "<group>"; };
 		DEE6C5E419BA9EBB00904866 /* CharacteristicData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CharacteristicData.h; sourceTree = "<group>"; };
 		DEE6C5E519BA9EBB00904866 /* CharacteristicData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CharacteristicData.m; sourceTree = "<group>"; };
 		DEEB45131ACA5D870032F212 /* CustomFlowLayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CustomFlowLayout.h; sourceTree = "<group>"; };
@@ -398,6 +400,7 @@
 		DE0051C419B7C1770053D2EB /* Images */ = {
 			isa = PBXGroup;
 			children = (
+				DED9F5691AE99C1200D1BF28 /* bluetooth_256.png */,
 				DEF789C51AD6FF96005676AF /* logout@2x.png */,
 				DEF789C61AD6FF96005676AF /* logout@3x.png */,
 				DE502AB11ACC95D600410FE7 /* white-slideshow.png */,
@@ -812,6 +815,7 @@
 				DEB874AB1ACA06AD003B5996 /* add-pictures-128.png in Resources */,
 				DEC2ED541A7FD4E300B08A8B /* whoYuLogo.png in Resources */,
 				DEBC572E1AAA6592002F0E5E /* notepad@2x.png in Resources */,
+				DED9F56A1AE99C1200D1BF28 /* bluetooth_256.png in Resources */,
 				DED227091AC0C97900FFE6AD /* publish@3x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -962,8 +966,8 @@
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "iPhone Developer: Chase Midler (WCJWHDNR58)";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer: Chase Midler (WCJWHDNR58)";
+				CODE_SIGN_IDENTITY = "iPhone Distribution: Chase Midler";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution: Chase Midler";
 				COPY_PHASE_STRIP = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -982,7 +986,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "$(inherited)";
-				PROVISIONING_PROFILE = "af7edc33-66a7-441f-a99a-7713d8ade61c";
+				PROVISIONING_PROFILE = "1b437b06-d2a4-408f-aabd-f0db8130856a";
 				SDKROOT = iphoneos;
 			};
 			name = Debug;
@@ -1003,8 +1007,8 @@
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "iPhone Developer: Chase Midler (WCJWHDNR58)";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer: Chase Midler (WCJWHDNR58)";
+				CODE_SIGN_IDENTITY = "iPhone Distribution: Chase Midler";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution: Chase Midler";
 				COPY_PHASE_STRIP = YES;
 				ENABLE_NS_ASSERTIONS = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -1015,7 +1019,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
-				PROVISIONING_PROFILE = "af7edc33-66a7-441f-a99a-7713d8ade61c";
+				PROVISIONING_PROFILE = "1b437b06-d2a4-408f-aabd-f0db8130856a";
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -1028,8 +1032,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer: Chase Midler (WCJWHDNR58)";
+				CODE_SIGN_IDENTITY = "iPhone Distribution: Chase Midler";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution: Chase Midler";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/parse-library-1.2.21",
@@ -1042,7 +1046,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_NAME = StreamMe;
-				PROVISIONING_PROFILE = "af7edc33-66a7-441f-a99a-7713d8ade61c";
+				PROVISIONING_PROFILE = "1b437b06-d2a4-408f-aabd-f0db8130856a";
 				SWIFT_OBJC_BRIDGING_HEADER = "WhoYu/WhoYU-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				WRAPPER_EXTENSION = app;
@@ -1056,8 +1060,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer: Chase Midler (WCJWHDNR58)";
+				CODE_SIGN_IDENTITY = "iPhone Distribution: Chase Midler";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution: Chase Midler";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/parse-library-1.2.21",
@@ -1070,7 +1074,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_NAME = StreamMe;
-				PROVISIONING_PROFILE = "af7edc33-66a7-441f-a99a-7713d8ade61c";
+				PROVISIONING_PROFILE = "1b437b06-d2a4-408f-aabd-f0db8130856a";
 				SWIFT_OBJC_BRIDGING_HEADER = "WhoYu/WhoYU-Bridging-Header.h";
 				WRAPPER_EXTENSION = app;
 			};

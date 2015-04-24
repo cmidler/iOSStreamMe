@@ -432,7 +432,7 @@
      {
          textField.tag = EMAIL_TAG;
          textField.delegate = self;
-         textField.placeholder = NSLocalizedString(@"Email", @"Email");
+         textField.placeholder = NSLocalizedString(@"Email (This is never visible)", @"Email (This is never visible)");
          if(_email)
              textField.text = _email;
          [textField setKeyboardType: UIKeyboardTypeEmailAddress];
@@ -727,8 +727,8 @@
     // Store the data
     
     //setup pages for tutorial
-    _pageTitles = @[@"StreamMe shares streams of pictures to those around you.  These streams are public.", @"To quickly share to one or more streams you can shake the phone to quick-open the camera."];
-    _pageImages = @[@"whoYuLogo.png", @"shake-gesture.png"];
+    _pageTitles = @[@"StreamMe shares streams of pictures to those around you.  These streams are public.", @"StreamMe requires Bluetooth to be turned on for discovery of nearby streams.", @"To quickly share to one or more streams you can shake the phone to quick-open the camera."];
+    _pageImages = @[@"whoYuLogo.png", @"bluetooth_256.png", @"shake-gesture.png"];
     
     // Create page view controller
     self.pageViewController = [self.storyboard instantiateViewControllerWithIdentifier:@"MainTutorialPageViewController"];

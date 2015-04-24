@@ -109,6 +109,10 @@
                                              selector:@selector(mainNotification:)
                                                  name:@"countStreams"
                                                object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(mainNotification:)
+                                                 name:@"reloadSection"
+                                               object:nil];
     
     
     //Adding pull to refresh
@@ -170,7 +174,40 @@
     //shake gesture
     if (motion == UIEventSubtypeMotionShake)
     {
+        //if no bluetooth then just present the alert
+        if(!_central.bluetoothOn)
+        {
+            [self presentNoBluetoothAlert];
+            return;
+        }
+        
+        AVAuthorizationStatus status = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
+        //camera permission is denied
+        if(status == AVAuthorizationStatusDenied){ // denied
+            [self presentNoCameraAlert];
+            return;
+        }
+        // Explicit user permission is required for media capture, but the user has not yet granted or denied such permission.
+        else if(status == AVAuthorizationStatusNotDetermined){
+            __block bool allowed = NO;
+            __block bool checkingPermissions = YES;
+            [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted){
+                NSLog(@"granted is %d", granted);
+                allowed = granted;
+                checkingPermissions = NO;
+            }];
+            
+            while(checkingPermissions)
+                ;
+            if(!allowed)
+                return;
+            
+        }
+
+
+        
         AppDelegate* appDelegate = [[UIApplication sharedApplication] delegate];
+        
         NSMutableArray* streams = [appDelegate streams];
         
         //there are streams so open camera automatically
@@ -201,6 +238,71 @@
         
         NSLog(@"shake gesture");
     } 
+}
+
+//helper to not let the user do stuff if bluetooth is turned off
+-(void) presentNoBluetoothAlert
+{
+    UIAlertController *alertController = [UIAlertController
+                                          alertControllerWithTitle:@"Bluetooth Turned Off"
+                                          message:@"Bluetooth Is Turned Off. Please Go To Settings->Bluetooth and Make Sure Bluetooth Is Turned On!"
+                                          preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *okAction = [UIAlertAction
+                               actionWithTitle:NSLocalizedString(@"Ok", @"Ok action")
+                               style:UIAlertActionStyleDefault
+                               handler:^(UIAlertAction *action)
+                               {
+                                   return;
+                               }];
+    /*UIAlertAction *settingsAction = [UIAlertAction
+                                     actionWithTitle:NSLocalizedString(@"Settings", @"Settings action")
+                                     style:UIAlertActionStyleDefault
+                                     handler:^(UIAlertAction *action)
+                                     {
+                                         NSString* settingString = @"settings:";
+                                         NSLog(@"Settings String is %@", settingString);
+                                         if (UIApplicationOpenSettingsURLString != NULL) {
+                                             [[UIApplication sharedApplication] openURL:[NSURL URLWithString:settingString]];
+                                         }
+                                         return;
+                                     }];
+    [alertController addAction:settingsAction];*/
+    [alertController addAction:okAction];
+    
+    [self presentViewController:alertController animated:YES completion:nil];
+    return;
+
+}
+
+-(void) presentNoCameraAlert
+{
+    UIAlertController *alertController = [UIAlertController
+                                          alertControllerWithTitle:@"Camera Not Allowed!"
+                                          message:@"Camera Permission Is Not Allowed. Turn On The Camera Permission For This App Through The Settings To Use The Camera."
+                                          preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *okAction = [UIAlertAction
+                               actionWithTitle:NSLocalizedString(@"Ok", @"Ok action")
+                               style:UIAlertActionStyleDefault
+                               handler:^(UIAlertAction *action)
+                               {
+                                   return;
+                               }];
+    UIAlertAction *settingsAction = [UIAlertAction
+                                     actionWithTitle:NSLocalizedString(@"Settings", @"Settings action")
+                                     style:UIAlertActionStyleDefault
+                                     handler:^(UIAlertAction *action)
+                                     {
+                                         if (UIApplicationOpenSettingsURLString != NULL) {
+                                             [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]];
+                                         }
+                                         return;
+                                     }];
+    
+    [alertController addAction:settingsAction];
+    [alertController addAction:okAction];
+    
+    [self presentViewController:alertController animated:YES completion:nil];
+
 }
 
 -(void) viewWillDisappear:(BOOL)animated
@@ -279,6 +381,8 @@
         NSDictionary* userInfo = [notification userInfo];
         [self countStreamShares:[userInfo objectForKey:@"streamIds"]];
     }
+    else if ([[notification name] isEqualToString:@"reloadSection"])
+        [self sortStreams];
 }
 
 
@@ -896,12 +1000,42 @@
     _creatingStream = NO;
     _openedWithShake = NO;
     _selectedStream = ((Stream*)showStreamsArray[_selectedCellIndex]).stream;
+    AVAuthorizationStatus status = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
+    //camera permission is denied
+    if(status == AVAuthorizationStatusDenied){ // denied
+        [self presentNoCameraAlert];
+        return;
+    }
+    // Explicit user permission is required for media capture, but the user has not yet granted or denied such permission.
+    else if(status == AVAuthorizationStatusNotDetermined){
+        __block bool allowed = NO;
+        __block bool checkingPermissions = YES;
+        [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted){
+            NSLog(@"granted is %d", granted);
+            allowed = granted;
+            checkingPermissions = NO;
+            
+        }];
+        
+        while(checkingPermissions)
+            ;
+        if(!allowed)
+            return;
+        
+    }
+
     [self takePhoto];
 }
 
 -(void) viewWillAppear:(BOOL)animated
 {
     [super viewWillAppear:animated];
+    //if no bluetooth then just present the alert
+    if(!_central.bluetoothOn)
+    {
+        [self presentNoBluetoothAlert];
+        return;
+    }
     _menuOpened = NO;
     NSLog(@"current row is %d", (int)_selectedCellIndex);
     //scroll to right position
@@ -941,8 +1075,44 @@
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
+    
+    //if bluetooth is turned off, hide everything
+    if(!_central.bluetoothOn)
+    {
+        // Display a message when the table is empty
+        UILabel *messageLabel = [[UILabel alloc] initWithFrame:CGRectMake(TABLE_VIEW_X_ORIGIN, streamsTableView.center.y, streamsTableView.bounds.size.width-TABLE_VIEW_X_ORIGIN*2, streamsTableView.bounds.size.height)]; //initWithFrame:CGRectMake(0, 0, streamsTableView.bounds.size.width, streamsTableView.bounds.size.height)];
+        
+        UIImageView *picture = [[UIImageView alloc] initWithFrame:CGRectMake(streamsTableView.center.x-(PICTURE_SIZE/2), streamsTableView.center.y -(PICTURE_SIZE), PICTURE_SIZE, PICTURE_SIZE)];
+        picture.layer.cornerRadius = PICTURE_SIZE/2;
+        picture.clipsToBounds = YES;
+        //picture.contentMode = UIViewContentModeScaleToFill;
+        picture.image = [UIImage imageNamed:@"stream-128.png"];
+        
+        UITapGestureRecognizer *pictureTap =  [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(pictureTapDetected:)];
+        pictureTap.numberOfTapsRequired = 1;
+        [picture setUserInteractionEnabled:YES];
+        [picture addGestureRecognizer:pictureTap];
+        
+        //bluetooth isn't on naturally
+        messageLabel.text = @"Your bluetooth is turned off!  Go to Settings->Bluetooth and make sure bluetooth is enable to get the full functionality of this application! ";
+        
+        /*else
+         messageLabel.text = @"You are currently undiscoverable and cannot see other profiles.  Toggle discoverable in settings to see other people!";*/
+        messageLabel.textColor = [UIColor blackColor];
+        messageLabel.numberOfLines = 0;
+        messageLabel.textAlignment = NSTextAlignmentCenter;
+        messageLabel.font = [UIFont fontWithName:@"HelveticaNeue-Italic" size:20];
+        [messageLabel sizeToFit];
+        
+        streamsTableView.backgroundView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, streamsTableView.bounds.size.width, streamsTableView.bounds.size.height)];
+        [streamsTableView.backgroundView addSubview:picture];
+        [streamsTableView.backgroundView addSubview:messageLabel];
+        [streamsTableView sendSubviewToBack:picture];
+        self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+        return 0;
+    }
     //the number of streams
-    if([showStreamsArray count])
+    else if([showStreamsArray count])
     {
         self.tableView.separatorStyle = UITableViewCellSeparatorStyleSingleLine;
         streamsTableView.backgroundView = nil;
@@ -983,11 +1153,7 @@
         [picture setUserInteractionEnabled:YES];
         [picture addGestureRecognizer:pictureTap];
         
-        //bluetooth isn't on naturally
-        if(!_central.bluetoothOn)
-            messageLabel.text = @"Your bluetooth is turned off!  Go to Settings->Bluetooth and make sure bluetooth is enable to get the full functionality of this application! ";
-        else
-            messageLabel.text = @"No streams around you.  Go ahead and start up the first one!";
+        messageLabel.text = @"No streams around you.  Go ahead and start up the first one!";
         
         /*else
          messageLabel.text = @"You are currently undiscoverable and cannot see other profiles.  Toggle discoverable in settings to see other people!";*/
@@ -1513,6 +1679,36 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 }
 
 - (IBAction)addStreamAction:(id)sender {
+    if(!_central.bluetoothOn)
+    {
+        [self presentNoBluetoothAlert];
+        return;
+    }
+    
+    AVAuthorizationStatus status = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
+    //camera permission is denied
+    if(status == AVAuthorizationStatusDenied){ // denied
+        [self presentNoCameraAlert];
+        return;
+    }
+    // Explicit user permission is required for media capture, but the user has not yet granted or denied such permission.
+    else if(status == AVAuthorizationStatusNotDetermined){
+        __block bool allowed = NO;
+        __block bool checkingPermissions = YES;
+        [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted) {
+            
+            NSLog(@"granted is %d", granted);
+            allowed = granted;
+            checkingPermissions = NO;
+        }];
+        
+        while(checkingPermissions)
+            ;
+        if(!allowed)
+            return;
+        
+    }
+    
     _creatingStream = YES;
     [self setTitleForStream];
 }
@@ -1899,24 +2095,52 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 }
 
 - (void)image:(UIImage *)image didFinishSavingWithError:(NSError *)error contextInfo:(void *)contextInfo {
-    UIAlertView *alert;
-    //NSLog(@"Image:%@", image);
+    NSLog(@"trying to save photo");
     if (error) {
-        alert = [[UIAlertView alloc] initWithTitle:@"Error!"
-                                           message:@"Please add Photos permissions for this app!"
-                                          delegate:nil
-                                 cancelButtonTitle:@"OK"
-                                 otherButtonTitles:nil];
-        [alert show];
+        UIAlertController *alertController = [UIAlertController
+                                              alertControllerWithTitle:@"Photos Not Allowed!"
+                                              message:@"Photos Permission Is Not Allowed. Turn On The Photos Permission For This App Through The Settings To Save Your Photo."
+                                              preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertAction *okAction = [UIAlertAction
+                                   actionWithTitle:NSLocalizedString(@"Ok", @"Ok action")
+                                   style:UIAlertActionStyleDefault
+                                   handler:^(UIAlertAction *action)
+                                   {
+                                       return;
+                                   }];
+        UIAlertAction *settingsAction = [UIAlertAction
+                                         actionWithTitle:NSLocalizedString(@"Settings", @"Settings action")
+                                         style:UIAlertActionStyleDefault
+                                         handler:^(UIAlertAction *action)
+                                         {
+                                             if (UIApplicationOpenSettingsURLString != NULL) {
+                                                 [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]];
+                                             }
+                                             return;
+                                         }];
+
+        [alertController addAction:settingsAction];
+        [alertController addAction:okAction];
+        
+        [customPicker presentViewController:alertController animated:YES completion:nil];
     }
     else
     {
-        alert = [[UIAlertView alloc] initWithTitle:@"Success!"
-                                           message:@"Photo was saved to your library."
-                                          delegate:nil
-                                 cancelButtonTitle:@"OK"
-                                 otherButtonTitles:nil];
-        [alert show];
+        UIAlertController *alertController = [UIAlertController
+                                              alertControllerWithTitle:@"Success!"
+                                              message:@"Photo was saved to your library."
+                                              preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertAction *okAction = [UIAlertAction
+                                   actionWithTitle:NSLocalizedString(@"Ok", @"Ok action")
+                                   style:UIAlertActionStyleDefault
+                                   handler:^(UIAlertAction *action)
+                                   {
+                                       return;
+                                   }];
+        
+        [alertController addAction:okAction];
+        
+        [customPicker presentViewController:alertController animated:YES completion:nil];
     }
         
     

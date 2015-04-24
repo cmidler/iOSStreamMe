@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6751" systemVersion="14C109" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" initialViewController="5as-cS-lGH">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="7531" systemVersion="14D131" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" initialViewController="5as-cS-lGH">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6736"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="7520"/>
         <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
         <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
     </dependencies>
@@ -501,7 +501,7 @@
         <scene sceneID="CtV-v5-uoh">
             <objects>
                 <navigationController restorationIdentifier="mainNavigationViewController" definesPresentationContext="YES" id="QkY-hy-LKm" customClass="MainNavigationViewController" sceneMemberID="viewController">
-                    <tabBarItem key="tabBarItem" title="In Range" image="BF89ED07-3755-4D98-8ACE-0661FF77E227" id="QWG-JZ-FhN"/>
+                    <tabBarItem key="tabBarItem" title="In Range" image="25CC3E07-9894-4B99-B136-970715836894" id="QWG-JZ-FhN"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="10q-K2-WDE">
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
@@ -534,7 +534,7 @@
         </scene>
     </scenes>
     <resources>
-        <image name="BF89ED07-3755-4D98-8ACE-0661FF77E227" width="16" height="16">
+        <image name="25CC3E07-9894-4B99-B136-970715836894" width="16" height="16">
             <mutableData key="keyedArchiveRepresentation">
 YnBsaXN0MDDUAQIDBAUGOzxYJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK0HCBEW
 GxwgISksLzU4VSRudWxs1AkKCwwNDg8QViRjbGFzc1xOU0ltYWdlRmxhZ3NWTlNSZXBzV05TQ29sb3KA
