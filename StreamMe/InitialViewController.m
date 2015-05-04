@@ -201,16 +201,12 @@
     
     self.view.backgroundColor = [UIColor colorWithPatternImage:image];
     
-    UILabel *navigationTitle=[[UILabel alloc]initWithFrame:CGRectMake(0, 0, 176, 44)];
-    navigationTitle.text = @"StreamMe";
-    navigationTitle.textColor = [UIColor whiteColor];
-    navigationTitle.font = [UIFont boldSystemFontOfSize:17];
-    navigationTitle.textAlignment = NSTextAlignmentCenter;
-    UIImageView *workaroundView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 176, 44)];
+    UIImageView* navigationTitle = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 88, 44)];
+    navigationTitle.image = [UIImage imageNamed:@"streamme_banner_1.png"];
+    [self.view addSubview:navigationTitle];
+    UIImageView *workaroundView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 88, 44)];
     [workaroundView addSubview:navigationTitle];
     self.navigationItem.titleView=workaroundView;
-    //self.navigationItem.title = @"StreamMe";
-    //[[UINavigationBar appearance] setBarTintColor:[UIColor yellowColor]];
     [self.navigationController.navigationBar setBarTintColor:[UIColor colorWithPatternImage:image]];
     
     [self loggedIn];
@@ -728,7 +724,7 @@
     
     //setup pages for tutorial
     _pageTitles = @[@"StreamMe shares streams of pictures to those around you.  These streams are public.", @"StreamMe requires Bluetooth to be turned on for discovery of nearby streams.", @"To quickly share to one or more streams you can shake the phone to quick-open the camera."];
-    _pageImages = @[@"whoYuLogo.png", @"bluetooth_256.png", @"shake-gesture.png"];
+    _pageImages = @[@"streamme_1024_icon.jpg", @"bluetooth_256.png", @"shake-gesture.png"];
     
     // Create page view controller
     self.pageViewController = [self.storyboard instantiateViewControllerWithIdentifier:@"MainTutorialPageViewController"];

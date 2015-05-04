@@ -7,7 +7,7 @@
 //
 
 #import "MainTableViewController.h"
-#define restorationKey @"profileDataKey"
+
 @interface MainTableViewController ()
 
 @end
@@ -2346,37 +2346,196 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     [share setObject:pictureFile forKey:@"file"];
     [share setACL:defaultACL];
     
-    //create the new stream
-    PFObject* stream = [PFObject objectWithClassName:@"Stream"];
-    stream[@"isPrivate"] = [NSNumber numberWithBool:NO]; //Just hardcoding this for now
-    stream[@"name"] = _streamName;
-    stream[@"creator"] = user;
-    stream[@"endTime"] = endDate;
-    stream[@"firstShare"] = share;
-    [stream setACL:defaultACL];
+    //do 4 requests so we know it actually saves
+    [share saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
+        if(error)
+        {
+            UIAlertController *alertController = [UIAlertController
+                                                  alertControllerWithTitle:@"Error Starting Stream"
+                                                  message:@"An error occurred starting the stream.  Check your internet connection and try again."
+                                                  preferredStyle:UIAlertControllerStyleAlert];
+            UIAlertAction *okAction = [UIAlertAction
+                                       actionWithTitle:NSLocalizedString(@"Ok", @"Ok action")
+                                       style:UIAlertActionStyleDefault
+                                       handler:^(UIAlertAction *action)
+                                       {
+                                           [share deleteInBackground];
+                                           [activityIndicator setHidden:YES];
+                                           UIBarButtonItem* publish = [[toolBar items] lastObject];
+                                           publish.enabled = NO;
+                                           return;
+                                       }];
+            
+            [alertController addAction:okAction];
+            [self presentViewController:alertController animated:YES completion:nil];
+            return;
+            
+        }
+        
+        //create the new stream
+        PFObject* stream = [PFObject objectWithClassName:@"Stream"];
+        stream[@"isPrivate"] = [NSNumber numberWithBool:NO]; //Just hardcoding this for now
+        stream[@"name"] = _streamName;
+        stream[@"creator"] = user;
+        stream[@"endTime"] = endDate;
+        stream[@"firstShare"] = share;
+        [stream setACL:defaultACL];
+        
+        [stream saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
+            if(error)
+            {
+                UIAlertController *alertController = [UIAlertController
+                                                      alertControllerWithTitle:@"Error Starting Stream"
+                                                      message:@"An error occurred starting the stream.  Check your internet connection and try again."
+                                                      preferredStyle:UIAlertControllerStyleAlert];
+                UIAlertAction *okAction = [UIAlertAction
+                                           actionWithTitle:NSLocalizedString(@"Ok", @"Ok action")
+                                           style:UIAlertActionStyleDefault
+                                           handler:^(UIAlertAction *action)
+                                           {
+                                               NSArray* pfObjects = [[NSArray alloc] initWithObjects:share,stream, nil];
+                                               [PFObject deleteAllInBackground:pfObjects];
+                                               [activityIndicator setHidden:YES];
+                                               UIBarButtonItem* publish = [[toolBar items] lastObject];
+                                               publish.enabled = NO;
+                                               return;
+                                           }];
+                
+                [alertController addAction:okAction];
+                [self presentViewController:alertController animated:YES completion:nil];
+                return;
+                
+            }
+            
+            //create the stream share
+            PFObject* streamShare = [PFObject objectWithClassName:@"StreamShares"];
+            streamShare[@"stream"] = stream;
+            streamShare[@"share"] = share;
+            streamShare[@"user"] = user;
+            streamShare[@"isIgnored"] = [NSNumber numberWithBool:NO];
+            [streamShare setACL:defaultACL];
+            
+            [streamShare saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
+                if(error)
+                {
+                    UIAlertController *alertController = [UIAlertController
+                                                          alertControllerWithTitle:@"Error Starting Stream"
+                                                          message:@"An error occurred starting the stream.  Check your internet connection and try again."
+                                                          preferredStyle:UIAlertControllerStyleAlert];
+                    UIAlertAction *okAction = [UIAlertAction
+                                               actionWithTitle:NSLocalizedString(@"Ok", @"Ok action")
+                                               style:UIAlertActionStyleDefault
+                                               handler:^(UIAlertAction *action)
+                                               {
+                                                   NSArray* pfObjects = [[NSArray alloc] initWithObjects:share,stream,streamShare, nil];
+                                                   [PFObject deleteAllInBackground:pfObjects];
+                                                   [activityIndicator setHidden:YES];
+                                                   UIBarButtonItem* publish = [[toolBar items] lastObject];
+                                                   publish.enabled = NO;
+                                                   return;
+                                               }];
+                    
+                    [alertController addAction:okAction];
+                    [self presentViewController:alertController animated:YES completion:nil];
+                    return;
+                    
+                }
+                //create the user stream
+                PFObject* userStream = [PFObject objectWithClassName:@"UserStreams"];
+                userStream[@"user"] = user;
+                userStream[@"stream"] = stream;
+                userStream[@"stream_share"] = streamShare;
+                userStream[@"share"] = share;
+                userStream[@"creator"] = user;
+                userStream[@"isIgnored"] = [NSNumber numberWithBool:NO];
+                [userStream setACL:defaultACL];
+                
+                [userStream saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
+                    if(error)
+                    {
+                        UIAlertController *alertController = [UIAlertController
+                                                              alertControllerWithTitle:@"Error Starting Stream"
+                                                              message:@"An error occurred starting the stream.  Check your internet connection and try again."
+                                                              preferredStyle:UIAlertControllerStyleAlert];
+                        UIAlertAction *okAction = [UIAlertAction
+                                                   actionWithTitle:NSLocalizedString(@"Ok", @"Ok action")
+                                                   style:UIAlertActionStyleDefault
+                                                   handler:^(UIAlertAction *action)
+                                                   {
+                                                       NSArray* pfObjects = [[NSArray alloc] initWithObjects:share,stream,streamShare,userStream, nil];
+                                                       [PFObject deleteAllInBackground:pfObjects];
+                                                       [activityIndicator setHidden:YES];
+                                                       UIBarButtonItem* publish = [[toolBar items] lastObject];
+                                                       publish.enabled = NO;
+                                                       return;
+                                                   }];
+                        
+                        [alertController addAction:okAction];
+                        [self presentViewController:alertController animated:YES completion:nil];
+                        return;
+                        
+                    }
+                    
+                    //no error.  Pop and return
+                    AppDelegate* appDelegate = [[UIApplication sharedApplication] delegate];
+                    NSMutableArray* streams = [appDelegate streams];
+                    Stream* newStream = [[Stream alloc] init];
+                    newStream.stream = stream;
+                    //want to create an array of shares so we can lazy load the next ones
+                    [newStream.streamShares addObject:streamShare];
+                    newStream.totalViewers = 1;
+                    newStream.username = user.username;
+                    //newest time of streamshare
+                    newStream.newestShareCreationTime = streamShare.createdAt;
+                    [streams addObject:newStream];
+                    //update the user's points total
+                    [PFCloud callFunctionInBackground:@"createStreamUpdatePoints" withParameters:@{} block:^(id object, NSError *error) {}];
+                    //send push to users
+                    //get nearby user streams first
+                    MainDatabase* md = [MainDatabase shared];
+                    __block bool inQueue = YES;
+                    NSMutableArray* userIds = [[NSMutableArray alloc] init];
+                    [md.queue inDatabase:^(FMDatabase *db) {
+                        
+                        
+                        //need to delete the peripherals that are about to expire
+                        NSString *userSQL = @"SELECT DISTINCT user_id FROM user WHERE is_me != ?";
+                        NSArray* values = @[[NSNumber numberWithInt:1]];
+                        FMResultSet *s = [db executeQuery:userSQL withArgumentsInArray:values];
+                        //get the peripheral ids
+                        while([s next])
+                        {
+                            NSLog(@"found user");
+                            [userIds addObject:[s stringForColumnIndex:0]];
+                        }
+                        inQueue = NO;
+                    }];
+                    
+                    while(inQueue)
+                        ;
+                    
+                    //send push
+                    if(userIds && userIds.count)
+                        [PFCloud callFunctionInBackground:@"sendPushForStream" withParameters:@{@"streamId":newStream.stream.objectId, @"userIds":userIds} block:^(id object, NSError *error) {}];
+                    [self dismissImagePickerView];
+                }];
+                
+            }];
+            
+        }];
+
+    }];
     
-    //create the stream share
-    PFObject* streamShare = [PFObject objectWithClassName:@"StreamShares"];
-    streamShare[@"stream"] = stream;
-    streamShare[@"share"] = share;
-    streamShare[@"user"] = user;
-    streamShare[@"isIgnored"] = [NSNumber numberWithBool:NO];
-    [streamShare setACL:defaultACL];
-    
-    //create the user stream
-    PFObject* userStream = [PFObject objectWithClassName:@"UserStreams"];
-    userStream[@"user"] = user;
-    userStream[@"stream"] = stream;
-    userStream[@"stream_share"] = streamShare;
-    userStream[@"share"] = share;
-    userStream[@"creator"] = user;
-    userStream[@"isIgnored"] = [NSNumber numberWithBool:NO];
-    [userStream setACL:defaultACL];
     
     
     
-    NSArray* pfObjects = [[NSArray alloc] initWithObjects:share,stream,streamShare,userStream, nil];
-    [PFObject saveAllInBackground:pfObjects block:^(BOOL succeeded, NSError *error) {
+    
+    
+    
+    
+    
+    
+    /*[PFObject saveAllInBackground:pfObjects block:^(BOOL succeeded, NSError *error) {
         if(error)
         {
             UIAlertController *alertController = [UIAlertController
@@ -2444,7 +2603,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
             [PFCloud callFunctionInBackground:@"sendPushForStream" withParameters:@{@"streamId":newStream.stream.objectId, @"userIds":userIds} block:^(id object, NSError *error) {}];
         [self dismissImagePickerView];
         
-    }];
+    }];*/
 
 }
 

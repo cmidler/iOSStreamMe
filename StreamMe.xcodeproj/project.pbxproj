@@ -54,6 +54,8 @@
 		DE7AE47819B76AC80001567E /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DE7AE46F19B76AC80001567E /* SystemConfiguration.framework */; };
 		DE7B4E4B1AA6489A000CC40B /* settings@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = DE7B4E491AA6489A000CC40B /* settings@2x.png */; };
 		DE7B4E4C1AA6489A000CC40B /* settings@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = DE7B4E4A1AA6489A000CC40B /* settings@3x.png */; };
+		DE8E51791AEFEDE70079B1F7 /* streamme_1024_icon.jpg in Resources */ = {isa = PBXBuildFile; fileRef = DE8E51781AEFEDE70079B1F7 /* streamme_1024_icon.jpg */; };
+		DE8E517B1AEFEF2D0079B1F7 /* streamme_banner_1.png in Resources */ = {isa = PBXBuildFile; fileRef = DE8E517A1AEFEF2D0079B1F7 /* streamme_banner_1.png */; };
 		DEA1D6521A76A90C00292270 /* down_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = DEA1D6511A76A90C00292270 /* down_arrow.png */; };
 		DEA1D6741A77E3FA00292270 /* dashed_line_border.jpg in Resources */ = {isa = PBXBuildFile; fileRef = DEA1D6731A77E3FA00292270 /* dashed_line_border.jpg */; };
 		DEA50D241ACB95BF00D96F30 /* white-down-arrow@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = DEA50D221ACB95BF00D96F30 /* white-down-arrow@2x.png */; };
@@ -224,6 +226,8 @@
 		DE7AE46F19B76AC80001567E /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 		DE7B4E491AA6489A000CC40B /* settings@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "settings@2x.png"; sourceTree = "<group>"; };
 		DE7B4E4A1AA6489A000CC40B /* settings@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "settings@3x.png"; sourceTree = "<group>"; };
+		DE8E51781AEFEDE70079B1F7 /* streamme_1024_icon.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = streamme_1024_icon.jpg; sourceTree = "<group>"; };
+		DE8E517A1AEFEF2D0079B1F7 /* streamme_banner_1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = streamme_banner_1.png; sourceTree = "<group>"; };
 		DEA1D6511A76A90C00292270 /* down_arrow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = down_arrow.png; sourceTree = "<group>"; };
 		DEA1D6731A77E3FA00292270 /* dashed_line_border.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = dashed_line_border.jpg; sourceTree = "<group>"; };
 		DEA50D221ACB95BF00D96F30 /* white-down-arrow@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "white-down-arrow@2x.png"; sourceTree = "<group>"; };
@@ -400,6 +404,8 @@
 		DE0051C419B7C1770053D2EB /* Images */ = {
 			isa = PBXGroup;
 			children = (
+				DE8E517A1AEFEF2D0079B1F7 /* streamme_banner_1.png */,
+				DE8E51781AEFEDE70079B1F7 /* streamme_1024_icon.jpg */,
 				DED9F5691AE99C1200D1BF28 /* bluetooth_256.png */,
 				DEF789C51AD6FF96005676AF /* logout@2x.png */,
 				DEF789C61AD6FF96005676AF /* logout@3x.png */,
@@ -766,6 +772,7 @@
 				DEBC57231AAA648F002F0E5E /* contact_card@3x.png in Resources */,
 				DEA50D241ACB95BF00D96F30 /* white-down-arrow@2x.png in Resources */,
 				DEBC57401AADE20D002F0E5E /* back_arrow@2x.png in Resources */,
+				DE8E517B1AEFEF2D0079B1F7 /* streamme_banner_1.png in Resources */,
 				DEBC57291AAA648F002F0E5E /* save@3x.png in Resources */,
 				DEB8749E1AC9E1E0003B5996 /* add-pictures-512.png in Resources */,
 				DEBC57221AAA648F002F0E5E /* contact_card@2x.png in Resources */,
@@ -792,6 +799,7 @@
 				DEB874911AC62981003B5996 /* pictures@2x.png in Resources */,
 				DEB874861AC4E5EC003B5996 /* noFlash@3x.png in Resources */,
 				DEF789C81AD6FF96005676AF /* logout@3x.png in Resources */,
+				DE8E51791AEFEDE70079B1F7 /* streamme_1024_icon.jpg in Resources */,
 				DED227081AC0C97900FFE6AD /* publish@2x.png in Resources */,
 				DEB874821AC4E5EC003B5996 /* automaticFlash@3x.png in Resources */,
 				DE5B0A951AC3B17100A255F8 /* lightBlue.png in Resources */,
