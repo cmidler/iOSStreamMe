@@ -13,9 +13,11 @@
 #import "MainDatabase.h"
 #import "MeViewController.h"
 #import "CustomPickerViewController.h"
+#import "CustomAlertViewController.h"
 #import "ViewStreamCollectionViewController.h"
 #import "SelectStreamsTableViewController.h"
 #import "Stream.h"
+
 
 #include "REMenu.h"
 #define STREAMS_PER_PAGE 50
@@ -35,13 +37,13 @@
 #define TABLE_VIEW_X_ORIGIN 16
 #define COLLECTION_VIEW_WIDTH 262.5 //260 for width and 2.5 for spacing between cells
 
-@interface MainTableViewController : UITableViewController <UITextFieldDelegate,UINavigationControllerDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextViewDelegate, UIPickerViewDataSource, UIPickerViewDelegate, UICollectionViewDataSource, UICollectionViewDelegate>
+@interface MainTableViewController : UITableViewController <UITextFieldDelegate,UINavigationControllerDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextViewDelegate, UIPickerViewDataSource, UIPickerViewDelegate, UICollectionViewDataSource, UICollectionViewDelegate, UIPopoverPresentationControllerDelegate>
 {
     NSArray* showStreamsArray;
 }
 - (IBAction)addStreamAction:(id)sender;
 //-(void) updateMethod;
-@property (weak, nonatomic) IBOutlet UIBarButtonItem *sidebarButton;
+
 @property (strong, nonatomic) IBOutlet UITableView *streamsTableView;
 @property (weak, nonatomic) IBOutlet UISwitch *switchButton;
 //- (IBAction)switchToggleAction:(id)sender;
@@ -54,7 +56,7 @@
 @property (strong, nonatomic) UIImageView *cameraOverlayView;
 @property (strong, nonatomic) UIToolbar* toolBar;
 @property (strong, nonatomic) UIBarButtonItem *flashButton;
-@property (strong, nonatomic) UIBarButtonItem *streamLengthButton;
+
 @property (strong, nonatomic) IBOutlet UIPickerView *pickerView;
 @property (strong, nonatomic) UILabel* timeLabel;
 @property (nonatomic, readwrite) bool finishedDownload;
@@ -86,4 +88,5 @@
 
 @property (nonatomic, readwrite) bool showingAnywhere;
 @property (nonatomic, readwrite) bool loadingViral;
+@property (strong, nonatomic) NSString* currentPopover;
 @end

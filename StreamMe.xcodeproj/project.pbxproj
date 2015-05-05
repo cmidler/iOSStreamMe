@@ -56,6 +56,11 @@
 		DE7B4E4C1AA6489A000CC40B /* settings@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = DE7B4E4A1AA6489A000CC40B /* settings@3x.png */; };
 		DE8E51791AEFEDE70079B1F7 /* streamme_1024_icon.jpg in Resources */ = {isa = PBXBuildFile; fileRef = DE8E51781AEFEDE70079B1F7 /* streamme_1024_icon.jpg */; };
 		DE8E517B1AEFEF2D0079B1F7 /* streamme_banner_1.png in Resources */ = {isa = PBXBuildFile; fileRef = DE8E517A1AEFEF2D0079B1F7 /* streamme_banner_1.png */; };
+		DE8E51801AF7DD840079B1F7 /* black_box@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = DE8E517E1AF7DD840079B1F7 /* black_box@2x.png */; };
+		DE8E51811AF7DD840079B1F7 /* black_box@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = DE8E517F1AF7DD840079B1F7 /* black_box@3x.png */; };
+		DE8E518A1AF85FA10079B1F7 /* CustomAlertViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = DE8E51891AF85FA10079B1F7 /* CustomAlertViewController.m */; };
+		DE8E518D1AF86FA50079B1F7 /* PopoverViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = DE8E518C1AF86FA50079B1F7 /* PopoverViewController.m */; };
+		DE8E518F1AF941420079B1F7 /* shutter.png in Resources */ = {isa = PBXBuildFile; fileRef = DE8E518E1AF941420079B1F7 /* shutter.png */; };
 		DEA1D6521A76A90C00292270 /* down_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = DEA1D6511A76A90C00292270 /* down_arrow.png */; };
 		DEA1D6741A77E3FA00292270 /* dashed_line_border.jpg in Resources */ = {isa = PBXBuildFile; fileRef = DEA1D6731A77E3FA00292270 /* dashed_line_border.jpg */; };
 		DEA50D241ACB95BF00D96F30 /* white-down-arrow@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = DEA50D221ACB95BF00D96F30 /* white-down-arrow@2x.png */; };
@@ -228,6 +233,13 @@
 		DE7B4E4A1AA6489A000CC40B /* settings@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "settings@3x.png"; sourceTree = "<group>"; };
 		DE8E51781AEFEDE70079B1F7 /* streamme_1024_icon.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = streamme_1024_icon.jpg; sourceTree = "<group>"; };
 		DE8E517A1AEFEF2D0079B1F7 /* streamme_banner_1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = streamme_banner_1.png; sourceTree = "<group>"; };
+		DE8E517E1AF7DD840079B1F7 /* black_box@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "black_box@2x.png"; sourceTree = "<group>"; };
+		DE8E517F1AF7DD840079B1F7 /* black_box@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "black_box@3x.png"; sourceTree = "<group>"; };
+		DE8E51881AF85FA10079B1F7 /* CustomAlertViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CustomAlertViewController.h; sourceTree = "<group>"; };
+		DE8E51891AF85FA10079B1F7 /* CustomAlertViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CustomAlertViewController.m; sourceTree = "<group>"; };
+		DE8E518B1AF86FA50079B1F7 /* PopoverViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PopoverViewController.h; sourceTree = "<group>"; };
+		DE8E518C1AF86FA50079B1F7 /* PopoverViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PopoverViewController.m; sourceTree = "<group>"; };
+		DE8E518E1AF941420079B1F7 /* shutter.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = shutter.png; sourceTree = "<group>"; };
 		DEA1D6511A76A90C00292270 /* down_arrow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = down_arrow.png; sourceTree = "<group>"; };
 		DEA1D6731A77E3FA00292270 /* dashed_line_border.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = dashed_line_border.jpg; sourceTree = "<group>"; };
 		DEA50D221ACB95BF00D96F30 /* white-down-arrow@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "white-down-arrow@2x.png"; sourceTree = "<group>"; };
@@ -404,6 +416,9 @@
 		DE0051C419B7C1770053D2EB /* Images */ = {
 			isa = PBXGroup;
 			children = (
+				DE8E518E1AF941420079B1F7 /* shutter.png */,
+				DE8E517E1AF7DD840079B1F7 /* black_box@2x.png */,
+				DE8E517F1AF7DD840079B1F7 /* black_box@3x.png */,
 				DE8E517A1AEFEF2D0079B1F7 /* streamme_banner_1.png */,
 				DE8E51781AEFEDE70079B1F7 /* streamme_1024_icon.jpg */,
 				DED9F5691AE99C1200D1BF28 /* bluetooth_256.png */,
@@ -510,6 +525,8 @@
 				DE502AB41ACCC32700410FE7 /* Stream.m */,
 				DEB874691AC4BA5D003B5996 /* TopToBottomSegue.h */,
 				DEB8746A1AC4BA5D003B5996 /* TopToBottomSegue.m */,
+				DE8E51881AF85FA10079B1F7 /* CustomAlertViewController.h */,
+				DE8E51891AF85FA10079B1F7 /* CustomAlertViewController.m */,
 			);
 			name = Classes;
 			sourceTree = "<group>";
@@ -604,6 +621,8 @@
 				DE502AAA1ACC622F00410FE7 /* MainTutorialPageViewController.m */,
 				DEB874571AC49351003B5996 /* MeViewController.h */,
 				DEB874581AC49351003B5996 /* MeViewController.m */,
+				DE8E518B1AF86FA50079B1F7 /* PopoverViewController.h */,
+				DE8E518C1AF86FA50079B1F7 /* PopoverViewController.m */,
 				DE502A9F1ACC4F3100410FE7 /* SelectStreamsTableViewController.h */,
 				DE502AA01ACC4F3100410FE7 /* SelectStreamsTableViewController.m */,
 				DEC67BA31AA8BDD1004991C2 /* SettingsViewController.h */,
@@ -755,6 +774,7 @@
 				DEB874701AC4C09A003B5996 /* camera_overlay.png in Resources */,
 				DEBC57251AAA648F002F0E5E /* email@3x.png in Resources */,
 				DEBC57321AAA6676002F0E5E /* sending_contact@2x.png in Resources */,
+				DE8E51801AF7DD840079B1F7 /* black_box@2x.png in Resources */,
 				DEB874791AC4E10A003B5996 /* cameraFlip@2x.png in Resources */,
 				DEBC57411AADE20D002F0E5E /* back_arrow@3x.png in Resources */,
 				DEBC572A1AAA648F002F0E5E /* trash@2x.png in Resources */,
@@ -775,6 +795,7 @@
 				DE8E517B1AEFEF2D0079B1F7 /* streamme_banner_1.png in Resources */,
 				DEBC57291AAA648F002F0E5E /* save@3x.png in Resources */,
 				DEB8749E1AC9E1E0003B5996 /* add-pictures-512.png in Resources */,
+				DE8E51811AF7DD840079B1F7 /* black_box@3x.png in Resources */,
 				DEBC57221AAA648F002F0E5E /* contact_card@2x.png in Resources */,
 				DE29AB8A1A881EC8000B010B /* BlueGradient.png in Resources */,
 				DEB874811AC4E5EC003B5996 /* automaticFlash@2x.png in Resources */,
@@ -795,6 +816,7 @@
 				DEBC57371AAB5217002F0E5E /* Main.storyboard in Resources */,
 				DEA1D6741A77E3FA00292270 /* dashed_line_border.jpg in Resources */,
 				DEBC57271AAA648F002F0E5E /* phone@3x.png in Resources */,
+				DE8E518F1AF941420079B1F7 /* shutter.png in Resources */,
 				DEC67BBC1AA94F65004991C2 /* edit@3x.png in Resources */,
 				DEB874911AC62981003B5996 /* pictures@2x.png in Resources */,
 				DEB874861AC4E5EC003B5996 /* noFlash@3x.png in Resources */,
@@ -888,6 +910,8 @@
 				DE7AE43619B762C90001567E /* main.m in Sources */,
 				DE0051BE19B78F190053D2EB /* MainTableViewController.m in Sources */,
 				DEC67BA81AA8BE44004991C2 /* SettingsTableViewCell.m in Sources */,
+				DE8E518A1AF85FA10079B1F7 /* CustomAlertViewController.m in Sources */,
+				DE8E518D1AF86FA50079B1F7 /* PopoverViewController.m in Sources */,
 				DEB874AE1ACA105F003B5996 /* ViewStreamCollectionViewController.m in Sources */,
 				DEB8746B1AC4BA5D003B5996 /* TopToBottomSegue.m in Sources */,
 				DEEB451B1ACAE6F20032F212 /* PushFadeSegue.m in Sources */,
@@ -974,8 +998,8 @@
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "iPhone Distribution: Chase Midler";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution: Chase Midler";
+				CODE_SIGN_IDENTITY = "iPhone Developer: Chase Midler (WCJWHDNR58)";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer: Chase Midler (WCJWHDNR58)";
 				COPY_PHASE_STRIP = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -994,7 +1018,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "$(inherited)";
-				PROVISIONING_PROFILE = "1b437b06-d2a4-408f-aabd-f0db8130856a";
+				PROVISIONING_PROFILE = "af7edc33-66a7-441f-a99a-7713d8ade61c";
 				SDKROOT = iphoneos;
 			};
 			name = Debug;
@@ -1015,8 +1039,8 @@
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "iPhone Distribution: Chase Midler";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution: Chase Midler";
+				CODE_SIGN_IDENTITY = "iPhone Developer: Chase Midler (WCJWHDNR58)";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer: Chase Midler (WCJWHDNR58)";
 				COPY_PHASE_STRIP = YES;
 				ENABLE_NS_ASSERTIONS = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -1027,7 +1051,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
-				PROVISIONING_PROFILE = "1b437b06-d2a4-408f-aabd-f0db8130856a";
+				PROVISIONING_PROFILE = "af7edc33-66a7-441f-a99a-7713d8ade61c";
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -1040,8 +1064,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_IDENTITY = "iPhone Distribution: Chase Midler";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution: Chase Midler";
+				CODE_SIGN_IDENTITY = "iPhone Developer: Chase Midler (WCJWHDNR58)";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer: Chase Midler (WCJWHDNR58)";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/parse-library-1.2.21",
@@ -1054,7 +1078,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_NAME = StreamMe;
-				PROVISIONING_PROFILE = "1b437b06-d2a4-408f-aabd-f0db8130856a";
+				PROVISIONING_PROFILE = "af7edc33-66a7-441f-a99a-7713d8ade61c";
 				SWIFT_OBJC_BRIDGING_HEADER = "WhoYu/WhoYU-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				WRAPPER_EXTENSION = app;
@@ -1068,8 +1092,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_IDENTITY = "iPhone Distribution: Chase Midler";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution: Chase Midler";
+				CODE_SIGN_IDENTITY = "iPhone Developer: Chase Midler (WCJWHDNR58)";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer: Chase Midler (WCJWHDNR58)";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/parse-library-1.2.21",
@@ -1082,7 +1106,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_NAME = StreamMe;
-				PROVISIONING_PROFILE = "1b437b06-d2a4-408f-aabd-f0db8130856a";
+				PROVISIONING_PROFILE = "af7edc33-66a7-441f-a99a-7713d8ade61c";
 				SWIFT_OBJC_BRIDGING_HEADER = "WhoYu/WhoYU-Bridging-Header.h";
 				WRAPPER_EXTENSION = app;
 			};

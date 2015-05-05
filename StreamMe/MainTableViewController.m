@@ -17,7 +17,6 @@
 @synthesize customPicker;
 @synthesize toolBar;
 @synthesize caption;
-@synthesize streamLengthButton;
 @synthesize cameraOverlayView;
 @synthesize flashButton;
 @synthesize pickerView;
@@ -113,6 +112,10 @@
                                              selector:@selector(mainNotification:)
                                                  name:@"reloadSection"
                                                object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(mainNotification:)
+                                                 name:@"dismissCameraPopover"
+                                               object:nil];
     
     
     //Adding pull to refresh
@@ -127,6 +130,72 @@
 
     
     [self pullToRefresh];
+    //[self checkCreateStreamInfo];
+}
+
+-(void) checkCreateStreamInfo
+{
+    /*float width = self.view.frame.size.width;
+    UIView* view  = [[UIView alloc] initWithFrame:CGRectMake(width/2, 0, width/2, width/4)];
+    UILabel* label = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, width/2, width/8)];
+    UIButton* button = [[UIButton alloc] initWithFrame:CGRectMake(0, width/8, width/2, width/8)];
+    label.text = @"Create a new stream of photos.";
+    label.textAlignment = NSTextAlignmentCenter;
+    label.numberOfLines = 0;
+    label.font = [UIFont fontWithName:@"HelveticaNeue" size:14.0];
+    [button setTitle:@"Got It!" forState:UIControlStateNormal];
+    [button setTitleColor:[UIColor blueColor] forState:UIControlStateNormal];
+    button.titleLabel.textAlignment = NSTextAlignmentCenter;
+    button.titleLabel.font = [UIFont fontWithName:@"HelveticaNeue" size:14.0];
+    [view addSubview:label];
+    [view addSubview:button];
+    view.layer.borderColor = [[UIColor blackColor] CGColor];
+    view.layer.cornerRadius = 5.0;
+    view.layer.borderWidth = 2.0;
+    [self.view addSubview:view];
+    [UIView animateWithDuration:0.5
+                     animations:^{
+                         view.center = CGPointMake(width*3.0/4.0,view.frame.size.height/2);
+                         [self.view layoutIfNeeded];
+                     }];*/
+    
+   
+    /*UIView* barButtonView = [self.navigationItem.rightBarButtonItem valueForKey:@"view"];
+    CustomAlertViewController *alertController = [CustomAlertViewController
+                                                  alertControllerWithTitle:nil
+                                                  message:@"Create a new stream of pictures"
+                                                  preferredStyle:UIAlertControllerStyleActionSheet];
+    
+    UIAlertAction *okAction = [UIAlertAction
+                               actionWithTitle:NSLocalizedString(@"Got It!", @"OK action")
+                               style:UIAlertActionStyleDefault
+                               handler:^(UIAlertAction *action)
+                               {
+                                   //[self.navigationItem.rightBarButtonItem setBackgroundImage:nil forState:UIControlStateNormal barMetrics:UIBarMetricsDefault ];
+                                   barButtonView.backgroundColor = [UIColor clearColor];
+                                   return;
+                               }];
+    
+    [alertController addAction:okAction];
+    // This will turn the Action Sheet into a popover
+    [alertController setModalPresentationStyle:UIModalPresentationPopover];
+    
+    NSLog(@"presentation style is %d and popover is %d", alertController.modalPresentationStyle, UIModalPresentationPopover);
+    // Set Modal In Popover to YES to make sure your popover isn't dismissed by taps outside the popover controller
+    [alertController setModalInPopover:YES];
+    
+    [self presentViewController:alertController animated:YES completion:nil];
+    UIPopoverPresentationController* popoverController = alertController.popoverPresentationController;
+    
+    popoverController.barButtonItem = self.navigationItem.rightBarButtonItem;
+    NSLog(@"popover controller = %@", popoverController);
+    
+    //NSLog(@"bar button view is %@", barButtonView);
+    popoverController.sourceView = barButtonView;
+    popoverController.sourceRect = barButtonView.bounds;
+    popoverController.permittedArrowDirections = UIPopoverArrowDirectionUp;
+    
+    barButtonView.backgroundColor = [UIColor blackColor];*/
 }
 
 -(void) setNavigationTitle
@@ -252,6 +321,7 @@
                                style:UIAlertActionStyleDefault
                                handler:^(UIAlertAction *action)
                                {
+                                   [self checkCreateStreamInfo];
                                    return;
                                }];
     /*UIAlertAction *settingsAction = [UIAlertAction
@@ -383,6 +453,8 @@
     }
     else if ([[notification name] isEqualToString:@"reloadSection"])
         [self sortStreams];
+    else if ([[notification name] isEqualToString:@"dismissCameraPopover"])
+        [self popoverDismissed];
 }
 
 
@@ -1035,6 +1107,10 @@
     {
         [self presentNoBluetoothAlert];
         return;
+    }
+    else
+    {
+        [self checkCreateStreamInfo];
     }
     _menuOpened = NO;
     NSLog(@"current row is %d", (int)_selectedCellIndex);
@@ -1786,26 +1862,30 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     customPicker.sourceType = UIImagePickerControllerSourceTypeCamera;
     customPicker.showsCameraControls = NO;
     customPicker.canTakePicture = YES;
+    float transformNumber = (self.view.frame.size.height-TOOLBAR_HEIGHT)/self.view.frame.size.width;
+    NSLog(@"transform number is %f", transformNumber);
+    customPicker.cameraViewTransform = CGAffineTransformMakeScale(1.0, transformNumber);
     _flashMode = UIImagePickerControllerCameraFlashModeAuto;
+    NSLog(@" picker overlay height %f",customPicker.cameraOverlayView.frame.size.height);
     _isTakingPicture = YES;
     //set original center
     _originalCenter = customPicker.view.center;
     
     //helper variables
     float screenWidth = self.view.frame.size.width;
-    float pickerHeight = (4.0/3.0*screenWidth);
+    float pickerHeight = (screenWidth*transformNumber);
     
     NSLog(@"picker height is %f",pickerHeight);
     
     // overlay on top of camera lens view
     cameraOverlayView = [[UIImageView alloc] initWithFrame:CGRectMake(0,0,screenWidth, pickerHeight)];
-    UIImage* overlay = [UIImage imageNamed:@"camera_overlay.png"];
+    //UIImage* overlay = [UIImage imageNamed:@"camera_overlay.png"];
     [cameraOverlayView setContentMode:UIViewContentModeScaleToFill];
-    cameraOverlayView.image = overlay;
+    //cameraOverlayView.image = overlay;
     cameraOverlayView.alpha = 0.0f;
 
     //make a textview for the caption on the camera
-    caption = [[UITextView alloc] initWithFrame:CGRectMake(0, 2+ pickerHeight, screenWidth, self.view.frame.size.height-pickerHeight-TOOLBAR_HEIGHT-2)];
+    caption = [[UITextView alloc] initWithFrame:CGRectMake(0, pickerHeight, screenWidth, self.view.frame.size.height-pickerHeight-TOOLBAR_HEIGHT)];
     caption.delegate = self;
     caption.text = @"Enter Caption:";
     caption.textColor = [UIColor grayColor];
@@ -1816,7 +1896,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     caption.returnKeyType = UIReturnKeyDone;
     
     //setup the toolbar
-    toolBar = [[UIToolbar alloc] initWithFrame:CGRectMake(0, pickerHeight+caption.frame.size.height+2, screenWidth, TOOLBAR_HEIGHT)];
+    toolBar = [[UIToolbar alloc] initWithFrame:CGRectMake(0, pickerHeight+caption.frame.size.height, screenWidth, TOOLBAR_HEIGHT)];
     UIBarButtonItem *cancelButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel target:self action:@selector(cancelClicked:)];
     UIBarButtonItem *flipButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"cameraFlip.png"] style:UIBarButtonItemStyleDone target:self action:@selector(flipCamera:)];
     flashButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"automaticFlash.png"] style:UIBarButtonItemStyleDone target:self action:@selector(cameraFlash:)];
@@ -1845,9 +1925,13 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     [UIView setAnimationDelay:2.2f];
     cameraOverlayView.alpha = 1.0f;
     [UIView commitAnimations];
+    //hide the caption at first
+    caption.hidden = YES;
     
-    
-    [self presentViewController:customPicker animated:YES completion:NULL];
+    [self presentViewController:customPicker animated:YES completion:^{
+       //present an alert to tell the person to tap the screen to take the photo
+        
+    }];
 }
 
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info {
@@ -1855,7 +1939,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     //Don't allow pictures to be taken
     customPicker.canTakePicture = NO;
     _isTakingPicture = NO;
-    
+    caption.hidden = NO;
     //helper var
     float screenWidth = self.view.frame.size.width;
     _expirationTime = ((NSNumber*)[[PFUser currentUser] objectForKey:@"streamTimeHours"]).floatValue;
@@ -1877,7 +1961,8 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     if(image.imageOrientation == 1)
         imageOrientation = 3;
     UIImage* fixedImage = [self fixOrientation:image withOrientation:imageOrientation];
-    CGSize destinationSize = CGSizeMake(screenWidth, 4.0/3.0*screenWidth);
+    float transformNumber = (self.view.frame.size.height-TOOLBAR_HEIGHT)/self.view.frame.size.width;
+    CGSize destinationSize = CGSizeMake(screenWidth, transformNumber*screenWidth);
     UIGraphicsBeginImageContext(destinationSize);
     [fixedImage drawInRect:CGRectMake(0,0,destinationSize.width,destinationSize.height)];
     UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
@@ -1905,6 +1990,40 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     UIBarButtonItem *publishButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"publish.png"] style:UIBarButtonItemStyleDone target:self action:@selector(publishClicked:)];
     UIBarButtonItem *saveButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"save.png"] style:UIBarButtonItemStyleDone target:self action:@selector(saveClicked:)];
     
+    //create a custom timer view
+    UIView* timerView = [[UIView alloc] initWithFrame:CGRectMake(0,0,TOOLBAR_HEIGHT, TOOLBAR_HEIGHT)];
+    [timerView setUserInteractionEnabled:YES];
+    UITapGestureRecognizer *timerTap =  [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(timerSelected:)];
+    timerTap.numberOfTapsRequired = 1;
+    [timerView addGestureRecognizer:timerTap];
+    
+    //create a button with a timer image
+    UIButton* customButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    customButton.frame = CGRectMake(0,0,TOOLBAR_HEIGHT/2, TOOLBAR_HEIGHT/2);
+    [customButton setBackgroundImage:[UIImage imageNamed:@"timer.png"] forState:UIControlStateNormal];
+    [customButton addTarget:self action:@selector(timerSelected:) forControlEvents:UIControlEventTouchUpInside];
+    customButton.center = timerView.center;
+    
+    //create a label to store the default time for the user
+    timeLabel = [[UILabel alloc] initWithFrame:CGRectMake(0,0,TOOLBAR_HEIGHT/2, TOOLBAR_HEIGHT/2)];
+    timeLabel.center = timerView.center;
+    timeLabel.text = [NSString stringWithFormat:@"%.01f", _expirationTime];
+    timeLabel.font = [UIFont boldSystemFontOfSize:9.0];
+    timeLabel.textColor = [UIColor whiteColor];
+    timeLabel.numberOfLines = 1;
+    timeLabel.textAlignment = NSTextAlignmentCenter;
+    UITapGestureRecognizer *labelTap =  [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(timerLabelSelected:)];
+    labelTap.numberOfTapsRequired = 1;
+    [timeLabel addGestureRecognizer:labelTap];
+    
+    //add the button and label to the view
+    [timerView addSubview:customButton];
+    [timerView addSubview:timeLabel];
+    
+    //create the bar button item based on the view
+    UIBarButtonItem* timerBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:timerView];
+    [timerBarButtonItem setTintColor:[UIColor whiteColor]];
+    
     [cancelButton setTintColor:[UIColor whiteColor]];
     [publishButton setTintColor:[UIColor whiteColor]];
     [saveButton setTintColor:[UIColor whiteColor]];
@@ -1915,45 +2034,20 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     }
     else//need to add timer as well
     {
-        //create a custom timer view
-        UIView* timerView = [[UIView alloc] initWithFrame:CGRectMake(0,0,TOOLBAR_HEIGHT, TOOLBAR_HEIGHT)];
-        [timerView setUserInteractionEnabled:YES];
-        UITapGestureRecognizer *timerTap =  [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(timerSelected:)];
-        timerTap.numberOfTapsRequired = 1;
-        [timerView addGestureRecognizer:timerTap];
-        
-        //create a button with a timer image
-        UIButton* customButton = [UIButton buttonWithType:UIButtonTypeCustom];
-        customButton.frame = CGRectMake(0,0,TOOLBAR_HEIGHT/2, TOOLBAR_HEIGHT/2);
-        [customButton setBackgroundImage:[UIImage imageNamed:@"timer.png"] forState:UIControlStateNormal];
-        [customButton addTarget:self action:@selector(timerSelected:) forControlEvents:UIControlEventTouchUpInside];
-        customButton.center = timerView.center;
-        
-        //create a label to store the default time for the user
-        timeLabel = [[UILabel alloc] initWithFrame:CGRectMake(0,0,TOOLBAR_HEIGHT/2, TOOLBAR_HEIGHT/2)];
-        timeLabel.center = timerView.center;
-        timeLabel.text = [NSString stringWithFormat:@"%.01f", _expirationTime];
-        timeLabel.font = [UIFont boldSystemFontOfSize:9.0];
-        timeLabel.textColor = [UIColor whiteColor];
-        timeLabel.numberOfLines = 1;
-        timeLabel.textAlignment = NSTextAlignmentCenter;
-        UITapGestureRecognizer *labelTap =  [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(timerLabelSelected:)];
-        labelTap.numberOfTapsRequired = 1;
-        [timeLabel addGestureRecognizer:labelTap];
-        
-        //add the button and label to the view
-        [timerView addSubview:customButton];
-        [timerView addSubview:timeLabel];
-        
-        //create the bar button item based on the view
-        UIBarButtonItem* timerBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:timerView];
-        [timerBarButtonItem setTintColor:[UIColor whiteColor]];
         //add the bar button items to the toolbar
         [toolBar setItems:[NSArray arrayWithObjects:cancelButton,[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil], saveButton, [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil],timerBarButtonItem, [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil],publishButton, nil]];
         
         //also setup the pickerview
         [self setupPicker];
     }
+    
+    
+    [self popoverDismissed];
+    
+
+    /*UIImage* backgroundImage = [UIImage imageNamed:@"black_box.png"];
+     [self.navigationItem.rightBarButtonItem setBackgroundImage:backgroundImage forState:UIControlStateNormal barMetrics:UIBarMetricsDefault ];*/
+    //barButtonView.backgroundColor = [UIColor blackColor];
     
 }
 
@@ -2056,14 +2150,138 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     
 }
 
+
+-(void) popoverDismissed
+{
+    UIView* barButtonView;
+    UIBarButtonItem* selectedButton;
+    //if no value for current popover then we are on caption
+    if(!_currentPopover)
+    {
+        PopoverViewController* pvc = [self.storyboard instantiateViewControllerWithIdentifier:@"PopoverViewController"];
+        [pvc setModalPresentationStyle:UIModalPresentationPopover];
+        pvc.preferredContentSize = CGSizeMake(280, 80);
+        
+        NSLog(@"pvc height is %f", pvc.view.frame.size.height);
+        UIPopoverPresentationController* popoverController = pvc.popoverPresentationController;
+        NSLog(@"popover controller = %@", popoverController);
+        
+        //NSLog(@"bar button view is %@", barButtonView);
+        popoverController.sourceView = caption;
+        popoverController.sourceRect = CGRectMake(0,0,280,80);
+        popoverController.permittedArrowDirections = UIPopoverArrowDirectionDown;
+        popoverController.delegate = customPicker;
+        [customPicker presentViewController:pvc animated:YES completion:nil];
+        
+        pvc.popoverLabel.text = @"Add a caption to the picture.";
+        pvc.popoverLabel.textAlignment = NSTextAlignmentCenter;
+        pvc.popoverLabel.numberOfLines = 0;
+        _currentPopover = @"caption";
+        return;
+    }
+    //publish
+    else if([_currentPopover isEqualToString:@"caption"])
+    {
+        //set the publish button as the first to be explained
+        selectedButton = toolBar.items[toolBar.items.count-1];
+        barButtonView = [selectedButton valueForKey:@"view"];
+        //set which popover we are using
+        _currentPopover = @"publish";
+    }
+    else if([_currentPopover isEqualToString:@"publish"] && _creatingStream)
+    {
+        //set the publish button as the first to be explained
+        selectedButton = toolBar.items[4]; // probably shouldn't hardcode it, but oh well
+        barButtonView = [selectedButton valueForKey:@"view"];
+        //set which popover we are using
+        _currentPopover = @"timer";
+    }
+    else if([_currentPopover isEqualToString:@"publish"] || [_currentPopover isEqualToString:@"timer"])//we are on save
+    {
+        //set the publish button as the first to be explained
+        selectedButton = toolBar.items[2]; // probably shouldn't hardcode it, but oh well
+        barButtonView = [selectedButton valueForKey:@"view"];
+        //set which popover we are using
+        _currentPopover = @"save";
+    }
+    else if([_currentPopover isEqualToString:@"save"])//on cancel
+    {
+        //set the publish button as the first to be explained
+        selectedButton = toolBar.items[0]; // probably shouldn't hardcode it, but oh well
+        barButtonView = [selectedButton valueForKey:@"view"];
+        //set which popover we are using
+        _currentPopover = @"cancel";
+    }
+    else//done with popovers
+    {
+        caption.hidden = NO;
+        _currentPopover = nil;
+        for(UIBarButtonItem* barButton in toolBar.items)
+        {
+            UIView* buttonView = [barButton valueForKey:@"view"];
+            buttonView.backgroundColor = [UIColor clearColor];
+        }
+        return;
+    }
+    
+    //disable the other buttons
+    int i = 0;
+    for(UIBarButtonItem* barButton in toolBar.items)
+    {
+        UIView* buttonView = [barButton valueForKey:@"view"];
+        //want to highlight
+        if(![barButton isEqual:selectedButton])
+        {
+            buttonView.backgroundColor = [UIColor clearColor];
+        }
+        else
+        {
+            buttonView.backgroundColor = [UIColor grayColor];
+        }
+        i++;
+    }
+    
+    
+    PopoverViewController* pvc = [self.storyboard instantiateViewControllerWithIdentifier:@"PopoverViewController"];
+    [pvc setModalPresentationStyle:UIModalPresentationPopover];
+    pvc.preferredContentSize = CGSizeMake(280, 80);
+    
+    NSLog(@"pvc height is %f", pvc.view.frame.size.height);
+    UIPopoverPresentationController* popoverController = pvc.popoverPresentationController;
+    [caption setHidden:YES];
+    popoverController.barButtonItem = selectedButton;
+    NSLog(@"popover controller = %@", popoverController);
+    
+    //NSLog(@"bar button view is %@", barButtonView);
+    popoverController.sourceView = barButtonView;
+    popoverController.sourceRect = CGRectMake(0,0,280,80);
+    popoverController.permittedArrowDirections = UIPopoverArrowDirectionDown;
+    popoverController.delegate = customPicker;
+    [customPicker presentViewController:pvc animated:YES completion:nil];
+    if([_currentPopover isEqualToString:@"publish"])
+        pvc.popoverLabel.text = @"Publish the photo.";
+    if([_currentPopover isEqualToString:@"timer"])
+        pvc.popoverLabel.text = @"Set how long you want the stream to last.";
+    if([_currentPopover isEqualToString:@"save"])
+        pvc.popoverLabel.text = @"Save the photo to your library.";
+    if([_currentPopover isEqualToString:@"cancel"])
+        pvc.popoverLabel.text = @"Retake the picture";
+    pvc.popoverLabel.textAlignment = NSTextAlignmentCenter;
+    pvc.popoverLabel.numberOfLines = 0;
+}
+
 -(void) timerLabelSelected:(id) sender
 {
+    if(_currentPopover)
+        return;
     [self timerSelected:self];
 }
 
 //helper to change the timer
 -(void) timerSelected:(id)sender
 {
+    if(_currentPopover)
+        return;
     NSLog(@"timer selected fired");
     //toggle showing the picker
     if(_pickerShown)
@@ -2090,6 +2308,8 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 //save the image to your photo library
 -(void) saveClicked:(id) sender
 {
+    if(_currentPopover)
+        return;
     UIImage* imageTaken = [UIImage imageWithData:_imageData];
     UIImageWriteToSavedPhotosAlbum(imageTaken, self, @selector(image:didFinishSavingWithError:contextInfo:), nil);
 }
@@ -2148,13 +2368,16 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 
 -(void) publishClicked:(id)sender
 {
+    if(_currentPopover)
+        return;
     activityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
     activityIndicator.center = cameraOverlayView.center;
     [activityIndicator startAnimating];
     [activityIndicator setHidden:NO];
     [customPicker.view addSubview:activityIndicator];
-    UIBarButtonItem* publish = [[toolBar items] lastObject];
-    publish.enabled = NO;
+    for(UIBarButtonItem* buttonItem in toolBar.items)
+        buttonItem.enabled = NO;
+    
     //deciding if I am creating the stream or just a share
     if(_creatingStream)
         [self createStream];
@@ -2215,6 +2438,8 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 
 -(void) cancelClicked:(id)sender
 {
+    if(_currentPopover)
+        return;
     //first picture
     if(_isTakingPicture)
     {
@@ -2224,6 +2449,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     //second picture
     else
     {
+        caption.hidden = YES;
         //remove pickerview from picture if it is there
         if(_creatingStream)
             [pickerView removeFromSuperview];
@@ -2240,7 +2466,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         //return to taking picture
         _isTakingPicture = YES;
         customPicker.canTakePicture = YES;
-        cameraOverlayView.image = [UIImage imageNamed:@"camera_overlay.png"];
+        //cameraOverlayView.image = [UIImage imageNamed:@"camera_overlay.png"];
     }
 }
 
@@ -2361,8 +2587,8 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                                        {
                                            [share deleteInBackground];
                                            [activityIndicator setHidden:YES];
-                                           UIBarButtonItem* publish = [[toolBar items] lastObject];
-                                           publish.enabled = NO;
+                                           for(UIBarButtonItem* buttonItem in toolBar.items)
+                                               buttonItem.enabled = YES;
                                            return;
                                        }];
             
@@ -2396,8 +2622,8 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                                                NSArray* pfObjects = [[NSArray alloc] initWithObjects:share,stream, nil];
                                                [PFObject deleteAllInBackground:pfObjects];
                                                [activityIndicator setHidden:YES];
-                                               UIBarButtonItem* publish = [[toolBar items] lastObject];
-                                               publish.enabled = NO;
+                                               for(UIBarButtonItem* buttonItem in toolBar.items)
+                                                   buttonItem.enabled = YES;
                                                return;
                                            }];
                 
@@ -2430,8 +2656,8 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                                                    NSArray* pfObjects = [[NSArray alloc] initWithObjects:share,stream,streamShare, nil];
                                                    [PFObject deleteAllInBackground:pfObjects];
                                                    [activityIndicator setHidden:YES];
-                                                   UIBarButtonItem* publish = [[toolBar items] lastObject];
-                                                   publish.enabled = NO;
+                                                   for(UIBarButtonItem* buttonItem in toolBar.items)
+                                                       buttonItem.enabled = YES;
                                                    return;
                                                }];
                     
@@ -2465,8 +2691,8 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                                                        NSArray* pfObjects = [[NSArray alloc] initWithObjects:share,stream,streamShare,userStream, nil];
                                                        [PFObject deleteAllInBackground:pfObjects];
                                                        [activityIndicator setHidden:YES];
-                                                       UIBarButtonItem* publish = [[toolBar items] lastObject];
-                                                       publish.enabled = NO;
+                                                       for(UIBarButtonItem* buttonItem in toolBar.items)
+                                                           buttonItem.enabled = YES;
                                                        return;
                                                    }];
                         
@@ -2821,7 +3047,19 @@ shouldChangeTextInRange:(NSRange)range
     CGImageRelease(cgimg);
     return img;
 }
+- (UIModalPresentationStyle)adaptivePresentationStyleForPresentationController:(UIPresentationController *)controller {
+    NSLog(@"in main adaptivepresentation");
+    return UIModalPresentationNone;
+}
+- (void)didEnterBackground:(NSNotification *)notification
+{
+    NSLog(@"entered background");
+    [self.presentedViewController dismissViewControllerAnimated:NO completion:nil];
+}
 
-
+- (void)popoverPresentationControllerDidDismissPopover:(UIPopoverPresentationController *)popoverPresentationController
+{
+    NSLog(@"dismissed in main");
+}
 
 @end

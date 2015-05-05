@@ -68,6 +68,16 @@
     
 }
 
+- (UIModalPresentationStyle)adaptivePresentationStyleForPresentationController:(UIPresentationController *)controller {
+    NSLog(@"in custom picker adaptivepresentation");
+    return UIModalPresentationNone;
+}
+
+- (void)popoverPresentationControllerDidDismissPopover:(UIPopoverPresentationController *)popoverPresentationController
+{
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"dismissCameraPopover" object:self userInfo:nil];
+}
+
 
 
 @end

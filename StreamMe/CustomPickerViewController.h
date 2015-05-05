@@ -7,7 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
-
-@interface CustomPickerViewController : UIImagePickerController
+#import "PopoverViewController.h"
+@interface CustomPickerViewController : UIImagePickerController<UIPopoverPresentationControllerDelegate>
 @property (nonatomic, readwrite) bool canTakePicture;
 @end

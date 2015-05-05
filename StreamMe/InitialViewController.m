@@ -536,6 +536,8 @@
                                    //Sign up the user if possible and redirect to main page
                                    [newUser signUpInBackgroundWithBlock:^(BOOL succeeded, NSError *error)
                                     {
+                                        __block UIAlertController *alertController;
+                                        __block UIAlertAction *okAction;
                                         if(!error)
                                         {
                                             NSLog(@"Successfully registered");
@@ -566,22 +568,43 @@
                                             
                                             
                                             [PFCloud callFunctionInBackground:@"addUserPrivate" withParameters:@{} block:^(id object, NSError *error) {
+                                            
                                                 if(error)
+                                                {
                                                     NSLog(@"error running cloud function");
+                                                    alertController = [UIAlertController
+                                                                       alertControllerWithTitle:@"Error Registering"
+                                                                       message:@"Couldn't register account.  Please check your internet connection and try again."
+                                                                       preferredStyle:UIAlertControllerStyleAlert];
+                                                    
+                                                    okAction= [UIAlertAction
+                                                               actionWithTitle:NSLocalizedString(@"Ok", @"Ok action")
+                                                               style:UIAlertActionStyleDefault
+                                                               handler:^(UIAlertAction *action)
+                                                               {
+                                                                   _activityIndicator.hidden = YES;
+                                                                   [_activityIndicator stopAnimating];
+                                                                   
+                                                                   [user deleteEventually];
+                                                                   [self registerAction:self];
+                                                                   return;
+                                                               }];
+                                                    [alertController addAction:okAction];
+                                                    [self presentViewController:alertController animated:YES completion:nil];
+                                                    return;
+                                                }
                                                 else
                                                 {
                                                     [user refreshInBackgroundWithBlock:^(PFObject *object, NSError *error) {if(!error)user = (PFUser*)object;}];
                                                     NSLog(@"successful save.");
+                                                    [self performSegueWithIdentifier:@"loggedInSegue"
+                                                                              sender:self];
                                                 }
                                             }];
-                                            
-                                            [self performSegueWithIdentifier:@"loggedInSegue"
-                                                                      sender:self];
                                         }
                                         else{
                                             NSLog(@"Failed to register");
-                                            UIAlertController *alertController;
-                                            UIAlertAction *okAction;
+                                            
                                             //email error code
                                             if(error.code == 203)
                                             {
@@ -724,7 +747,7 @@
     
     //setup pages for tutorial
     _pageTitles = @[@"StreamMe shares streams of pictures to those around you.  These streams are public.", @"StreamMe requires Bluetooth to be turned on for discovery of nearby streams.", @"To quickly share to one or more streams you can shake the phone to quick-open the camera."];
-    _pageImages = @[@"streamme_1024_icon.jpg", @"bluetooth_256.png", @"shake-gesture.png"];
+    _pageImages = @[@"whoYuLogo.png", @"bluetooth_256.png", @"shake-gesture.png"];
     
     // Create page view controller
     self.pageViewController = [self.storyboard instantiateViewControllerWithIdentifier:@"MainTutorialPageViewController"];
