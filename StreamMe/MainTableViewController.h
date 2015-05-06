@@ -13,9 +13,9 @@
 #import "MainDatabase.h"
 #import "MeViewController.h"
 #import "CustomPickerViewController.h"
-#import "CustomAlertViewController.h"
 #import "ViewStreamCollectionViewController.h"
 #import "SelectStreamsTableViewController.h"
+#import "PassthroughView.h"
 #import "Stream.h"
 
 
@@ -26,6 +26,7 @@
 #define STREAM_CELL_TAG 1234
 #define END_LOADING_SHARE_TAG 1111
 #define BEGINNING_LOADING_SHARE_TAG 8888
+#define ADD_SHARE_TAG 9876
 #define SHARE_CELL_TAG 1000
 #define MAX_TITLE_CHARS 32
 #define MAX_CAPTION_CHARS 140
@@ -56,7 +57,7 @@
 @property (strong, nonatomic) UIImageView *cameraOverlayView;
 @property (strong, nonatomic) UIToolbar* toolBar;
 @property (strong, nonatomic) UIBarButtonItem *flashButton;
-
+@property (strong, nonatomic) UIView* firstHeaderView;
 @property (strong, nonatomic) IBOutlet UIPickerView *pickerView;
 @property (strong, nonatomic) UILabel* timeLabel;
 @property (nonatomic, readwrite) bool finishedDownload;
@@ -85,6 +86,7 @@
 @property (nonatomic, readwrite) int sortBy;
 @property (strong, nonatomic) REMenu* menu;
 @property (nonatomic, readwrite) bool menuOpened;
+@property (nonatomic, readwrite) bool popoverOpen;
 
 @property (nonatomic, readwrite) bool showingAnywhere;
 @property (nonatomic, readwrite) bool loadingViral;

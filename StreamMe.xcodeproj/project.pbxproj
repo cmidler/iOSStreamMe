@@ -58,9 +58,9 @@
 		DE8E517B1AEFEF2D0079B1F7 /* streamme_banner_1.png in Resources */ = {isa = PBXBuildFile; fileRef = DE8E517A1AEFEF2D0079B1F7 /* streamme_banner_1.png */; };
 		DE8E51801AF7DD840079B1F7 /* black_box@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = DE8E517E1AF7DD840079B1F7 /* black_box@2x.png */; };
 		DE8E51811AF7DD840079B1F7 /* black_box@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = DE8E517F1AF7DD840079B1F7 /* black_box@3x.png */; };
-		DE8E518A1AF85FA10079B1F7 /* CustomAlertViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = DE8E51891AF85FA10079B1F7 /* CustomAlertViewController.m */; };
 		DE8E518D1AF86FA50079B1F7 /* PopoverViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = DE8E518C1AF86FA50079B1F7 /* PopoverViewController.m */; };
 		DE8E518F1AF941420079B1F7 /* shutter.png in Resources */ = {isa = PBXBuildFile; fileRef = DE8E518E1AF941420079B1F7 /* shutter.png */; };
+		DE8E51981AFAD8FE0079B1F7 /* PassthroughView.m in Sources */ = {isa = PBXBuildFile; fileRef = DE8E51971AFAD8FE0079B1F7 /* PassthroughView.m */; };
 		DEA1D6521A76A90C00292270 /* down_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = DEA1D6511A76A90C00292270 /* down_arrow.png */; };
 		DEA1D6741A77E3FA00292270 /* dashed_line_border.jpg in Resources */ = {isa = PBXBuildFile; fileRef = DEA1D6731A77E3FA00292270 /* dashed_line_border.jpg */; };
 		DEA50D241ACB95BF00D96F30 /* white-down-arrow@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = DEA50D221ACB95BF00D96F30 /* white-down-arrow@2x.png */; };
@@ -235,11 +235,11 @@
 		DE8E517A1AEFEF2D0079B1F7 /* streamme_banner_1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = streamme_banner_1.png; sourceTree = "<group>"; };
 		DE8E517E1AF7DD840079B1F7 /* black_box@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "black_box@2x.png"; sourceTree = "<group>"; };
 		DE8E517F1AF7DD840079B1F7 /* black_box@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "black_box@3x.png"; sourceTree = "<group>"; };
-		DE8E51881AF85FA10079B1F7 /* CustomAlertViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CustomAlertViewController.h; sourceTree = "<group>"; };
-		DE8E51891AF85FA10079B1F7 /* CustomAlertViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CustomAlertViewController.m; sourceTree = "<group>"; };
 		DE8E518B1AF86FA50079B1F7 /* PopoverViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PopoverViewController.h; sourceTree = "<group>"; };
 		DE8E518C1AF86FA50079B1F7 /* PopoverViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PopoverViewController.m; sourceTree = "<group>"; };
 		DE8E518E1AF941420079B1F7 /* shutter.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = shutter.png; sourceTree = "<group>"; };
+		DE8E51961AFAD8FE0079B1F7 /* PassthroughView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PassthroughView.h; sourceTree = "<group>"; };
+		DE8E51971AFAD8FE0079B1F7 /* PassthroughView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PassthroughView.m; sourceTree = "<group>"; };
 		DEA1D6511A76A90C00292270 /* down_arrow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = down_arrow.png; sourceTree = "<group>"; };
 		DEA1D6731A77E3FA00292270 /* dashed_line_border.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = dashed_line_border.jpg; sourceTree = "<group>"; };
 		DEA50D221ACB95BF00D96F30 /* white-down-arrow@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "white-down-arrow@2x.png"; sourceTree = "<group>"; };
@@ -515,6 +515,8 @@
 				DEB8746D1AC4BF92003B5996 /* CustomPickerViewController.m */,
 				DEB8745D1AC496B8003B5996 /* CustomSegue.h */,
 				DEB8745E1AC496B8003B5996 /* CustomSegue.m */,
+				DE8E51961AFAD8FE0079B1F7 /* PassthroughView.h */,
+				DE8E51971AFAD8FE0079B1F7 /* PassthroughView.m */,
 				DEEB451C1ACAE71B0032F212 /* PopRevealSegue.h */,
 				DEEB451D1ACAE71B0032F212 /* PopRevealSegue.m */,
 				DEEB45191ACAE6F20032F212 /* PushFadeSegue.h */,
@@ -525,8 +527,6 @@
 				DE502AB41ACCC32700410FE7 /* Stream.m */,
 				DEB874691AC4BA5D003B5996 /* TopToBottomSegue.h */,
 				DEB8746A1AC4BA5D003B5996 /* TopToBottomSegue.m */,
-				DE8E51881AF85FA10079B1F7 /* CustomAlertViewController.h */,
-				DE8E51891AF85FA10079B1F7 /* CustomAlertViewController.m */,
 			);
 			name = Classes;
 			sourceTree = "<group>";
@@ -901,6 +901,7 @@
 				DE502AA11ACC4F3100410FE7 /* SelectStreamsTableViewController.m in Sources */,
 				DEB874951AC64A27003B5996 /* StreamCollectionViewCell.m in Sources */,
 				DE7AE43A19B762C90001567E /* AppDelegate.m in Sources */,
+				DE8E51981AFAD8FE0079B1F7 /* PassthroughView.m in Sources */,
 				DEEB451E1ACAE71B0032F212 /* PopRevealSegue.m in Sources */,
 				DEA6944B1A11B51100E4D11F /* MainNavigationViewController.m in Sources */,
 				DEC0A55D1A59EA9200D17D8A /* CopyableLabel.m in Sources */,
@@ -910,7 +911,6 @@
 				DE7AE43619B762C90001567E /* main.m in Sources */,
 				DE0051BE19B78F190053D2EB /* MainTableViewController.m in Sources */,
 				DEC67BA81AA8BE44004991C2 /* SettingsTableViewCell.m in Sources */,
-				DE8E518A1AF85FA10079B1F7 /* CustomAlertViewController.m in Sources */,
 				DE8E518D1AF86FA50079B1F7 /* PopoverViewController.m in Sources */,
 				DEB874AE1ACA105F003B5996 /* ViewStreamCollectionViewController.m in Sources */,
 				DEB8746B1AC4BA5D003B5996 /* TopToBottomSegue.m in Sources */,

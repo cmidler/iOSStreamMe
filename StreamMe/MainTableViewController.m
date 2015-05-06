@@ -133,69 +133,143 @@
     //[self checkCreateStreamInfo];
 }
 
--(void) checkCreateStreamInfo
+-(void) mainTutorial
 {
-    /*float width = self.view.frame.size.width;
-    UIView* view  = [[UIView alloc] initWithFrame:CGRectMake(width/2, 0, width/2, width/4)];
-    UILabel* label = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, width/2, width/8)];
-    UIButton* button = [[UIButton alloc] initWithFrame:CGRectMake(0, width/8, width/2, width/8)];
-    label.text = @"Create a new stream of photos.";
-    label.textAlignment = NSTextAlignmentCenter;
-    label.numberOfLines = 0;
-    label.font = [UIFont fontWithName:@"HelveticaNeue" size:14.0];
-    [button setTitle:@"Got It!" forState:UIControlStateNormal];
-    [button setTitleColor:[UIColor blueColor] forState:UIControlStateNormal];
-    button.titleLabel.textAlignment = NSTextAlignmentCenter;
-    button.titleLabel.font = [UIFont fontWithName:@"HelveticaNeue" size:14.0];
-    [view addSubview:label];
-    [view addSubview:button];
-    view.layer.borderColor = [[UIColor blackColor] CGColor];
-    view.layer.cornerRadius = 5.0;
-    view.layer.borderWidth = 2.0;
-    [self.view addSubview:view];
-    [UIView animateWithDuration:0.5
-                     animations:^{
-                         view.center = CGPointMake(width*3.0/4.0,view.frame.size.height/2);
-                         [self.view layoutIfNeeded];
-                     }];*/
     
-   
-    /*UIView* barButtonView = [self.navigationItem.rightBarButtonItem valueForKey:@"view"];
-    CustomAlertViewController *alertController = [CustomAlertViewController
-                                                  alertControllerWithTitle:nil
-                                                  message:@"Create a new stream of pictures"
-                                                  preferredStyle:UIAlertControllerStyleActionSheet];
+    //if we have already done the streams of content then return
+    NSNumber *showStreamOfContentTutorial =
+    [[NSUserDefaults standardUserDefaults] objectForKey:@"ShowStreamOfContentTutorial"];
+    if(showStreamOfContentTutorial)
+        return;
     
-    UIAlertAction *okAction = [UIAlertAction
-                               actionWithTitle:NSLocalizedString(@"Got It!", @"OK action")
-                               style:UIAlertActionStyleDefault
-                               handler:^(UIAlertAction *action)
-                               {
-                                   //[self.navigationItem.rightBarButtonItem setBackgroundImage:nil forState:UIControlStateNormal barMetrics:UIBarMetricsDefault ];
-                                   barButtonView.backgroundColor = [UIColor clearColor];
-                                   return;
-                               }];
+    //see if we have to do the popover right now
+    NSNumber *showedAddStreamMainTutorial =
+    [[NSUserDefaults standardUserDefaults] objectForKey:@"ShowedAddStreamMainTutorial"];
+    if (showedAddStreamMainTutorial && (!showStreamsArray || !showStreamsArray.count))
+        return;
     
-    [alertController addAction:okAction];
-    // This will turn the Action Sheet into a popover
-    [alertController setModalPresentationStyle:UIModalPresentationPopover];
+    //ok we have to show tutorials
     
-    NSLog(@"presentation style is %d and popover is %d", alertController.modalPresentationStyle, UIModalPresentationPopover);
-    // Set Modal In Popover to YES to make sure your popover isn't dismissed by taps outside the popover controller
-    [alertController setModalInPopover:YES];
+    //show add stream tutorial
+    if(!showedAddStreamMainTutorial)
+    {
+        PopoverViewController* pvc = [self.storyboard instantiateViewControllerWithIdentifier:@"PopoverViewController"];
+        [pvc setModalPresentationStyle:UIModalPresentationPopover];
+        pvc.preferredContentSize = CGSizeMake(280, 80);
+        
+        NSLog(@"pvc height is %f", pvc.view.frame.size.height);
+        UIPopoverPresentationController* popoverController = pvc.popoverPresentationController;
+        [caption setHidden:YES];
+        popoverController.barButtonItem = self.navigationItem.rightBarButtonItem;
+        NSLog(@"popover controller = %@", popoverController);
+        
+        //NSLog(@"bar button view is %@", barButtonView);
+        popoverController.sourceView = [self.navigationItem.rightBarButtonItem valueForKey:@"view"];
+        popoverController.sourceRect = CGRectMake(0,0,280,80);
+        popoverController.permittedArrowDirections = UIPopoverArrowDirectionUp;
+        popoverController.delegate = self;
+        [self presentViewController:pvc animated:YES completion:nil];
+        pvc.popoverLabel.text = @"Add your own stream of photos here.";
+        pvc.popoverLabel.textAlignment = NSTextAlignmentCenter;
+        pvc.popoverLabel.numberOfLines = 0;
+        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        [defaults setObject:@"YES" forKey:@"ShowedAddStreamMainTutorial"];
+        [defaults synchronize];
+        _popoverOpen = 1;
+    }
     
-    [self presentViewController:alertController animated:YES completion:nil];
-    UIPopoverPresentationController* popoverController = alertController.popoverPresentationController;
+    //show stream content tutorial
+    if(!showStreamOfContentTutorial && showStreamsArray && showStreamsArray.count && !_popoverOpen)
+    {
+        NSLog(@"inside of main tutorial for stream");
+        if(!_currentPopover)
+        {
+            NSLog(@"current popover is %@", _currentPopover);
+            _currentPopover = @"addStream";
+            _popoverOpen = YES;
+            PopoverViewController* pvc = [self.storyboard instantiateViewControllerWithIdentifier:@"PopoverViewController"];
+            [pvc setModalPresentationStyle:UIModalPresentationPopover];
+            pvc.preferredContentSize = CGSizeMake(280, 80);
+            
+            UIPopoverPresentationController* popoverController = pvc.popoverPresentationController;
+            [caption setHidden:YES];
+            
+            //NSLog(@"bar button view is %@", barButtonView);
+            NSIndexPath* tableViewPath = [NSIndexPath indexPathForRow:0 inSection:0];
+            MainTableViewCell *cell = (MainTableViewCell*)[streamsTableView cellForRowAtIndexPath:tableViewPath];
+            //make sure the cell is there
+            if(!cell)
+            {
+                NSLog(@"cell is nil");
+                return;
+            }
+            
+            popoverController.sourceView = cell;
+            popoverController.sourceRect = CGRectMake(0,0,280,80);
+            popoverController.permittedArrowDirections = UIPopoverArrowDirectionUp;
+            popoverController.delegate = self;
+            [self presentViewController:pvc animated:YES completion:nil];
+            pvc.popoverLabel.text = @"Quick scroll through multiple streams and select a photo for a more comprehensive view.";
+            pvc.popoverLabel.textAlignment = NSTextAlignmentCenter;
+            pvc.popoverLabel.numberOfLines = 0;
+            
+        }
+        else if([_currentPopover isEqualToString:@"addStream"] && !_popoverOpen)
+        {
+            _currentPopover = @"addPhoto";
+            _popoverOpen = YES;
+            PopoverViewController* pvc = [self.storyboard instantiateViewControllerWithIdentifier:@"PopoverViewController"];
+            [pvc setModalPresentationStyle:UIModalPresentationPopover];
+            pvc.preferredContentSize = CGSizeMake(280, 80);
+            
+            NSLog(@"pvc height is %f", pvc.view.frame.size.height);
+            UIPopoverPresentationController* popoverController = pvc.popoverPresentationController;
+            [caption setHidden:YES];
+            NSLog(@"popover controller = %@", popoverController);
+            
+            //NSLog(@"bar button view is %@", barButtonView);
+            //now need to find the headerview
+            if(!_firstHeaderView)
+            {
+                NSLog(@"bad first header");
+                return;
+            }
+            UIView* sourceView = _firstHeaderView.subviews[7];
+            if(!sourceView)
+            {
+                NSLog(@"sourceview is null %@", sourceView);
+                return;
+            }
+            sourceView.backgroundColor = [UIColor grayColor];
+            popoverController.sourceView = sourceView;
+            popoverController.sourceRect = CGRectMake(0,0,280,80);
+            popoverController.permittedArrowDirections = UIPopoverArrowDirectionDown;
+            popoverController.delegate = self;
+            [self presentViewController:pvc animated:YES completion:nil];
+            pvc.popoverLabel.text = @"Click the add content button to contribute your own vision to the existing stream!";
+            pvc.popoverLabel.textAlignment = NSTextAlignmentCenter;
+            pvc.popoverLabel.numberOfLines = 0;
+            
+        }
+        else if(!_popoverOpen)
+        {
+            NSLog(@"current popover is in else %@", _currentPopover);
+            UIView* sourceView = _firstHeaderView.subviews[7];
+            if(!sourceView)
+            {
+                NSLog(@"sourceview is null %@", sourceView);
+                return;
+            }
+            sourceView.backgroundColor = [UIColor clearColor];
+            _currentPopover = nil;
+            _popoverOpen = NO;
+            NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+            [defaults setObject:@"YES" forKey:@"ShowStreamOfContentTutorial"];
+            [defaults synchronize];
+            
+        }
+    }
     
-    popoverController.barButtonItem = self.navigationItem.rightBarButtonItem;
-    NSLog(@"popover controller = %@", popoverController);
-    
-    //NSLog(@"bar button view is %@", barButtonView);
-    popoverController.sourceView = barButtonView;
-    popoverController.sourceRect = barButtonView.bounds;
-    popoverController.permittedArrowDirections = UIPopoverArrowDirectionUp;
-    
-    barButtonView.backgroundColor = [UIColor blackColor];*/
 }
 
 -(void) setNavigationTitle
@@ -321,7 +395,7 @@
                                style:UIAlertActionStyleDefault
                                handler:^(UIAlertAction *action)
                                {
-                                   [self checkCreateStreamInfo];
+                                   [self mainTutorial];
                                    return;
                                }];
     /*UIAlertAction *settingsAction = [UIAlertAction
@@ -1030,10 +1104,10 @@
             if([s.stream.objectId isEqualToString:streamId])
             {
                 //check to see if the match is still valid
-                NSDate* date = [s.stream objectForKey:@"endTime"];
+                /*NSDate* date = [s.stream objectForKey:@"endTime"];
                 NSTimeInterval interval = [date timeIntervalSinceDate:[NSDate date]];
                 if(isnan(interval) || interval<=0)
-                    continue;//not valid
+                    continue;//not valid*/
                 
                 //found valid match
                 [PFCloud callFunctionInBackground:@"countUsersForStreams" withParameters:@{@"streamId":streamId} block:^(id object, NSError *error) {
@@ -1056,6 +1130,7 @@
 
 -(void) singlePictureTapDetected:(id) sender
 {
+    
     NSLog(@"single picture tap detected");
     UITapGestureRecognizer *gesture = (UITapGestureRecognizer *) sender;
     _selectedSectionIndex = (int)gesture.view.tag;
@@ -1068,7 +1143,7 @@
 -(void) headerTapDetected:(id) sender
 {
     UITapGestureRecognizer *gesture = (UITapGestureRecognizer *) sender;
-    _selectedCellIndex = (int)gesture.view.tag;
+    _selectedCellIndex = -(int)gesture.view.tag;
     _creatingStream = NO;
     _openedWithShake = NO;
     _selectedStream = ((Stream*)showStreamsArray[_selectedCellIndex]).stream;
@@ -1110,7 +1185,7 @@
     }
     else
     {
-        [self checkCreateStreamInfo];
+        [self mainTutorial];
     }
     _menuOpened = NO;
     NSLog(@"current row is %d", (int)_selectedCellIndex);
@@ -1267,7 +1342,7 @@
 }
 
 //creating the header view so that we can have edit buttons as well
-- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
+/*- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
     
     Stream* s = showStreamsArray[section];
     
@@ -1370,7 +1445,7 @@
     [headerView addSubview:usernameLabel];
     
     return headerView;
-}
+}*/
 
 //Show data in cells
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
@@ -1388,7 +1463,11 @@
     //loop through subviews and if pfimage is there remove it
     for(UIView* view in cell.subviews)
     {
+        //remove imageview
         if([view isKindOfClass:[PFImageView class]])
+            [view removeFromSuperview];
+        //remove old headerview
+        if(view.tag < 0)
             [view removeFromSuperview];
     }
     
@@ -1400,22 +1479,120 @@
         Stream* s = showStreamsArray[indexPath.section];
         
         
+        float width = tableView.frame.size.width;
+        float halfHeight = HEADER_HEIGHT/2.0;
+        float quarterHeight = HEADER_HEIGHT/4.0;
+        float threeQuarterHeight = HEADER_HEIGHT*3.0/4.0;
+        
         //create the view to hold all of the other views
-        UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(cell.frame.size.width/4, cell.frame.size.height/2-HEADER_HEIGHT/2, cell.frame.size.width/2, HEADER_HEIGHT)];
-        titleLabel.backgroundColor = [UIColor whiteColor];
-        titleLabel.font = [UIFont boldSystemFontOfSize:17.0];
-        titleLabel.textColor = [UIColor darkTextColor];
-        titleLabel.textAlignment = NSTextAlignmentCenter;
-        titleLabel.numberOfLines = 0;
-        titleLabel.layer.cornerRadius = 10;
-        titleLabel.clipsToBounds = YES;
-        titleLabel.text = [NSString stringWithFormat:@"#%@",[s.stream objectForKey:@"name"] ];
-        //titleLabel.center = cell.center;
-        [cell addSubview:titleLabel];
+        PassthroughView *headerView = [[PassthroughView alloc] initWithFrame:CGRectMake(0, cell.frame.size.height/2-HEADER_HEIGHT/2, tableView.frame.size.width, HEADER_HEIGHT)];
+        headerView.tag = -indexPath.section;
+        headerView.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0.6];
+        if(!indexPath.section)
+            _firstHeaderView = headerView;
+        
+        //create the title with the name of the stream
+        UILabel *title = [[UILabel alloc] initWithFrame:CGRectMake(5, 5, width-threeQuarterHeight, halfHeight)];
+        title.font = [UIFont boldSystemFontOfSize:17.0];
+        title.textColor = [UIColor darkTextColor];
+        title.text = [NSString stringWithFormat:@"#%@",[s.stream objectForKey:@"name"] ];
+        title.textAlignment = NSTextAlignmentLeft;
+        title.numberOfLines = 1;
+        title.minimumScaleFactor = 8./title.font.pointSize;
+        title.adjustsFontSizeToFitWidth = YES;
+        
+        
+        //set when it expires
+        UILabel *expiration = [[UILabel alloc] initWithFrame:CGRectMake(5, threeQuarterHeight, width/3.0, quarterHeight)];
+        expiration.font = [UIFont boldSystemFontOfSize:10.0];
+        expiration.numberOfLines = 1;
+        //get time left label
+        NSDate* endTime = [s.stream objectForKey:@"endTime"];
+        NSString* timeLeft;
+        NSTimeInterval interval = [endTime timeIntervalSinceDate:[NSDate date]];
+        //stream if over
+        if(isnan(interval) || interval<=0)
+        {
+            timeLeft = @"Stream Expired";
+            [expiration setTextColor:[UIColor redColor]];
+            [headerView setUserInteractionEnabled:NO];
+        }
+        else
+        {
+            interval = interval/60;//let's get minutes accuracy
+            //if more 30 minutes left then say less than the rounded up hour
+            if(interval>30)
+                timeLeft = [NSString stringWithFormat:@"Expires: < %dh",(int) ceil(interval/60)];
+            else
+                timeLeft = [NSString stringWithFormat:@"Expires: < %dm",(int) ceil(interval)];
+        }
+        expiration.text = timeLeft;
+        
+        //creation time label
+        UILabel *creationLabel = [[UILabel alloc] initWithFrame:CGRectMake(5, halfHeight, width/3.0, quarterHeight)];
+        creationLabel.font = [UIFont systemFontOfSize:10.0];
+        creationLabel.numberOfLines = 1;
+        NSDate* createdAt = s.stream.createdAt;
+        NSDateFormatter *dateFormatter = [[NSDateFormatter alloc]init];
+        dateFormatter.dateFormat = @"hh:mm a";
+        NSString *dateString = [dateFormatter stringFromDate: createdAt];
+        creationLabel.text = [NSString stringWithFormat:@"Started: %@",dateString];
+        
+        //add image for people
+        UIImageView* peopleImageView = [[UIImageView alloc] initWithFrame:CGRectMake(width/3.0 , threeQuarterHeight, halfHeight*3.0/4.0, quarterHeight)];
+        peopleImageView.image = [UIImage imageNamed:@"people.png"];
+        
+        //add number of people
+        UILabel *viewers = [[UILabel alloc] initWithFrame:CGRectMake(peopleImageView.frame.origin.x+peopleImageView.frame.size.width + 5, threeQuarterHeight, width/6, quarterHeight)];
+        viewers.font = [UIFont systemFontOfSize:10.0];
+        viewers.numberOfLines = 1;
+        viewers.text = [NSString stringWithFormat:@"%d",(int)s.totalViewers ];
+        //[viewers sizeToFit];
+        
+        //add image for pictures
+        UIImageView* pictureImageView = [[UIImageView alloc] initWithFrame:CGRectMake(width/3.0, halfHeight, halfHeight*3.0/4.0, quarterHeight)];
+        pictureImageView.image = [UIImage imageNamed:@"pictures.png"];
+        
+        //add number of pictures
+        UILabel *contributions = [[UILabel alloc] initWithFrame:CGRectMake(pictureImageView.frame.origin.x + pictureImageView.frame.size.width+5, halfHeight, width/6, quarterHeight)];
+        contributions.font = [UIFont systemFontOfSize:10.0];
+        contributions.numberOfLines = 1;
+        contributions.text = [NSString stringWithFormat:@"%d",(int)s.totalShares];
+        //[contributions sizeToFit];
+        
+        //add the creator's username
+        UILabel* usernameLabel = [[UILabel alloc] initWithFrame:CGRectMake(contributions.frame.origin.x+contributions.frame.size.width, threeQuarterHeight, width -(contributions.frame.origin.x+contributions.frame.size.width)-5 , quarterHeight)];
+        usernameLabel.font = [UIFont boldSystemFontOfSize:12.0];
+        usernameLabel.numberOfLines = 0;
+        usernameLabel.text = s.username;
+        usernameLabel.textAlignment = NSTextAlignmentRight;
+        
+        //image view to help
+        UIImageView* addSharesImageView = [[UIImageView alloc] initWithFrame:CGRectMake(width-threeQuarterHeight, 5,threeQuarterHeight-5, threeQuarterHeight-5)];
+        addSharesImageView.image = [UIImage imageNamed:@"add-pictures-128.png"];
+        addSharesImageView.tag = -indexPath.section;
+        UITapGestureRecognizer *headerTap =  [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(headerTapDetected:)];
+        headerTap.numberOfTapsRequired = 1;
+        [addSharesImageView setUserInteractionEnabled:YES];
+        [addSharesImageView addGestureRecognizer:headerTap];
+        
+        //add a line going underneath the title
+        UIView *lineView = [[UIView alloc] initWithFrame:CGRectMake(0, halfHeight, width-threeQuarterHeight-10, 1)];
+        lineView.backgroundColor = [UIColor blackColor];
+        
+        [headerView addSubview:title];
+        [headerView addSubview:expiration];
+        [headerView addSubview:creationLabel];
+        [headerView addSubview:peopleImageView];
+        [headerView addSubview:viewers];
+        [headerView addSubview:pictureImageView];
+        [headerView addSubview:contributions];
+        [headerView addSubview:addSharesImageView];
+        [headerView addSubview:lineView];
+        [headerView addSubview:usernameLabel];
+        [cell addSubview:headerView];
         cell.tag = STREAM_CELL_TAG;
         cell.backgroundView = nil;
-        NSDate* endTime = [s.stream objectForKey:@"endTime"];
-        NSTimeInterval interval = [endTime timeIntervalSinceDate:[NSDate date]];
         
         //if there is only one photo, then make an image view to fit the cell
         //otherwise allow the collection view
@@ -1423,7 +1600,7 @@
         {
             
             NSInteger offset = s.offset*COLLECTION_VIEW_WIDTH;
-            cell.backgroundColor = [UIColor whiteColor];
+            //cell.backgroundColor = [UIColor whiteColor];
             cell.streamCollectionView.hidden = NO;
             [cell.streamCollectionView reloadData];
             if(offset)
@@ -1458,7 +1635,16 @@
             if(isnan(interval) || interval<=0)
             {
                 [cell setUserInteractionEnabled:NO];
-                cell.backgroundColor = [UIColor grayColor];
+                // create effect
+                UIBlurEffect *blur = [UIBlurEffect effectWithStyle:UIBlurEffectStyleLight];
+                
+                // add effect to an effect view
+                UIVisualEffectView *effectView = [[UIVisualEffectView alloc]initWithEffect:blur];
+                effectView.frame = cellImageView.frame;
+                
+                // add the effect view to the image view
+                [cellImageView addSubview:effectView];
+                [cellImageView bringSubviewToFront:effectView];
             }
             else
             {
@@ -1468,12 +1654,12 @@
                 cellImageView.tag = indexPath.section;
                 [cellImageView addGestureRecognizer:pictureImageTap];
                 [cell setUserInteractionEnabled:YES];
-                cell.backgroundColor = [UIColor whiteColor];
+                //cell.backgroundColor = [UIColor whiteColor];
             }
             [cell addSubview:cellImageView];
             
         }
-        [cell bringSubviewToFront:titleLabel];
+        [cell bringSubviewToFront:headerView];
         
     }
     //Loading cell
@@ -1523,6 +1709,24 @@
     }
     
     
+}
+
+- (void)tableView:(UITableView *)tableView
+didEndDisplayingCell:(UITableViewCell *)cell
+forRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if([indexPath row] == ((NSIndexPath*)[[tableView indexPathsForVisibleRows] lastObject]).row){
+        //end of loading
+        //if we have already done the streams of content then return
+        NSNumber *showStreamOfContentTutorial =
+        [[NSUserDefaults standardUserDefaults] objectForKey:@"ShowStreamOfContentTutorial"];
+        NSLog(@"at end of tableview with content %d", showStreamOfContentTutorial.boolValue);
+        if(!showStreamOfContentTutorial && showStreamsArray && showStreamsArray.count)
+        {
+            NSLog(@"loading main tutorial");
+            [self mainTutorial];
+        }
+    }
 }
 
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView{
@@ -1751,7 +1955,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
-    return HEADER_HEIGHT;
+    return 0.1f;
 }
 
 - (IBAction)addStreamAction:(id)sender {
@@ -2367,7 +2571,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     if([_currentPopover isEqualToString:@"timer"])
         pvc.popoverLabel.text = @"Set how long you want the stream to last.";
     if([_currentPopover isEqualToString:@"save"])
-        pvc.popoverLabel.text = @"Save the photo to your library.";
+        pvc.popoverLabel.text = @"Save the photo to your phone's library.";
     if([_currentPopover isEqualToString:@"cancel"])
         pvc.popoverLabel.text = @"Retake the picture";
     pvc.popoverLabel.textAlignment = NSTextAlignmentCenter;
@@ -3164,7 +3368,9 @@ shouldChangeTextInRange:(NSRange)range
 
 - (void)popoverPresentationControllerDidDismissPopover:(UIPopoverPresentationController *)popoverPresentationController
 {
-    NSLog(@"dismissed in main");
+    _popoverOpen = NO;
+    [self mainTutorial];
+    
 }
 
 @end

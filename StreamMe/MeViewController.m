@@ -22,6 +22,28 @@
     meArray = @[@"Points:", @"Rank:"];
     _spinnerActive = YES;
     _points = 0;
+    
+    //present an alert to tell the person to tap the screen to take the photo
+    NSNumber *showPoints =
+    [[NSUserDefaults standardUserDefaults] objectForKey:@"ShowPoints"];
+    if (!showPoints) {
+        UIAlertController *alertController = [UIAlertController
+                                              alertControllerWithTitle:@"Earn StreamMe Points"
+                                              message:@"Earn points by starting streams or adding content to existing ones to increase your rank!"
+                                              preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertAction *okAction = [UIAlertAction
+                                   actionWithTitle:NSLocalizedString(@"Ok", @"Ok action")
+                                   style:UIAlertActionStyleDefault
+                                   handler:^(UIAlertAction *action)
+                                   {
+                                       NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+                                       [defaults setObject:@"YES" forKey:@"ShowPoints"];
+                                       [defaults synchronize];
+                                       return;
+                                   }];
+        [alertController addAction:okAction];
+        [self presentViewController:alertController animated:YES completion:nil];
+    }
 }
 
 //query to get points
