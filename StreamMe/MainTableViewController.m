@@ -1862,30 +1862,37 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     customPicker.sourceType = UIImagePickerControllerSourceTypeCamera;
     customPicker.showsCameraControls = NO;
     customPicker.canTakePicture = YES;
-    float transformNumber = (self.view.frame.size.height-TOOLBAR_HEIGHT)/self.view.frame.size.width;
+    //helper variables
+    float screenWidth = self.view.frame.size.width;
+    float transformNumber = self.view.frame.size.height/self.view.frame.size.width;
     NSLog(@"transform number is %f", transformNumber);
-    customPicker.cameraViewTransform = CGAffineTransformMakeScale(1.0, transformNumber);
+    float pickerHeight = self.view.frame.size.height;
+    
+    CGFloat cameraAspectRatio = 4.0f/3.0f;
+    
+    CGFloat camViewHeight = screenWidth * cameraAspectRatio;
+    CGFloat scale = self.view.frame.size.height / camViewHeight;
+    //CGFloat adjustedXPosition = (screenWidth*scale - screenWidth)/2;
+    
+    CGFloat adjustedYPosition = (pickerHeight - camViewHeight) / 2;
+    NSLog(@"adjusted y position is %f", adjustedYPosition);
+    NSLog(@"scale is %f",scale);
+    CGAffineTransform translate = CGAffineTransformMakeTranslation(0, adjustedYPosition);
+    customPicker.cameraViewTransform = translate;
+    customPicker.cameraViewTransform = CGAffineTransformScale(translate, scale, scale);
+    
     _flashMode = UIImagePickerControllerCameraFlashModeAuto;
-    NSLog(@" picker overlay height %f",customPicker.cameraOverlayView.frame.size.height);
     _isTakingPicture = YES;
     //set original center
     _originalCenter = customPicker.view.center;
     
-    //helper variables
-    float screenWidth = self.view.frame.size.width;
-    float pickerHeight = (screenWidth*transformNumber);
-    
-    NSLog(@"picker height is %f",pickerHeight);
-    
     // overlay on top of camera lens view
     cameraOverlayView = [[UIImageView alloc] initWithFrame:CGRectMake(0,0,screenWidth, pickerHeight)];
-    //UIImage* overlay = [UIImage imageNamed:@"camera_overlay.png"];
     [cameraOverlayView setContentMode:UIViewContentModeScaleToFill];
-    //cameraOverlayView.image = overlay;
     cameraOverlayView.alpha = 0.0f;
 
     //make a textview for the caption on the camera
-    caption = [[UITextView alloc] initWithFrame:CGRectMake(0, pickerHeight, screenWidth, self.view.frame.size.height-pickerHeight-TOOLBAR_HEIGHT)];
+    caption = [[UITextView alloc] initWithFrame:CGRectMake(0, pickerHeight-2*TOOLBAR_HEIGHT, screenWidth, TOOLBAR_HEIGHT)];
     caption.delegate = self;
     caption.text = @"Enter Caption:";
     caption.textColor = [UIColor grayColor];
@@ -1896,7 +1903,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     caption.returnKeyType = UIReturnKeyDone;
     
     //setup the toolbar
-    toolBar = [[UIToolbar alloc] initWithFrame:CGRectMake(0, pickerHeight+caption.frame.size.height, screenWidth, TOOLBAR_HEIGHT)];
+    toolBar = [[UIToolbar alloc] initWithFrame:CGRectMake(0, self.view.frame.size.height-TOOLBAR_HEIGHT, screenWidth, TOOLBAR_HEIGHT)];
     UIBarButtonItem *cancelButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel target:self action:@selector(cancelClicked:)];
     UIBarButtonItem *flipButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"cameraFlip.png"] style:UIBarButtonItemStyleDone target:self action:@selector(flipCamera:)];
     flashButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"automaticFlash.png"] style:UIBarButtonItemStyleDone target:self action:@selector(cameraFlash:)];
@@ -1905,7 +1912,13 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     [cancelButton setTintColor:[UIColor whiteColor]];
     [toolBar setItems:[NSArray arrayWithObjects:cancelButton,[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil], flashButton, [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil], flipButton, nil]];
     [toolBar setBarStyle:UIBarStyleBlack];
-    [toolBar setBackgroundColor:[UIColor blackColor]];
+    [toolBar setBackgroundColor:[UIColor clearColor]];
+    [toolBar setTranslucent:YES];
+    [toolBar setBackgroundImage:[UIImage new]
+                  forToolbarPosition:UIBarPositionAny
+                          barMetrics:UIBarMetricsDefault];
+    [toolBar setShadowImage:[UIImage new]
+              forToolbarPosition:UIToolbarPositionAny];
     
     //check if I have to redo caption height
     if(caption.frame.size.height < TABLE_VIEW_BAR_HEIGHT)
@@ -1929,7 +1942,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     caption.hidden = YES;
     
     [self presentViewController:customPicker animated:YES completion:^{
-       //present an alert to tell the person to tap the screen to take the photo
+        //present an alert to tell the person to tap the screen to take the photo
         
     }];
 }
@@ -1946,44 +1959,46 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     
     //figure out the image
     UIImage* image =[info objectForKey:UIImagePickerControllerOriginalImage];
-    //NSNumber* orientation = [((NSDictionary*)[info objectForKey:UIImagePickerControllerMediaMetadata]) objectForKey:@"Orientation"];
-    //NSLog(@"image metadata is %@", [info objectForKey:UIImagePickerControllerMediaMetadata]);
-    
-    //NSLog(@"image orientation is %d", orientation.intValue);
-    
-   /* NSLog(@"image is %f, %f", image.size.width, image.size.height);
-    NSLog(@"overlay is %f, %f, %f, %f", cameraOverlayView.frame.origin.x, cameraOverlayView.frame.origin.y, cameraOverlayView.frame.size.width, cameraOverlayView.frame.size.height);
-    CGRect rect = CGRectMake(image.size.width/2-screenWidth/2, TOOLBAR_HEIGHT, screenWidth, screenWidth*4.0/3.0);
-    CGImageRef imageRef = CGImageCreateWithImageInRect([image CGImage], rect);
-    UIImage *newImage = [UIImage imageWithCGImage:imageRef];*/
-    NSLog(@"image orientation is = %d", (int)image.imageOrientation);
     int imageOrientation = 3 - image.imageOrientation;
     if(image.imageOrientation == 1)
         imageOrientation = 3;
     UIImage* fixedImage = [self fixOrientation:image withOrientation:imageOrientation];
-    float transformNumber = (self.view.frame.size.height-TOOLBAR_HEIGHT)/self.view.frame.size.width;
-    CGSize destinationSize = CGSizeMake(screenWidth, transformNumber*screenWidth);
+    CGFloat cameraAspectRatio = 4.0f/3.0f;
+    
+    CGFloat camViewHeight = screenWidth * cameraAspectRatio;
+    CGFloat scale = self.view.frame.size.height / camViewHeight;
+    CGFloat adjustedXPosition = (screenWidth*scale - screenWidth)/2;
+    CGSize destinationSize = CGSizeMake(screenWidth*scale, self.view.frame.size.height);
     UIGraphicsBeginImageContext(destinationSize);
     [fixedImage drawInRect:CGRectMake(0,0,destinationSize.width,destinationSize.height)];
     UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
+    
+    // Create rectangle that represents a cropped image
+    // from the middle of the existing image
+    CGRect rect = CGRectMake(adjustedXPosition, 0 ,screenWidth, newImage.size.height);
+    
+    // Create bitmap image from original image data,
+    // using rectangle to specify desired crop area
+    CGImageRef imageRef = CGImageCreateWithImageInRect([newImage CGImage], rect);
+    UIImage* croppedImage = [UIImage imageWithCGImage:imageRef];
     
     //if the image is from front camera, need to flip horizontally
     if(customPicker.cameraDevice == UIImagePickerControllerCameraDeviceFront)
     {
         //depending on the orientation is how we flip it
         if(image.imageOrientation == 3 || image.imageOrientation == 0 || image.imageOrientation == 1)
-            newImage = [UIImage imageWithCGImage:newImage.CGImage
+            croppedImage = [UIImage imageWithCGImage:croppedImage.CGImage
                                        scale:newImage.scale
                                  orientation:UIImageOrientationUpMirrored];
         else
-            newImage = [UIImage imageWithCGImage:newImage.CGImage
+            croppedImage = [UIImage imageWithCGImage:croppedImage.CGImage
                                            scale:newImage.scale
                                      orientation:UIImageOrientationRightMirrored];
     }
     //set the image data
-    _imageData = UIImageJPEGRepresentation(newImage, 1.0f);
-    cameraOverlayView.image = newImage;
+    _imageData = UIImageJPEGRepresentation(croppedImage, 1.0f);
+    cameraOverlayView.image = croppedImage;
     
     //reset the toolbar
     UIBarButtonItem *cancelButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel target:self action:@selector(cancelClicked:)];
@@ -2177,6 +2192,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         pvc.popoverLabel.textAlignment = NSTextAlignmentCenter;
         pvc.popoverLabel.numberOfLines = 0;
         _currentPopover = @"caption";
+        [caption setEditable:NO];
         return;
     }
     //publish
@@ -2215,6 +2231,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     else//done with popovers
     {
         caption.hidden = NO;
+        [caption setEditable:YES];
         _currentPopover = nil;
         for(UIBarButtonItem* barButton in toolBar.items)
         {
@@ -2375,8 +2392,9 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     [activityIndicator startAnimating];
     [activityIndicator setHidden:NO];
     [customPicker.view addSubview:activityIndicator];
-    for(UIBarButtonItem* buttonItem in toolBar.items)
-        buttonItem.enabled = NO;
+    [toolBar setHidden:YES];
+    [caption setHidden:YES];
+    
     
     //deciding if I am creating the stream or just a share
     if(_creatingStream)
@@ -2466,7 +2484,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         //return to taking picture
         _isTakingPicture = YES;
         customPicker.canTakePicture = YES;
-        //cameraOverlayView.image = [UIImage imageNamed:@"camera_overlay.png"];
+        cameraOverlayView.image = nil;//[UIImage imageNamed:@"camera_overlay.png"];
     }
 }
 
@@ -2587,8 +2605,8 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                                        {
                                            [share deleteInBackground];
                                            [activityIndicator setHidden:YES];
-                                           for(UIBarButtonItem* buttonItem in toolBar.items)
-                                               buttonItem.enabled = YES;
+                                           [toolBar setHidden:NO];
+                                           [caption setHidden:NO];
                                            return;
                                        }];
             
@@ -2622,8 +2640,8 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                                                NSArray* pfObjects = [[NSArray alloc] initWithObjects:share,stream, nil];
                                                [PFObject deleteAllInBackground:pfObjects];
                                                [activityIndicator setHidden:YES];
-                                               for(UIBarButtonItem* buttonItem in toolBar.items)
-                                                   buttonItem.enabled = YES;
+                                               [toolBar setHidden:NO];
+                                               [caption setHidden:NO];
                                                return;
                                            }];
                 
@@ -2656,8 +2674,8 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                                                    NSArray* pfObjects = [[NSArray alloc] initWithObjects:share,stream,streamShare, nil];
                                                    [PFObject deleteAllInBackground:pfObjects];
                                                    [activityIndicator setHidden:YES];
-                                                   for(UIBarButtonItem* buttonItem in toolBar.items)
-                                                       buttonItem.enabled = YES;
+                                                   [toolBar setHidden:NO];
+                                                   [caption setHidden:NO];
                                                    return;
                                                }];
                     
@@ -2691,8 +2709,8 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                                                        NSArray* pfObjects = [[NSArray alloc] initWithObjects:share,stream,streamShare,userStream, nil];
                                                        [PFObject deleteAllInBackground:pfObjects];
                                                        [activityIndicator setHidden:YES];
-                                                       for(UIBarButtonItem* buttonItem in toolBar.items)
-                                                           buttonItem.enabled = YES;
+                                                       [toolBar setHidden:NO];
+                                                       [caption setHidden:NO];
                                                        return;
                                                    }];
                         
