@@ -1943,7 +1943,27 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     
     [self presentViewController:customPicker animated:YES completion:^{
         //present an alert to tell the person to tap the screen to take the photo
-        
+        NSNumber *showTouchScreenForPhoto =
+        [[NSUserDefaults standardUserDefaults] objectForKey:@"ShowTouchScreenForPhoto"];
+        if (showTouchScreenForPhoto == nil) {
+            UIAlertController *alertController = [UIAlertController
+                                                  alertControllerWithTitle:@"Take A Photo!"
+                                                  message:@"To take a photograph with the camera just tap anywhere on the screen!"
+                                                  preferredStyle:UIAlertControllerStyleAlert];
+            UIAlertAction *okAction = [UIAlertAction
+                                       actionWithTitle:NSLocalizedString(@"Ok", @"Ok action")
+                                       style:UIAlertActionStyleDefault
+                                       handler:^(UIAlertAction *action)
+                                       {
+                                           NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+                                           [defaults setObject:@"YES" forKey:@"ShowTouchScreenForPhoto"];
+                                           [defaults synchronize];
+                                           return;
+                                       }];
+            [alertController addAction:okAction];
+            
+            [customPicker presentViewController:alertController animated:YES completion:nil];
+        }
     }];
 }
 
@@ -2168,77 +2188,144 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 
 -(void) popoverDismissed
 {
+    //see if we have to do the popover right now
+    NSNumber *showedCreateStreamTutorial =
+    [[NSUserDefaults standardUserDefaults] objectForKey:@"ShowedCreateStreamTutorial"];
+    if (showedCreateStreamTutorial)
+        return;
+    
+    //if we showed the add to stream tutorial and are adding again then no need for popovers
+    NSNumber *showedAddToStreamTutorial =
+    [[NSUserDefaults standardUserDefaults] objectForKey:@"ShowedAddToStreamTutorial"];
+    if(showedAddToStreamTutorial && !_creatingStream)
+        return;
+    
+    //Ok, we need to show some tutorial
     UIView* barButtonView;
     UIBarButtonItem* selectedButton;
-    //if no value for current popover then we are on caption
-    if(!_currentPopover)
+    
+    
+    //neither tutorial has been shown
+    if(!showedAddToStreamTutorial && !showedAddToStreamTutorial)
     {
-        PopoverViewController* pvc = [self.storyboard instantiateViewControllerWithIdentifier:@"PopoverViewController"];
-        [pvc setModalPresentationStyle:UIModalPresentationPopover];
-        pvc.preferredContentSize = CGSizeMake(280, 80);
-        
-        NSLog(@"pvc height is %f", pvc.view.frame.size.height);
-        UIPopoverPresentationController* popoverController = pvc.popoverPresentationController;
-        NSLog(@"popover controller = %@", popoverController);
-        
-        //NSLog(@"bar button view is %@", barButtonView);
-        popoverController.sourceView = caption;
-        popoverController.sourceRect = CGRectMake(0,0,280,80);
-        popoverController.permittedArrowDirections = UIPopoverArrowDirectionDown;
-        popoverController.delegate = customPicker;
-        [customPicker presentViewController:pvc animated:YES completion:nil];
-        
-        pvc.popoverLabel.text = @"Add a caption to the picture.";
-        pvc.popoverLabel.textAlignment = NSTextAlignmentCenter;
-        pvc.popoverLabel.numberOfLines = 0;
-        _currentPopover = @"caption";
-        [caption setEditable:NO];
-        return;
-    }
-    //publish
-    else if([_currentPopover isEqualToString:@"caption"])
-    {
-        //set the publish button as the first to be explained
-        selectedButton = toolBar.items[toolBar.items.count-1];
-        barButtonView = [selectedButton valueForKey:@"view"];
-        //set which popover we are using
-        _currentPopover = @"publish";
-    }
-    else if([_currentPopover isEqualToString:@"publish"] && _creatingStream)
-    {
-        //set the publish button as the first to be explained
-        selectedButton = toolBar.items[4]; // probably shouldn't hardcode it, but oh well
-        barButtonView = [selectedButton valueForKey:@"view"];
-        //set which popover we are using
-        _currentPopover = @"timer";
-    }
-    else if([_currentPopover isEqualToString:@"publish"] || [_currentPopover isEqualToString:@"timer"])//we are on save
-    {
-        //set the publish button as the first to be explained
-        selectedButton = toolBar.items[2]; // probably shouldn't hardcode it, but oh well
-        barButtonView = [selectedButton valueForKey:@"view"];
-        //set which popover we are using
-        _currentPopover = @"save";
-    }
-    else if([_currentPopover isEqualToString:@"save"])//on cancel
-    {
-        //set the publish button as the first to be explained
-        selectedButton = toolBar.items[0]; // probably shouldn't hardcode it, but oh well
-        barButtonView = [selectedButton valueForKey:@"view"];
-        //set which popover we are using
-        _currentPopover = @"cancel";
-    }
-    else//done with popovers
-    {
-        caption.hidden = NO;
-        [caption setEditable:YES];
-        _currentPopover = nil;
-        for(UIBarButtonItem* barButton in toolBar.items)
+        //if no value for current popover then we are on caption
+        if(!_currentPopover)
         {
-            UIView* buttonView = [barButton valueForKey:@"view"];
-            buttonView.backgroundColor = [UIColor clearColor];
+            PopoverViewController* pvc = [self.storyboard instantiateViewControllerWithIdentifier:@"PopoverViewController"];
+            [pvc setModalPresentationStyle:UIModalPresentationPopover];
+            pvc.preferredContentSize = CGSizeMake(280, 80);
+            
+            NSLog(@"pvc height is %f", pvc.view.frame.size.height);
+            UIPopoverPresentationController* popoverController = pvc.popoverPresentationController;
+            NSLog(@"popover controller = %@", popoverController);
+            
+            //NSLog(@"bar button view is %@", barButtonView);
+            popoverController.sourceView = caption;
+            popoverController.sourceRect = CGRectMake(0,0,280,80);
+            popoverController.permittedArrowDirections = UIPopoverArrowDirectionDown;
+            popoverController.delegate = customPicker;
+            [customPicker presentViewController:pvc animated:YES completion:nil];
+            
+            pvc.popoverLabel.text = @"Add a caption to the picture.";
+            pvc.popoverLabel.textAlignment = NSTextAlignmentCenter;
+            pvc.popoverLabel.numberOfLines = 0;
+            _currentPopover = @"caption";
+            [caption setEditable:NO];
+            return;
         }
-        return;
+        //publish
+        else if([_currentPopover isEqualToString:@"caption"])
+        {
+            //set the publish button as the first to be explained
+            selectedButton = toolBar.items[toolBar.items.count-1];
+            barButtonView = [selectedButton valueForKey:@"view"];
+            //set which popover we are using
+            _currentPopover = @"publish";
+        }
+        else if([_currentPopover isEqualToString:@"publish"] && _creatingStream)
+        {
+            //set the publish button as the first to be explained
+            selectedButton = toolBar.items[4]; // probably shouldn't hardcode it, but oh well
+            barButtonView = [selectedButton valueForKey:@"view"];
+            //set which popover we are using
+            _currentPopover = @"timer";
+        }
+        else if([_currentPopover isEqualToString:@"publish"] || [_currentPopover isEqualToString:@"timer"])//we are on save
+        {
+            //set the publish button as the first to be explained
+            selectedButton = toolBar.items[2]; // probably shouldn't hardcode it, but oh well
+            barButtonView = [selectedButton valueForKey:@"view"];
+            //set which popover we are using
+            _currentPopover = @"save";
+        }
+        else if([_currentPopover isEqualToString:@"save"])//on cancel
+        {
+            //set the publish button as the first to be explained
+            selectedButton = toolBar.items[0]; // probably shouldn't hardcode it, but oh well
+            barButtonView = [selectedButton valueForKey:@"view"];
+            //set which popover we are using
+            _currentPopover = @"cancel";
+        }
+        else//done with popovers
+        {
+            caption.hidden = NO;
+            [caption setEditable:YES];
+            _currentPopover = nil;
+            for(UIBarButtonItem* barButton in toolBar.items)
+            {
+                UIView* buttonView = [barButton valueForKey:@"view"];
+                buttonView.backgroundColor = [UIColor clearColor];
+            }
+            
+            //set the correct user default
+            if(_creatingStream)
+            {
+                NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+                [defaults setObject:@"YES" forKey:@"ShowedCreateStreamTutorial"];
+                [defaults setObject:@"YES" forKey:@"ShowedAddToStreamTutorial"];
+                [defaults synchronize];
+            }
+            else
+            {
+                NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+                [defaults setObject:@"YES" forKey:@"ShowedAddToStreamTutorial"];
+                [defaults synchronize];
+            }
+            
+            
+            return;
+        }
+    }
+    //means
+    else if (showedAddToStreamTutorial && !showedCreateStreamTutorial && _creatingStream)
+    {
+        //if no value for current popover then we are on timer
+        if(!_currentPopover)
+        {
+            //set the publish button as the first to be explained
+            selectedButton = toolBar.items[4]; // probably shouldn't hardcode it, but oh well
+            barButtonView = [selectedButton valueForKey:@"view"];
+            //set which popover we are using
+            _currentPopover = @"timer";
+        }
+        else
+        {
+            caption.hidden = NO;
+            [caption setEditable:YES];
+            _currentPopover = nil;
+            for(UIBarButtonItem* barButton in toolBar.items)
+            {
+                UIView* buttonView = [barButton valueForKey:@"view"];
+                buttonView.backgroundColor = [UIColor clearColor];
+            }
+            
+            //set the correct user default
+            NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+            [defaults setObject:@"YES" forKey:@"ShowedCreateStreamTutorial"];
+            [defaults synchronize];
+            
+            return;
+        }
     }
     
     //disable the other buttons
