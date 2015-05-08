@@ -124,8 +124,7 @@
     
     //setup imageview size first
     float width = cell.frame.size.width;
-    float cellHeight = cell.frame.size.height;
-    float height = width*4.0/3.0;
+    float height = cell.frame.size.height;
     [cell setUserInteractionEnabled:YES];
     
     
@@ -138,13 +137,14 @@
     cell.captionTextView.hidden = YES;
     cell.usernameLabel.hidden = YES;
     cell.shareImageView.frame = CGRectMake(0, 0, width, height);
-    cell.usernameLabel.frame = CGRectMake(2.5, height, width-5, 10);
-    cell.captionTextView.frame = CGRectMake(2.5,height+10, width-2.5, cellHeight-height-10);
+    cell.usernameLabel.frame = CGRectMake(0, height-TOOLBAR_HEIGHT, width, TOOLBAR_HEIGHT);
+    cell.captionTextView.frame = CGRectMake(0,height-2*TOOLBAR_HEIGHT, width, TOOLBAR_HEIGHT);
     [cell.shareImageView setContentMode:UIViewContentModeScaleToFill];
     cell.shareImageView.translatesAutoresizingMaskIntoConstraints = YES;
     cell.usernameLabel.translatesAutoresizingMaskIntoConstraints = YES;
     cell.captionTextView.translatesAutoresizingMaskIntoConstraints = YES;
-    
+    cell.captionTextView.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.6];
+    cell.usernameLabel.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.6];
     //we are in the beginning loading row
     if(!hasFirstShare && !indexPath.row)
     {

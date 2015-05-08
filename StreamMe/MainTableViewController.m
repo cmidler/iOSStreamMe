@@ -136,6 +136,10 @@
 -(void) mainTutorial
 {
     
+    //don't want to give a popup when we aren't on the page
+    if(_imagePickerOpen)
+        return;
+    
     //if we have already done the streams of content then return
     NSNumber *showStreamOfContentTutorial =
     [[NSUserDefaults standardUserDefaults] objectForKey:@"ShowStreamOfContentTutorial"];
@@ -204,7 +208,23 @@
                 return;
             }
             
-            popoverController.sourceView = cell;
+            UIView* sourceView;
+            for(UIView* view in cell.subviews)
+            {
+                if(view.tag == TUTORIAL_VIEW_TAG)
+                {
+                    sourceView = view;
+                    break;
+                }
+            }
+            
+            if(!sourceView)
+            {
+                NSLog(@"sourceview is nil");
+                return;
+            }
+            
+            popoverController.sourceView = sourceView;
             popoverController.sourceRect = CGRectMake(0,0,280,80);
             popoverController.permittedArrowDirections = UIPopoverArrowDirectionUp;
             popoverController.delegate = self;
@@ -689,9 +709,6 @@
                 _tableFirstLoad = NO;
                 _downloadingStreams = NO;
                 [self countStreamShares:streamIds];
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [self sortStreams];
-                });
             }];
             
             
@@ -765,9 +782,6 @@
             _tableFirstLoad = NO;
             _downloadingStreams = NO;
             [self countStreamShares:streamIds];
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [self sortStreams];
-            });
         }];
     }
     
@@ -1031,10 +1045,20 @@
 //helper function to update the count of shares in the background for the list of provided stream ids
 -(void) countStreamShares:(NSArray*)streamIds
 {
+    //if no stream ids then return
+    if(!streamIds.count)
+    {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self sortStreams];
+        });
+    }
     NSLog(@"countStreamShares:()");
     AppDelegate* appDelegate = [[UIApplication sharedApplication] delegate];
     NSMutableArray* streams = [appDelegate streams];
     __block int i = 0;
+    
+    
+    
     //do background queries to update the amount of shares
     for(NSString* streamId in streamIds)
     {
@@ -1467,8 +1491,11 @@
         if([view isKindOfClass:[PFImageView class]])
             [view removeFromSuperview];
         //remove old headerview
-        if(view.tag < 0)
+        if(view.tag == HEADER_TAG)
+        {
+            NSLog(@"removing tag");
             [view removeFromSuperview];
+        }
     }
     
     //now check if we are using the profile cell or pagination
@@ -1486,7 +1513,7 @@
         
         //create the view to hold all of the other views
         PassthroughView *headerView = [[PassthroughView alloc] initWithFrame:CGRectMake(0, cell.frame.size.height/2-HEADER_HEIGHT/2, tableView.frame.size.width, HEADER_HEIGHT)];
-        headerView.tag = -indexPath.section;
+        headerView.tag = HEADER_TAG;
         headerView.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0.6];
         if(!indexPath.section)
             _firstHeaderView = headerView;
@@ -1520,8 +1547,10 @@
         else
         {
             interval = interval/60;//let's get minutes accuracy
+            if(interval > 720)
+                timeLeft = @"Never Expires!";
             //if more 30 minutes left then say less than the rounded up hour
-            if(interval>30)
+            else if(interval>30)
                 timeLeft = [NSString stringWithFormat:@"Expires: < %dh",(int) ceil(interval/60)];
             else
                 timeLeft = [NSString stringWithFormat:@"Expires: < %dm",(int) ceil(interval)];
@@ -1591,6 +1620,14 @@
         [headerView addSubview:lineView];
         [headerView addSubview:usernameLabel];
         [cell addSubview:headerView];
+        
+        //for tutorial purposes add a view at the bottom for it to be hooked to
+        UIView* tutorialView = [[UIView alloc] initWithFrame:CGRectMake(cell.frame.size.width/2, cell.frame.size.height*2.0/3.0, 1, 1)];
+        [tutorialView setBackgroundColor:[UIColor clearColor]];
+        tutorialView.tag = TUTORIAL_VIEW_TAG;
+        [cell addSubview:tutorialView];
+        
+        
         cell.tag = STREAM_CELL_TAG;
         cell.backgroundView = nil;
         
@@ -1660,6 +1697,7 @@
             
         }
         [cell bringSubviewToFront:headerView];
+        [cell bringSubviewToFront:tutorialView];
         
     }
     //Loading cell
@@ -1704,6 +1742,7 @@
         {
             NSLog(@"at loading cell");
             _currentPage++;
+            NSLog(@"current page is now %d", _currentPage);
             [self pullToRefresh];
         }
     }
@@ -1905,10 +1944,17 @@ forRowAtIndexPath:(NSIndexPath *)indexPath
                 if([view isKindOfClass:[UIActivityIndicatorView class]])
                     [view removeFromSuperview];
         }];
-        NSLog(@"got to end of row");
+        //NSLog(@"got to end of row");
     }
     else
     {
+        //see if we have the share with the most recent time
+        PFObject* lastShare = [s.streamShares lastObject];
+        NSDate* newestShareTime = s.newestShareCreationTime;
+        bool hasNewestShare = NO;
+        if(NSOrderedSame == ([newestShareTime compare:lastShare.createdAt]))
+            hasNewestShare = YES;
+        NSLog(@"at end loading with count %d, has first share %d, and has newest %d", (int)s.streamShares.count, hasFirstShare, hasNewestShare);
         cell.tag = END_LOADING_SHARE_TAG;
         cell.shareImageView.image = [UIImage imageNamed:@"pictures-512.png"];
         UIActivityIndicatorView* collectionActivityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
@@ -2059,6 +2105,8 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 //helper function to setup the camera
 -(void) takePhoto
 {
+    _popoverOpen = NO;
+    _currentPopover = nil;
     _imagePickerOpen = YES;
     customPicker = [[CustomPickerViewController alloc] init];
     customPicker.delegate = self;
@@ -2200,7 +2248,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     
     // Create rectangle that represents a cropped image
     // from the middle of the existing image
-    CGRect rect = CGRectMake(adjustedXPosition, 0 ,screenWidth, newImage.size.height);
+    CGRect rect = CGRectMake(adjustedXPosition, 0 ,self.view.frame.size.width, newImage.size.height);
     
     // Create bitmap image from original image data,
     // using rectangle to specify desired crop area
@@ -2213,11 +2261,11 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         //depending on the orientation is how we flip it
         if(image.imageOrientation == 3 || image.imageOrientation == 0 || image.imageOrientation == 1)
             croppedImage = [UIImage imageWithCGImage:croppedImage.CGImage
-                                       scale:newImage.scale
+                                       scale:croppedImage.scale
                                  orientation:UIImageOrientationUpMirrored];
         else
             croppedImage = [UIImage imageWithCGImage:croppedImage.CGImage
-                                           scale:newImage.scale
+                                           scale:croppedImage.scale
                                      orientation:UIImageOrientationRightMirrored];
     }
     //set the image data
