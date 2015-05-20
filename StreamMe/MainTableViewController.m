@@ -41,7 +41,7 @@
     
     
     //setting up title
-    _sortBy = 0;
+    _sortBy = 1;
     [self setNavigationTitle];
     
     
@@ -58,7 +58,7 @@
                                                             _menuOpened = NO;
                                                         }];
     
-    REMenuItem *viralNearbyItem = [[REMenuItem alloc] initWithTitle:@"Viral"
+    REMenuItem *popularNearbyItem = [[REMenuItem alloc] initWithTitle:@"Popular"
                                                      subtitle:@"Sort by the streams with the most content nearby"
                                                         image:nil
                                              highlightedImage:nil
@@ -70,7 +70,7 @@
                                                            _menuOpened = NO;
                                                            
                                                        }];
-    _menu = [[REMenu alloc] initWithItems:@[newestItem,viralNearbyItem]];
+    _menu = [[REMenu alloc] initWithItems:@[popularNearbyItem,newestItem]];
     [_menu setTextColor:[UIColor whiteColor]];
     [_menu setBackgroundColor:[UIColor blackColor]];
     
@@ -254,7 +254,7 @@
                 NSLog(@"bad first header");
                 return;
             }
-            UIView* sourceView = _firstHeaderView.subviews[7];
+            UIView* sourceView = _firstHeaderView.subviews[4];
             if(!sourceView)
             {
                 NSLog(@"sourceview is null %@", sourceView);
@@ -274,7 +274,7 @@
         else if(!_popoverOpen)
         {
             NSLog(@"current popover is in else %@", _currentPopover);
-            UIView* sourceView = _firstHeaderView.subviews[7];
+            UIView* sourceView = _firstHeaderView.subviews[4];
             if(!sourceView)
             {
                 NSLog(@"sourceview is null %@", sourceView);
@@ -302,7 +302,7 @@
     if(!_sortBy)
         [menuButton setTitle:@"Newest" forState:UIControlStateNormal];
     else if(_sortBy==1)
-        [menuButton setTitle:@"Viral" forState:UIControlStateNormal];
+        [menuButton setTitle:@"Popular" forState:UIControlStateNormal];
     menuButton.titleLabel.textColor = [UIColor whiteColor];
     UIImage* image = [UIImage imageNamed:@"white-down-arrow.png"];
     //setting the down arrow
@@ -1512,16 +1512,16 @@
         float threeQuarterHeight = HEADER_HEIGHT*3.0/4.0;
         
         //create the view to hold all of the other views
-        PassthroughView *headerView = [[PassthroughView alloc] initWithFrame:CGRectMake(0, cell.frame.size.height/2-HEADER_HEIGHT/2, tableView.frame.size.width, HEADER_HEIGHT)];
+        PassthroughView *headerView = [[PassthroughView alloc] initWithFrame:CGRectMake(0, cell.frame.size.height-HEADER_HEIGHT, tableView.frame.size.width, HEADER_HEIGHT)];
         headerView.tag = HEADER_TAG;
-        headerView.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0.6];
+        headerView.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.2];
         if(!indexPath.section)
             _firstHeaderView = headerView;
         
         //create the title with the name of the stream
         UILabel *title = [[UILabel alloc] initWithFrame:CGRectMake(5, 5, width-threeQuarterHeight, halfHeight)];
         title.font = [UIFont boldSystemFontOfSize:17.0];
-        title.textColor = [UIColor darkTextColor];
+        title.textColor = [UIColor whiteColor];
         title.text = [NSString stringWithFormat:@"#%@",[s.stream objectForKey:@"name"] ];
         title.textAlignment = NSTextAlignmentLeft;
         title.numberOfLines = 1;
@@ -1556,9 +1556,10 @@
                 timeLeft = [NSString stringWithFormat:@"Expires: < %dm",(int) ceil(interval)];
         }
         expiration.text = timeLeft;
-        
+        expiration.textColor = [UIColor whiteColor];
+
         //creation time label
-        UILabel *creationLabel = [[UILabel alloc] initWithFrame:CGRectMake(5, halfHeight, width/3.0, quarterHeight)];
+        /*UILabel *creationLabel = [[UILabel alloc] initWithFrame:CGRectMake(5, halfHeight, width/3.0, quarterHeight)];
         creationLabel.font = [UIFont systemFontOfSize:10.0];
         creationLabel.numberOfLines = 1;
         NSDate* createdAt = s.stream.createdAt;
@@ -1576,29 +1577,31 @@
         viewers.font = [UIFont systemFontOfSize:10.0];
         viewers.numberOfLines = 1;
         viewers.text = [NSString stringWithFormat:@"%d",(int)s.totalViewers ];
-        //[viewers sizeToFit];
+        //[viewers sizeToFit];*/
         
         //add image for pictures
-        UIImageView* pictureImageView = [[UIImageView alloc] initWithFrame:CGRectMake(width/3.0, halfHeight, halfHeight*3.0/4.0, quarterHeight)];
-        pictureImageView.image = [UIImage imageNamed:@"pictures.png"];
+        UIImageView* pictureImageView = [[UIImageView alloc] initWithFrame:CGRectMake(5, halfHeight, halfHeight*3.0/4.0, quarterHeight)];
+        pictureImageView.image = [UIImage imageNamed:@"white_pictures.png"];
         
         //add number of pictures
         UILabel *contributions = [[UILabel alloc] initWithFrame:CGRectMake(pictureImageView.frame.origin.x + pictureImageView.frame.size.width+5, halfHeight, width/6, quarterHeight)];
         contributions.font = [UIFont systemFontOfSize:10.0];
         contributions.numberOfLines = 1;
         contributions.text = [NSString stringWithFormat:@"%d",(int)s.totalShares];
+        contributions.textColor = [UIColor whiteColor];
+
         //[contributions sizeToFit];
         
         //add the creator's username
-        UILabel* usernameLabel = [[UILabel alloc] initWithFrame:CGRectMake(contributions.frame.origin.x+contributions.frame.size.width, threeQuarterHeight, width -(contributions.frame.origin.x+contributions.frame.size.width)-5 , quarterHeight)];
-        usernameLabel.font = [UIFont boldSystemFontOfSize:12.0];
-        usernameLabel.numberOfLines = 0;
-        usernameLabel.text = s.username;
-        usernameLabel.textAlignment = NSTextAlignmentRight;
+        /*UILabel* addContent = [[UILabel alloc] initWithFrame:CGRectMake(contributions.frame.origin.x+contributions.frame.size.width, threeQuarterHeight, width -(contributions.frame.origin.x+contributions.frame.size.width)-5 , quarterHeight)];
+        addContent.font = [UIFont boldSystemFontOfSize:12.0];
+        addContent.numberOfLines = 0;
+        addContent.text = @"Add To This Stream";
+        addContent.textAlignment = NSTextAlignmentRight;*/
         
         //image view to help
-        UIImageView* addSharesImageView = [[UIImageView alloc] initWithFrame:CGRectMake(width-threeQuarterHeight, 5,threeQuarterHeight-5, threeQuarterHeight-5)];
-        addSharesImageView.image = [UIImage imageNamed:@"add-pictures-128.png"];
+        UIImageView* addSharesImageView = [[UIImageView alloc] initWithFrame:CGRectMake(width-threeQuarterHeight-2.5, quarterHeight/2+2.5,threeQuarterHeight-5, threeQuarterHeight-5)];
+        addSharesImageView.image = [UIImage imageNamed:@"thick_plus_circle.png"];
         addSharesImageView.tag = -indexPath.section;
         UITapGestureRecognizer *headerTap =  [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(headerTapDetected:)];
         headerTap.numberOfTapsRequired = 1;
@@ -1607,18 +1610,18 @@
         
         //add a line going underneath the title
         UIView *lineView = [[UIView alloc] initWithFrame:CGRectMake(0, halfHeight, width-threeQuarterHeight-10, 1)];
-        lineView.backgroundColor = [UIColor blackColor];
+        lineView.backgroundColor = [UIColor whiteColor];
         
         [headerView addSubview:title];
         [headerView addSubview:expiration];
-        [headerView addSubview:creationLabel];
+        /*[headerView addSubview:creationLabel];
         [headerView addSubview:peopleImageView];
-        [headerView addSubview:viewers];
+        [headerView addSubview:viewers];*/
         [headerView addSubview:pictureImageView];
         [headerView addSubview:contributions];
         [headerView addSubview:addSharesImageView];
         [headerView addSubview:lineView];
-        [headerView addSubview:usernameLabel];
+        //[headerView addSubview:addContent];
         [cell addSubview:headerView];
         
         //for tutorial purposes add a view at the bottom for it to be hooked to
@@ -2163,14 +2166,14 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     [flashButton setTintColor:[UIColor whiteColor]];
     [cancelButton setTintColor:[UIColor whiteColor]];
     [toolBar setItems:[NSArray arrayWithObjects:cancelButton,[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil], flashButton, [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil], flipButton, nil]];
-    [toolBar setBarStyle:UIBarStyleBlack];
-    [toolBar setBackgroundColor:[UIColor clearColor]];
-    [toolBar setTranslucent:YES];
     [toolBar setBackgroundImage:[UIImage new]
                   forToolbarPosition:UIBarPositionAny
                           barMetrics:UIBarMetricsDefault];
     [toolBar setShadowImage:[UIImage new]
               forToolbarPosition:UIToolbarPositionAny];
+    [toolBar setBarStyle:UIBarStyleBlack];
+    [toolBar setBackgroundColor:[[UIColor blackColor] colorWithAlphaComponent:0.2]];
+    [toolBar setTranslucent:YES];
     
     //check if I have to redo caption height
     if(caption.frame.size.height < TABLE_VIEW_BAR_HEIGHT)
