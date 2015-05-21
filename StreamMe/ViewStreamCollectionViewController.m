@@ -136,15 +136,19 @@
     
     cell.captionTextView.hidden = YES;
     cell.usernameLabel.hidden = YES;
+    cell.createdLabel.hidden = YES;
     cell.shareImageView.frame = CGRectMake(0, 0, width, height);
-    cell.usernameLabel.frame = CGRectMake(0, height-TOOLBAR_HEIGHT, width, TOOLBAR_HEIGHT);
-    cell.captionTextView.frame = CGRectMake(0,height-2*TOOLBAR_HEIGHT, width, TOOLBAR_HEIGHT);
+    cell.usernameLabel.frame = CGRectMake(0, height-3.0/2.0*TOOLBAR_HEIGHT, width, TOOLBAR_HEIGHT/2+1);
+    cell.captionTextView.frame = CGRectMake(0,height-TOOLBAR_HEIGHT, width, TOOLBAR_HEIGHT);
+    cell.createdLabel.frame = CGRectMake(0, height-3.0/2.0*TOOLBAR_HEIGHT, width, TOOLBAR_HEIGHT/2+1);
     [cell.shareImageView setContentMode:UIViewContentModeScaleToFill];
     cell.shareImageView.translatesAutoresizingMaskIntoConstraints = YES;
     cell.usernameLabel.translatesAutoresizingMaskIntoConstraints = YES;
+    cell.createdLabel.translatesAutoresizingMaskIntoConstraints = YES;
     cell.captionTextView.translatesAutoresizingMaskIntoConstraints = YES;
-    cell.captionTextView.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.6];
-    cell.usernameLabel.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.6];
+    cell.createdLabel.backgroundColor = [UIColor clearColor];
+    cell.captionTextView.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.2];
+    cell.usernameLabel.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.2];
     //we are in the beginning loading row
     if(!hasFirstShare && !indexPath.row)
     {
@@ -162,6 +166,7 @@
     {
         cell.captionTextView.hidden = NO;
         cell.usernameLabel.hidden = NO;
+        cell.createdLabel.hidden = NO;
         PFObject* streamShare = streamShares[indexPath.row-!hasFirstShare];
         PFObject* share = [streamShare objectForKey:@"share"];
         NSLog(@"caption is %@", [share objectForKey:@"caption"]);
@@ -180,6 +185,21 @@
         }];
         cell.usernameLabel.text = [NSString stringWithFormat:@"From: %@",[share objectForKey:@"username"] ];
         cell.captionTextView.text = [share objectForKey:@"caption"];
+        cell.captionTextView.textAlignment = NSTextAlignmentCenter;
+        NSString* timeSince;
+        //calculate the time since creation
+        NSDate* createdAt = share.createdAt;
+        NSTimeInterval interval = [[NSDate date] timeIntervalSinceDate:createdAt];
+        interval = interval/60;//let's get minutes accuracy
+        //if more 30 minutes left then say less than the rounded up hour
+        if(interval > 1440)
+            timeSince = [NSString stringWithFormat:@"Shared %dd ago",(int) floor(interval/1440)];
+        else if(interval>60)
+            timeSince = [NSString stringWithFormat:@"Shared %dh ago",(int) floor(interval/60)];
+        else
+            timeSince = [NSString stringWithFormat:@"Shared %dm ago",(int) ceil(interval)];
+        cell.createdLabel.text = timeSince;
+        
     }
     else
     {

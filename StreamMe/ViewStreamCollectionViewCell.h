@@ -12,6 +12,7 @@
 @property (weak, nonatomic) IBOutlet PFImageView *shareImageView;
 @property (weak, nonatomic) IBOutlet UILabel *usernameLabel;
 @property (weak, nonatomic) IBOutlet UITextView *captionTextView;
+@property (weak, nonatomic) IBOutlet UILabel *createdLabel;
 
 
 @end

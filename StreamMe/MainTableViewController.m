@@ -686,12 +686,6 @@
                         //want to create an array of shares so we can lazy load the next ones
                         [newStream.streamShares addObject:streamShare];
                         
-                        
-                        //if I am the creator then just me otherwise someone had to share it with me
-                        if([((PFUser*)[stream objectForKey:@"creator"]).objectId isEqualToString: [PFUser currentUser].objectId])
-                            newStream.totalViewers = 1;
-                        else
-                            newStream.totalViewers = 2;
                         //add the username
                         newStream.username = username;
                         //newest time of streamShare
@@ -758,13 +752,6 @@
                     
                     //want to create an array of shares so we can lazy load the next ones
                     [newStream.streamShares addObject:streamShare];
-                    
-                    
-                    //if I am the creator then just me otherwise someone had to share it with me
-                    if([((PFUser*)[stream objectForKey:@"creator"]).objectId isEqualToString: [PFUser currentUser].objectId])
-                        newStream.totalViewers = 1;
-                    else
-                        newStream.totalViewers = 2;
                     //add the username
                     newStream.username = username;
                     //newest time of streamShare
@@ -1121,28 +1108,6 @@
             }
         }];
         
-        //loop through all of the streams and query if it is not expired
-        for (Stream* s in streams)
-        {
-            //found match
-            if([s.stream.objectId isEqualToString:streamId])
-            {
-                //check to see if the match is still valid
-                /*NSDate* date = [s.stream objectForKey:@"endTime"];
-                NSTimeInterval interval = [date timeIntervalSinceDate:[NSDate date]];
-                if(isnan(interval) || interval<=0)
-                    continue;//not valid*/
-                
-                //found valid match
-                [PFCloud callFunctionInBackground:@"countUsersForStreams" withParameters:@{@"streamId":streamId} block:^(id object, NSError *error) {
-                    //just return if an error
-                    if(error)
-                        return;
-                    s.totalViewers = ((NSNumber*)object).integerValue;
-                    NSLog(@"total viewers is %d", (int)s.totalViewers);
-                }];
-            }
-        }
     }
 }
 
@@ -2156,6 +2121,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     //The rounded corner part, where you specify your view's corner radius:
     caption.layer.cornerRadius = 10;
     caption.returnKeyType = UIReturnKeyDone;
+    [caption setBackgroundColor:[[UIColor blackColor] colorWithAlphaComponent:0.2]];
     
     //setup the toolbar
     toolBar = [[UIToolbar alloc] initWithFrame:CGRectMake(0, self.view.frame.size.height-TOOLBAR_HEIGHT, screenWidth, TOOLBAR_HEIGHT)];
@@ -2233,47 +2199,71 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     _expirationTime = ((NSNumber*)[[PFUser currentUser] objectForKey:@"streamTimeHours"]).floatValue;
     
     //figure out the image
-    UIImage* image =[info objectForKey:UIImagePickerControllerOriginalImage];
-    int imageOrientation = 3 - image.imageOrientation;
-    if(image.imageOrientation == 1)
-        imageOrientation = 3;
-    UIImage* fixedImage = [self fixOrientation:image withOrientation:imageOrientation];
-    CGFloat cameraAspectRatio = 4.0f/3.0f;
+    UIImage* originalImage =[info objectForKey:UIImagePickerControllerOriginalImage];
     
+    CGFloat imageHeight = originalImage.size.height;
+    CGFloat imageWidth = originalImage.size.width;
+    CGFloat cameraAspectRatio = 4.0f/3.0f;
     CGFloat camViewHeight = screenWidth * cameraAspectRatio;
     CGFloat scale = self.view.frame.size.height / camViewHeight;
-    CGFloat adjustedXPosition = (screenWidth*scale - screenWidth)/2;
-    CGSize destinationSize = CGSizeMake(screenWidth*scale, self.view.frame.size.height);
-    UIGraphicsBeginImageContext(destinationSize);
-    [fixedImage drawInRect:CGRectMake(0,0,destinationSize.width,destinationSize.height)];
-    UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
-    UIGraphicsEndImageContext();
-    
+    //NSLog(@"scale is %f", scale);
+    CGFloat adjustedXPosition = (imageWidth*scale - imageWidth)/(2.0f*scale);
+    CGFloat adjustedYPosition = (imageHeight*scale - imageHeight)/(2.0f*scale);
+    //NSLog(@"adjusted x = %f", adjustedXPosition);
+    //NSLog(@"image width and height are %f, %f", imageWidth, imageHeight);
     // Create rectangle that represents a cropped image
-    // from the middle of the existing image
-    CGRect rect = CGRectMake(adjustedXPosition, 0 ,self.view.frame.size.width, newImage.size.height);
+    CGRect rect = CGRectMake(adjustedXPosition, 0 ,imageWidth-2.0f*adjustedXPosition, imageHeight);
     
-    // Create bitmap image from original image data,
-    // using rectangle to specify desired crop area
-    CGImageRef imageRef = CGImageCreateWithImageInRect([newImage CGImage], rect);
-    UIImage* croppedImage = [UIImage imageWithCGImage:imageRef];
+    //NSLog(@"rect width is %f and height is %f", rect.size.width, rect.size.height);
+    CGAffineTransform rectTransform = CGAffineTransformIdentity;
+    switch (originalImage.imageOrientation)
+    {
+        case UIImageOrientationLeft: //down
+            //NSLog(@"orientation left");
+            rectTransform = CGAffineTransformTranslate(CGAffineTransformMakeRotation(M_PI_2), 0, -originalImage.size.height);
+            break;
+        case UIImageOrientationRight: // normal
+            //NSLog(@"orientation right");
+            rectTransform = CGAffineTransformTranslate(CGAffineTransformMakeRotation(-M_PI_2), -originalImage.size.width, 0);
+            break;
+        case UIImageOrientationDown: //right
+            //NSLog(@"orientation down");
+            rect = CGRectMake(0, adjustedYPosition ,imageWidth, imageHeight-2.0f*adjustedYPosition);
+            rectTransform = CGAffineTransformTranslate(CGAffineTransformMakeRotation(-M_PI), -originalImage.size.width, -originalImage.size.height);
+            break;
+        default:
+            //NSLog(@"orientation default"); // left
+            rect = CGRectMake(0, adjustedYPosition ,imageWidth, imageHeight-2.0f*adjustedYPosition);
+            rectTransform = CGAffineTransformIdentity;
+    };
+    rectTransform = CGAffineTransformScale(rectTransform, originalImage.scale, originalImage.scale);
+    
+    CGImageRef imageRef = CGImageCreateWithImageInRect([originalImage CGImage], CGRectApplyAffineTransform(rect, rectTransform));
+    UIImage *result = [UIImage imageWithCGImage:imageRef scale:originalImage.scale orientation:originalImage.imageOrientation];
+    
+    int imageOrientation = 3 - result.imageOrientation;
+    if(result.imageOrientation == 1 || result.imageOrientation == 2)
+        imageOrientation = 3;
+    UIImage* fixedImage = [self fixOrientation:result withOrientation:imageOrientation];
+    
     
     //if the image is from front camera, need to flip horizontally
     if(customPicker.cameraDevice == UIImagePickerControllerCameraDeviceFront)
     {
         //depending on the orientation is how we flip it
-        if(image.imageOrientation == 3 || image.imageOrientation == 0 || image.imageOrientation == 1)
-            croppedImage = [UIImage imageWithCGImage:croppedImage.CGImage
-                                       scale:croppedImage.scale
-                                 orientation:UIImageOrientationUpMirrored];
+        if(fixedImage.imageOrientation == 3)
+            fixedImage = [UIImage imageWithCGImage:fixedImage.CGImage
+                                               scale:fixedImage.scale
+                                         orientation:UIImageOrientationLeftMirrored];
         else
-            croppedImage = [UIImage imageWithCGImage:croppedImage.CGImage
-                                           scale:croppedImage.scale
-                                     orientation:UIImageOrientationRightMirrored];
+            fixedImage = [UIImage imageWithCGImage:fixedImage.CGImage
+                                               scale:fixedImage.scale
+                                         orientation:UIImageOrientationUpMirrored];
     }
+    
     //set the image data
-    _imageData = UIImageJPEGRepresentation(croppedImage, 1.0f);
-    cameraOverlayView.image = croppedImage;
+    _imageData = UIImageJPEGRepresentation(fixedImage, 1.0f);
+    cameraOverlayView.image = fixedImage;
     
     //reset the toolbar
     UIBarButtonItem *cancelButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel target:self action:@selector(cancelClicked:)];
@@ -2909,6 +2899,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     NSDate* endDate = [NSDate dateWithTimeIntervalSince1970:endTime];
     if(!caption.text.length || [caption.text isEqualToString:@"Enter Caption:"])
         caption.text = @"No caption.";
+    [caption setBackgroundColor: [[UIColor blackColor] colorWithAlphaComponent:0.2]];
     PFUser* user = [PFUser currentUser];
 
     //Create the default acl
@@ -3069,7 +3060,6 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                     newStream.stream = stream;
                     //want to create an array of shares so we can lazy load the next ones
                     [newStream.streamShares addObject:streamShare];
-                    newStream.totalViewers = 1;
                     newStream.username = user.username;
                     //newest time of streamshare
                     newStream.newestShareCreationTime = streamShare.createdAt;
@@ -3198,6 +3188,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 {
     if(!captionText.length || [captionText isEqualToString:@"Enter Caption:"])
         captionText = @"No caption.";
+    [caption setBackgroundColor:[[UIColor blackColor] colorWithAlphaComponent:0.2]];
     PFUser* user = [PFUser currentUser];
     
     //update the user's points total
@@ -3305,7 +3296,7 @@ shouldChangeTextInRange:(NSRange)range
     {
         textView.text = @"";
     }
-    textView.textColor = [UIColor blackColor];
+    textView.textColor = [UIColor whiteColor];
     
     NSLog(@"set center");
     customPicker.view.center = CGPointMake(self.originalCenter.x, self.originalCenter.y + (self.originalCenter.y - textView.frame.origin.y-textView.frame.size.height/2));
@@ -3407,6 +3398,8 @@ shouldChangeTextInRange:(NSRange)range
     CGImageRelease(cgimg);
     return img;
 }
+
+
 - (UIModalPresentationStyle)adaptivePresentationStyleForPresentationController:(UIPresentationController *)controller {
     NSLog(@"in main adaptivepresentation");
     return UIModalPresentationNone;
