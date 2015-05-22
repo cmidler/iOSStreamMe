@@ -193,11 +193,11 @@
         interval = interval/60;//let's get minutes accuracy
         //if more 30 minutes left then say less than the rounded up hour
         if(interval > 1440)
-            timeSince = [NSString stringWithFormat:@"Shared %dd ago",(int) floor(interval/1440)];
+            timeSince = [NSString stringWithFormat:@"%dd ago",(int) floor(interval/1440)];
         else if(interval>60)
-            timeSince = [NSString stringWithFormat:@"Shared %dh ago",(int) floor(interval/60)];
+            timeSince = [NSString stringWithFormat:@"%dh ago",(int) floor(interval/60)];
         else
-            timeSince = [NSString stringWithFormat:@"Shared %dm ago",(int) ceil(interval)];
+            timeSince = [NSString stringWithFormat:@"%dm ago",(int) ceil(interval)];
         cell.createdLabel.text = timeSince;
         
     }

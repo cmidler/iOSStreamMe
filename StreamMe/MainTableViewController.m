@@ -229,7 +229,7 @@
             popoverController.permittedArrowDirections = UIPopoverArrowDirectionUp;
             popoverController.delegate = self;
             [self presentViewController:pvc animated:YES completion:nil];
-            pvc.popoverLabel.text = @"Quick scroll through multiple streams and select a photo for a more comprehensive view.";
+            pvc.popoverLabel.text = @"Quick scroll through multiple pictures and select a photo for a more comprehensive view.";
             pvc.popoverLabel.textAlignment = NSTextAlignmentCenter;
             pvc.popoverLabel.numberOfLines = 0;
             
@@ -1330,112 +1330,6 @@
     
 }
 
-//creating the header view so that we can have edit buttons as well
-/*- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
-    
-    Stream* s = showStreamsArray[section];
-    
-    float width = tableView.frame.size.width;
-    float halfHeight = HEADER_HEIGHT/2.0;
-    float quarterHeight = HEADER_HEIGHT/4.0;
-    float threeQuarterHeight = HEADER_HEIGHT*3.0/4.0;
-    
-    //create the view to hold all of the other views
-    UIView *headerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, tableView.frame.size.width, HEADER_HEIGHT)];
-    headerView.tag = section;
-    headerView.backgroundColor = [UIColor whiteColor];
-    UITapGestureRecognizer *headerTap =  [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(headerTapDetected:)];
-    headerTap.numberOfTapsRequired = 1;
-    [headerView setUserInteractionEnabled:YES];
-    [headerView addGestureRecognizer:headerTap];
-    
-    
-    //set when it expires
-    UILabel *expiration = [[UILabel alloc] initWithFrame:CGRectMake(5, halfHeight+10, width/3.0, halfHeight-10)];
-    expiration.font = [UIFont boldSystemFontOfSize:12.0];
-    expiration.numberOfLines = 1;
-    //get time left label
-    NSDate* endTime = [s.stream objectForKey:@"endTime"];
-    NSString* timeLeft;
-    NSTimeInterval interval = [endTime timeIntervalSinceDate:[NSDate date]];
-    //stream if over
-    if(isnan(interval) || interval<=0)
-    {
-        timeLeft = @"Stream Expired";
-        headerView.backgroundColor = [UIColor grayColor];
-        [headerView setUserInteractionEnabled:NO];
-    }
-    else
-    {
-        interval = interval/60;//let's get minutes accuracy
-        //if more 30 minutes left then say less than the rounded up hour
-        if(interval>30)
-            timeLeft = [NSString stringWithFormat:@"Expires: < %dh",(int) ceil(interval/60)];
-        else
-            timeLeft = [NSString stringWithFormat:@"Expires: < %dm",(int) ceil(interval)];
-    }
-    expiration.text = timeLeft;
-    
-    //creation time label
-    UILabel *creationLabel = [[UILabel alloc] initWithFrame:CGRectMake(5, 5, width/3.0, halfHeight-5)];
-    creationLabel.font = [UIFont systemFontOfSize:12.0];
-    creationLabel.numberOfLines = 1;
-    NSDate* createdAt = s.stream.createdAt;
-    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc]init];
-    dateFormatter.dateFormat = @"hh:mm a";
-    NSString *dateString = [dateFormatter stringFromDate: createdAt];
-    creationLabel.text = [NSString stringWithFormat:@"Started: %@",dateString];
-    
-    //add image for people
-    UIImageView* peopleImageView = [[UIImageView alloc] initWithFrame:CGRectMake(width/3.0 +5, halfHeight+10, halfHeight*3.0/4.0, halfHeight-10)];
-    peopleImageView.image = [UIImage imageNamed:@"people.png"];
-    
-    //add number of people
-    UILabel *viewers = [[UILabel alloc] initWithFrame:CGRectMake(peopleImageView.frame.origin.x+peopleImageView.frame.size.width + 10, halfHeight+10, width/3, halfHeight-10)];
-    viewers.font = [UIFont systemFontOfSize:12.0];
-    viewers.numberOfLines = 1;
-    viewers.text = [NSString stringWithFormat:@"%d",(int)s.totalViewers ];
-    //[viewers sizeToFit];
-    
-    //add image for pictures
-    UIImageView* pictureImageView = [[UIImageView alloc] initWithFrame:CGRectMake(width/3.0 +5, 5, halfHeight*3.0/4.0, halfHeight-5)];
-    pictureImageView.image = [UIImage imageNamed:@"pictures.png"];
-    
-    //add number of pictures
-    UILabel *contributions = [[UILabel alloc] initWithFrame:CGRectMake(pictureImageView.frame.origin.x + pictureImageView.frame.size.width+10, 5, width/3, halfHeight-5)];
-    contributions.font = [UIFont systemFontOfSize:12.0];
-    contributions.numberOfLines = 1;
-    contributions.text = [NSString stringWithFormat:@"%d",(int)s.totalShares];
-    //[contributions sizeToFit];
-    
-    //add the creator's username
-    UILabel* usernameLabel = [[UILabel alloc] initWithFrame:CGRectMake(contributions.frame.origin.x+contributions.frame.size.width, threeQuarterHeight, width -(contributions.frame.origin.x+contributions.frame.size.width)-5 , quarterHeight)];
-    usernameLabel.font = [UIFont boldSystemFontOfSize:12.0];
-    usernameLabel.numberOfLines = 0;
-    usernameLabel.text = s.username;
-    usernameLabel.textAlignment = NSTextAlignmentRight;
-    
-    //image view to help
-    UIImageView* addSharesImageView = [[UIImageView alloc] initWithFrame:CGRectMake(width-threeQuarterHeight, 5,threeQuarterHeight-5, threeQuarterHeight-5)];
-    addSharesImageView.image = [UIImage imageNamed:@"add-pictures-128.png"];
-    
-    //add a line going underneath the title
-    UIView *lineView = [[UIView alloc] initWithFrame:CGRectMake(0, halfHeight, width-threeQuarterHeight-10, 1)];
-    lineView.backgroundColor = [UIColor lightGrayColor];
-    
-    [headerView addSubview:expiration];
-    [headerView addSubview:creationLabel];
-    [headerView addSubview:peopleImageView];
-    [headerView addSubview:viewers];
-    [headerView addSubview:pictureImageView];
-    [headerView addSubview:contributions];
-    [headerView addSubview:addSharesImageView];
-    [headerView addSubview:lineView];
-    [headerView addSubview:usernameLabel];
-    
-    return headerView;
-}*/
-
 //Show data in cells
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
@@ -1495,7 +1389,7 @@
         
         
         //set when it expires
-        UILabel *expiration = [[UILabel alloc] initWithFrame:CGRectMake(5, threeQuarterHeight, width/3.0, quarterHeight)];
+        UILabel *expiration = [[UILabel alloc] initWithFrame:CGRectMake(5, threeQuarterHeight, width-10, quarterHeight)];
         expiration.font = [UIFont boldSystemFontOfSize:10.0];
         expiration.numberOfLines = 1;
         //get time left label
@@ -1545,11 +1439,11 @@
         //[viewers sizeToFit];*/
         
         //add image for pictures
-        UIImageView* pictureImageView = [[UIImageView alloc] initWithFrame:CGRectMake(5, halfHeight, halfHeight*3.0/4.0, quarterHeight)];
+        UIImageView* pictureImageView = [[UIImageView alloc] initWithFrame:CGRectMake(2.5, halfHeight+2.5, quarterHeight, quarterHeight)];
         pictureImageView.image = [UIImage imageNamed:@"white_pictures.png"];
         
         //add number of pictures
-        UILabel *contributions = [[UILabel alloc] initWithFrame:CGRectMake(pictureImageView.frame.origin.x + pictureImageView.frame.size.width+5, halfHeight, width/6, quarterHeight)];
+        UILabel *contributions = [[UILabel alloc] initWithFrame:CGRectMake(pictureImageView.frame.origin.x + pictureImageView.frame.size.width+5, halfHeight+2.5, width/2, quarterHeight)];
         contributions.font = [UIFont systemFontOfSize:10.0];
         contributions.numberOfLines = 1;
         contributions.text = [NSString stringWithFormat:@"%d",(int)s.totalShares];
@@ -1605,7 +1499,7 @@
         {
             
             NSInteger offset = s.offset*COLLECTION_VIEW_WIDTH;
-            //cell.backgroundColor = [UIColor whiteColor];
+            cell.backgroundColor = [UIColor blackColor];
             cell.streamCollectionView.hidden = NO;
             [cell.streamCollectionView reloadData];
             if(offset)
@@ -1628,12 +1522,13 @@
             cellImageView.image = [UIImage imageNamed:@"pictures-512.png"];
             cellImageView.file = [share objectForKey:@"file"];
             [cellImageView loadInBackground:^(UIImage *image, NSError *error) {
-                CGRect rect = CGRectMake(image.size.width/2-cell.frame.size.width/2, image.size.height/2-cell.frame.size.height/2, cell.frame.size.width, cell.frame.size.height);
+                //image = [self fixOrientation:image withOrientation:image.imageOrientation];
+                image = [self imageWithImage:image scaledToFillSize:cell.frame.size];
                 UIImage* tmpImage = [self fixOrientation:image withOrientation:image.imageOrientation];
-                CGImageRef imageRef = CGImageCreateWithImageInRect([tmpImage CGImage], rect);
-                UIImage *newImage = [UIImage imageWithCGImage:imageRef];
-                
-                cellImageView.image = newImage;
+                /*CGImageRef imageRef = CGImageCreateWithImageInRect([tmpImage CGImage], rect);
+                 UIImage *newImage = [UIImage imageWithCGImage:imageRef];*/
+                cellImageView.image = tmpImage;
+                cellImageView.backgroundColor = [UIColor blackColor];
                 cell.activityIndicator.hidden = YES;
                 [cell.activityIndicator stopAnimating];
             }];
@@ -1877,6 +1772,7 @@ forRowAtIndexPath:(NSIndexPath *)indexPath
         cell.tag = BEGINNING_LOADING_SHARE_TAG;
         cell.shareImageView.image = [UIImage imageNamed:@"pictures-512.png"];
         UIActivityIndicatorView* collectionActivityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+        collectionActivityIndicator.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.2];
         collectionActivityIndicator.hidesWhenStopped = YES;
         collectionActivityIndicator.hidden = NO;
         [collectionActivityIndicator startAnimating];
@@ -1889,6 +1785,7 @@ forRowAtIndexPath:(NSIndexPath *)indexPath
     {
         cell.tag = SHARE_CELL_TAG;
         UIActivityIndicatorView* collectionActivityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+        collectionActivityIndicator.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.2];
         collectionActivityIndicator.hidesWhenStopped = YES;
         collectionActivityIndicator.hidden = NO;
         [collectionActivityIndicator startAnimating];
@@ -1903,11 +1800,9 @@ forRowAtIndexPath:(NSIndexPath *)indexPath
         cell.shareImageView.file = [share objectForKey:@"file"];
         [cell.shareImageView loadInBackground:^(UIImage *image, NSError *error) {
             [cell setUserInteractionEnabled:YES];
-            CGRect rect = CGRectMake(image.size.width/2-cell.frame.size.width/2, image.size.height/2-cell.frame.size.height/2, cell.frame.size.width, cell.frame.size.height);
+            image = [self imageWithImage:image scaledToFillSize:cell.frame.size];
             UIImage* tmpImage = [self fixOrientation:image withOrientation:image.imageOrientation];
-            CGImageRef imageRef = CGImageCreateWithImageInRect([tmpImage CGImage], rect);
-            UIImage *newImage = [UIImage imageWithCGImage:imageRef];
-            cell.shareImageView.image = newImage;
+            cell.shareImageView.image = tmpImage;
             for(UIView* view in [cell.shareImageView subviews])
                 if([view isKindOfClass:[UIActivityIndicatorView class]])
                     [view removeFromSuperview];
@@ -1926,6 +1821,7 @@ forRowAtIndexPath:(NSIndexPath *)indexPath
         cell.tag = END_LOADING_SHARE_TAG;
         cell.shareImageView.image = [UIImage imageNamed:@"pictures-512.png"];
         UIActivityIndicatorView* collectionActivityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+        collectionActivityIndicator.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.2];
         collectionActivityIndicator.hidesWhenStopped = YES;
         collectionActivityIndicator.hidden = NO;
         [collectionActivityIndicator startAnimating];
@@ -3397,6 +3293,29 @@ shouldChangeTextInRange:(NSRange)range
     CGContextRelease(ctx);
     CGImageRelease(cgimg);
     return img;
+}
+
+- (UIImage *)imageWithImage:(UIImage *)image scaledToFillSize:(CGSize)size
+{
+    CGFloat scale = MAX(size.width/image.size.width, size.height/image.size.height);
+    //int imageOrientation = image.imageOrientation;
+    CGFloat width = image.size.width * scale;
+    CGFloat height = image.size.height * scale;
+    if(image.size.width>image.size.height)
+    {
+        width =image.size.height * scale;
+        height =image.size.width * scale;
+    }
+    CGRect imageRect = CGRectMake((size.width - width)/2.0f,
+                                  (size.height - height)/2.0f,
+                                  width,
+                                  height);
+    
+    UIGraphicsBeginImageContextWithOptions(size, NO, 0);
+    [image drawInRect:imageRect];
+    UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return newImage;
 }
 
 
