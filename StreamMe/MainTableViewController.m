@@ -51,10 +51,12 @@
                                                          image:nil
                                               highlightedImage:nil
                                                         action:^(REMenuItem *item) {
+                                                            bool oldSort = _sortBy;
                                                             _sortBy = 0;
                                                             _showingAnywhere = NO;
                                                             [self setNavigationTitle];
-                                                            [self sortStreams];
+                                                            if(oldSort != _sortBy)
+                                                                [self sortStreams];
                                                             _menuOpened = NO;
                                                         }];
     
@@ -63,10 +65,12 @@
                                                         image:nil
                                              highlightedImage:nil
                                                        action:^(REMenuItem *item) {
+                                                           bool oldSort = _sortBy;
                                                            _sortBy = 1;
                                                            _showingAnywhere = NO;
                                                            [self setNavigationTitle];
-                                                           [self sortStreams];
+                                                           if(oldSort != _sortBy)
+                                                               [self sortStreams];
                                                            _menuOpened = NO;
                                                            
                                                        }];
@@ -673,19 +677,114 @@
     for(Stream* stream in streams)
         [streamIds addObject:stream.stream.objectId];
     
-    //count the user ids
-    if(userIds.count)
+    NSDictionary* parameters;
+    NSDictionary* gpsParameters;
+    PFGeoPoint* currentLocation= nil;
+    if(_currentLocation)
+        currentLocation = [PFGeoPoint geoPointWithLocation:_currentLocation];
+    
+    if(currentLocation)
     {
-        NSLog(@"calling new streams from nearby users");
-        [PFCloud callFunctionInBackground:@"getNewStreamsFromNearbyUsers" withParameters:@{@"userIds":userIds} block:^(id object, NSError *error) {
-            //error
-            if(error)
-            {
-                NSLog(@"error for nearby user streams is %@", error);
-            }
-            
-            //either way call get streams for user
-            [PFCloud callFunctionInBackground:@"getStreamsForUser" withParameters:@{@"currentStreamsIds":streamIds, @"limit":[NSNumber numberWithInt:STREAMS_PER_PAGE]} block:^(id object, NSError *error) {
+        parameters = @{@"currentStreamsIds":streamIds, @"limit":[NSNumber numberWithInt:STREAMS_PER_PAGE], @"currentLocation":currentLocation};
+        gpsParameters = @{@"currentLocation":currentLocation};
+    }
+    else
+    {
+        parameters = @{@"currentStreamsIds":streamIds, @"limit":[NSNumber numberWithInt:STREAMS_PER_PAGE]};
+        gpsParameters = @{};
+    }
+    
+    
+    [PFCloud callFunctionInBackground:@"findStreamsByGPS" withParameters:gpsParameters block:^(id object, NSError *error) {
+        //error
+        if(error)
+        {
+            NSLog(@"error for find streams by gps is %@", error);
+        }
+    
+        //count the user ids
+        if(userIds.count)
+        {
+            NSLog(@"calling new streams from nearby users");
+            [PFCloud callFunctionInBackground:@"getNewStreamsFromNearbyUsers" withParameters:@{@"userIds":userIds} block:^(id object, NSError *error) {
+                //error
+                if(error)
+                {
+                    NSLog(@"error for nearby user streams is %@", error);
+                }
+                
+                //either way call get streams for user
+                [PFCloud callFunctionInBackground:@"getStreamsForUser" withParameters:parameters block:^(id object, NSError *error) {
+                    if(error)
+                    {
+                        _tableFirstLoad = NO;
+                        _downloadingStreams = NO;
+                        NSLog(@"error is %@", error);
+                        [self.refreshControl endRefreshing];
+                        [self sortStreams];
+                        return;
+                    }
+                    
+                    NSArray* newStreams = object;
+                    NSLog(@"new streams = %@", newStreams);
+                    //get array of all of the stream objects we have
+                    NSMutableArray* streamObjects = [[NSMutableArray alloc] init];
+                    
+                    //have array of streams in streams array
+                    for(Stream* s in streams)
+                        [streamObjects addObject:s.stream.objectId];
+                    //see if the array already contains it before we add it
+                    for(NSDictionary* dict in newStreams)
+                    {
+                        PFObject* stream = [dict objectForKey:@"stream"];
+                        PFObject* share = [dict objectForKey:@"share"];
+                        PFObject* streamShare = [dict objectForKey:@"stream_share"];
+                        streamShare[@"share"] = share;
+                        NSString* username = [dict objectForKey:@"username"];
+                        bool gotByBluetooth = ((NSNumber*)[dict objectForKey:@"gotByBluetooth"]).boolValue;
+                        //add id to the streamids array
+                        [streamIds addObject:stream.objectId];
+                        
+                        //if the stream isn't in the array then add it
+                        if(![streamObjects containsObject:stream.objectId])
+                        {
+                            NSLog(@"new stream object id is %@", stream.objectId);
+                            //initialize a new stream
+                            Stream* newStream = [[Stream alloc] init];
+                            newStream.stream = stream;
+                            
+                            //want to create an array of shares so we can lazy load the next ones
+                            [newStream.streamShares addObject:streamShare];
+                            
+                            //add the username
+                            newStream.username = username;
+                            //newest time of streamShare
+                            newStream.newestShareCreationTime = streamShare.createdAt;
+                            newStream.gotByBluetooth = gotByBluetooth;
+                            
+                            NSLog(@"got by bluetooth is %d", newStream.gotByBluetooth);
+                            //add the new stream object to the streams array
+                            [streams addObject:newStream];
+                            //get first share
+                            NSString* firstShareId = ((PFObject*)[stream objectForKey:@"firstShare"]).objectId;
+                            if([firstShareId isEqualToString:share.objectId])
+                                [self loadSharesRight:stream limitOf:SHARES_PER_PAGE];
+                            else
+                                [self loadSharesCenter:stream];
+                            [streamObjects addObject:stream.objectId];
+                        }
+                    }
+                    _tableFirstLoad = NO;
+                    _downloadingStreams = NO;
+                    [self countStreamShares:streamIds];
+                }];
+                
+                
+            }];
+        }
+        else
+        {
+            [PFCloud callFunctionInBackground:@"getStreamsForUser" withParameters:parameters block:^(id object, NSError *error) {
                 if(error)
                 {
                     _tableFirstLoad = NO;
@@ -698,6 +797,7 @@
                 
                 NSArray* newStreams = object;
                 NSLog(@"new streams = %@", newStreams);
+                
                 //get array of all of the stream objects we have
                 NSMutableArray* streamObjects = [[NSMutableArray alloc] init];
                 
@@ -712,6 +812,8 @@
                     PFObject* streamShare = [dict objectForKey:@"stream_share"];
                     streamShare[@"share"] = share;
                     NSString* username = [dict objectForKey:@"username"];
+                    bool gotByBluetooth = ((NSNumber*)[dict objectForKey:@"gotByBluetooth"]).boolValue;
+
                     //add id to the streamids array
                     [streamIds addObject:stream.objectId];
                     
@@ -725,11 +827,13 @@
                         
                         //want to create an array of shares so we can lazy load the next ones
                         [newStream.streamShares addObject:streamShare];
-                        
                         //add the username
                         newStream.username = username;
                         //newest time of streamShare
                         newStream.newestShareCreationTime = streamShare.createdAt;
+                        newStream.gotByBluetooth = gotByBluetooth;
+                        
+                        NSLog(@"got by bluetooth is %d", newStream.gotByBluetooth);
                         //add the new stream object to the streams array
                         [streams addObject:newStream];
                         //get first share
@@ -745,74 +849,8 @@
                 _downloadingStreams = NO;
                 [self countStreamShares:streamIds];
             }];
-            
-            
-        }];
-    }
-    else
-    {
-        [PFCloud callFunctionInBackground:@"getStreamsForUser" withParameters:@{@"currentStreamsIds":streamIds, @"limit":[NSNumber numberWithInt:STREAMS_PER_PAGE]} block:^(id object, NSError *error) {
-            if(error)
-            {
-                _tableFirstLoad = NO;
-                _downloadingStreams = NO;
-                NSLog(@"error is %@", error);
-                [self.refreshControl endRefreshing];
-                [self sortStreams];
-                return;
-            }
-            
-            NSArray* newStreams = object;
-            NSLog(@"new streams = %@", newStreams);
-            
-            //get array of all of the stream objects we have
-            NSMutableArray* streamObjects = [[NSMutableArray alloc] init];
-            
-            //have array of streams in streams array
-            for(Stream* s in streams)
-                [streamObjects addObject:s.stream.objectId];
-            //see if the array already contains it before we add it
-            for(NSDictionary* dict in newStreams)
-            {
-                PFObject* stream = [dict objectForKey:@"stream"];
-                PFObject* share = [dict objectForKey:@"share"];
-                PFObject* streamShare = [dict objectForKey:@"stream_share"];
-                streamShare[@"share"] = share;
-                NSString* username = [dict objectForKey:@"username"];
-                //add id to the streamids array
-                [streamIds addObject:stream.objectId];
-                
-                //if the stream isn't in the array then add it
-                if(![streamObjects containsObject:stream.objectId])
-                {
-                    NSLog(@"new stream object id is %@", stream.objectId);
-                    //initialize a new stream
-                    Stream* newStream = [[Stream alloc] init];
-                    newStream.stream = stream;
-                    
-                    //want to create an array of shares so we can lazy load the next ones
-                    [newStream.streamShares addObject:streamShare];
-                    //add the username
-                    newStream.username = username;
-                    //newest time of streamShare
-                    newStream.newestShareCreationTime = streamShare.createdAt;
-                    //add the new stream object to the streams array
-                    [streams addObject:newStream];
-                    //get first share
-                    NSString* firstShareId = ((PFObject*)[stream objectForKey:@"firstShare"]).objectId;
-                    if([firstShareId isEqualToString:share.objectId])
-                        [self loadSharesRight:stream limitOf:SHARES_PER_PAGE];
-                    else
-                        [self loadSharesCenter:stream];
-                    [streamObjects addObject:stream.objectId];
-                }
-            }
-            _tableFirstLoad = NO;
-            _downloadingStreams = NO;
-            [self countStreamShares:streamIds];
-        }];
-    }
-
+        }
+    }];
 }
 
 //lazy load shares right
@@ -873,9 +911,9 @@
         //change the boolean for downloading previous
         streamObj.isDownloadingAfter = NO;
         //reload section
-        dispatch_async(dispatch_get_main_queue(), ^{
+        //dispatch_async(dispatch_get_main_queue(), ^{
             [self sortStreams];
-        });
+        //});
     }];
 }
 
@@ -961,10 +999,10 @@
         
         //change the boolean for downloading previous
         streamObj.isDownloadingPrevious = NO;
-        dispatch_async(dispatch_get_main_queue(), ^{
+        //dispatch_async(dispatch_get_main_queue(), ^{
             //reload section
             [self sortStreams];
-        });
+        //});
         //[streamsTableView reloadSections:[NSIndexSet indexSetWithIndex:0] withRowAnimation:UITableViewRowAnimationNone];
     }];
 }
@@ -1062,7 +1100,7 @@
     
     
     [streamsTableView reloadData];
-    [streamsTableView layoutIfNeeded];
+    //[streamsTableView layoutIfNeeded];
     @synchronized(self)
     {
         _loadingTableView = NO;
@@ -1076,9 +1114,9 @@
     //if no stream ids then return
     if(!streamIds.count)
     {
-        dispatch_async(dispatch_get_main_queue(), ^{
+        //dispatch_async(dispatch_get_main_queue(), ^{
             [self sortStreams];
-        });
+        //});
     }
     NSLog(@"countStreamShares:()");
     AppDelegate* appDelegate = [[UIApplication sharedApplication] delegate];
@@ -1146,9 +1184,9 @@
             if(i == streamIds.count)
             {
                 NSLog(@"i is at stream count and will sort streams");
-                dispatch_async(dispatch_get_main_queue(), ^{
+                //dispatch_async(dispatch_get_main_queue(), ^{
                     [self sortStreams];
-                });
+                //});
             }
             else
             {
@@ -1464,6 +1502,7 @@
                 timeLeft = [NSString stringWithFormat:@"Expires: < %dm",(int) ceil(interval)];
         }
         expiration.text = timeLeft;
+        
 
         //creation time label
         /*UILabel *creationLabel = [[UILabel alloc] initWithFrame:CGRectMake(5, halfHeight, width/3.0, quarterHeight)];
@@ -1492,7 +1531,7 @@
         
         //add number of pictures
         UILabel *contributions = [[UILabel alloc] initWithFrame:CGRectMake(pictureImageView.frame.origin.x + pictureImageView.frame.size.width+5, halfHeight+2.5, width/2, quarterHeight)];
-        contributions.font = [UIFont systemFontOfSize:10.0];
+        contributions.font = [UIFont boldSystemFontOfSize:10.0];
         contributions.numberOfLines = 1;
         contributions.text = [NSString stringWithFormat:@"%d",(int)s.totalShares];
         contributions.textColor = [UIColor whiteColor];
@@ -1505,6 +1544,32 @@
         addContent.numberOfLines = 0;
         addContent.text = @"Add To This Stream";
         addContent.textAlignment = NSTextAlignmentRight;*/
+        
+        UILabel* distance = [[UILabel alloc] initWithFrame:CGRectMake(0, threeQuarterHeight, width-threeQuarterHeight-10, quarterHeight)];
+        distance.font = [UIFont boldSystemFontOfSize:10.0];
+        distance.numberOfLines = 1;
+        distance.textColor = [UIColor whiteColor];
+        distance.textAlignment = NSTextAlignmentRight;
+        
+        //figure out the distance from current location
+        if(!_currentLocation && !s.gotByBluetooth)
+            distance.text = @"Distance Unknown";
+        else
+        {
+            PFGeoPoint* geo = ((PFGeoPoint*)[s.stream objectForKey:@"location"]);
+            CLLocation* streamDistance = [[CLLocation alloc] initWithLatitude:geo.latitude longitude:geo.longitude];
+            
+            CLLocationDistance distanceInMeters = [_currentLocation distanceFromLocation:streamDistance];
+            //NSLog(@"distance in meters is %f", distanceInMeters);
+            
+            int miles = floor(distanceInMeters*0.000621371192);//meters to miles conversion
+            if(!miles)
+                distance.text = @"< 1 Mile Away";
+            else if (miles ==1)
+                distance.text = @"1 Mile Away";
+            else
+                distance.text = [NSString stringWithFormat:@"%d Miles Away", miles];
+        }
         
         //image view to help
         UIImageView* addSharesImageView = [[UIImageView alloc] initWithFrame:CGRectMake(width-threeQuarterHeight-2.5, quarterHeight/2+2.5,threeQuarterHeight-5, threeQuarterHeight-5)];
@@ -1527,6 +1592,7 @@
         [headerView addSubview:pictureImageView];
         [headerView addSubview:contributions];
         [headerView addSubview:addSharesImageView];
+        [headerView addSubview:distance];
         [headerView addSubview:lineView];
         //[headerView addSubview:addContent];
         [cell addSubview:headerView];
@@ -2987,6 +3053,9 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                 userStream[@"share"] = share;
                 userStream[@"creator"] = user;
                 userStream[@"isIgnored"] = [NSNumber numberWithBool:NO];
+                userStream[@"location"] = currentLocation;
+                userStream[@"gotByBluetooth"] = [NSNumber numberWithBool:YES];
+                userStream[@"isValid"] = [NSNumber numberWithBool:YES];
                 [userStream setACL:defaultACL];
                 
                 [userStream saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
@@ -3025,20 +3094,29 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                     newStream.username = user.username;
                     //newest time of streamshare
                     newStream.newestShareCreationTime = streamShare.createdAt;
+                    newStream.gotByBluetooth = YES;
                     [streams addObject:newStream];
                     //update the user's points total
                     [PFCloud callFunctionInBackground:@"createStreamUpdatePoints" withParameters:@{} block:^(id object, NSError *error) {}];
                     //send push to users
+                    
+                    //see if any of the users are stale
+                    
                     //get nearby user streams first
                     MainDatabase* md = [MainDatabase shared];
                     __block bool inQueue = YES;
                     NSMutableArray* userIds = [[NSMutableArray alloc] init];
                     [md.queue inDatabase:^(FMDatabase *db) {
-                        
+                        double currentTime = [[NSDate date]timeIntervalSince1970];
+                        double expirationTime = currentTime-TIMEOUT_TIME;
+                        //delete all expired user ids
+                        NSString *deleteSQL = @"DELETE FROM user WHERE time_since_update < ? AND is_me != ?";
+                         NSArray* values = @[[NSNumber numberWithDouble:expirationTime], [NSNumber numberWithInt:1]];
+                        [db executeUpdate:deleteSQL withArgumentsInArray:values];
                         
                         //need to delete the peripherals that are about to expire
                         NSString *userSQL = @"SELECT DISTINCT user_id FROM user WHERE is_me != ?";
-                        NSArray* values = @[[NSNumber numberWithInt:1]];
+                        values = @[[NSNumber numberWithInt:1]];
                         FMResultSet *s = [db executeQuery:userSQL withArgumentsInArray:values];
                         //get the peripheral ids
                         while([s next])
@@ -3283,7 +3361,7 @@ shouldChangeTextInRange:(NSRange)range
 - (UIImage *)fixOrientation:(UIImage*)image withOrientation:(int)orientation {
     
     //NSLog(@"image orientation is %d", orientation);
-    NSLog(@"up = %d, down = %d, right = %d, left = %d", (int)UIImageOrientationUp, (int)UIImageOrientationDown, (int)UIImageOrientationRight, (int)UIImageOrientationLeft);
+    //NSLog(@"up = %d, down = %d, right = %d, left = %d", (int)UIImageOrientationUp, (int)UIImageOrientationDown, (int)UIImageOrientationRight, (int)UIImageOrientationLeft);
     
     // No-op if the orientation is already correct
     if (orientation == UIImageOrientationUp) return image;

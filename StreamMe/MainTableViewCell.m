@@ -27,14 +27,14 @@
 - (void)setSelected:(BOOL)selected animated:(BOOL)animated
 {
     //[super setSelected:selected animated:animated];
-    NSLog(@"set selected!!!");
+    //NSLog(@"set selected!!!");
     // Configure the view for the selected state
 }
 
 -(void) setHighlighted:(BOOL)selected animated:(BOOL)animated
 {
     // set highlighted
-    NSLog(@"set highlighted!!!");
+    //NSLog(@"set highlighted!!!");
 }
 
 -(void)setCollectionViewDataSourceDelegate:(id<UICollectionViewDataSource, UICollectionViewDelegate>)dataSourceDelegate index:(NSInteger)index

@@ -20,4 +20,5 @@
 @property (strong, nonatomic) NSDate* newestShareCreationTime;
 @property (nonatomic, readwrite) BOOL isDownloadingPrevious;
 @property (nonatomic, readwrite) BOOL isDownloadingAfter;
+@property (nonatomic, readwrite) BOOL gotByBluetooth;
 @end
