@@ -19,4 +19,5 @@
 @property (strong, nonatomic) IBOutlet UITableView *streamsTableView;
 @property (strong, nonatomic) NSString* captionText;
 @property (strong, nonatomic) NSData* imageData;
+@property (strong, nonatomic) CLLocation* currentLocation;
 @end

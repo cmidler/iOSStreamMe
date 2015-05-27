@@ -359,6 +359,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DE7AE47219B76AC80001567E /* CoreLocation.framework in Frameworks */,
 				DED226C61AC06B7100FFE6AD /* Bolts.framework in Frameworks */,
 				DED226C41AC06AC500FFE6AD /* Accounts.framework in Frameworks */,
 				DED226C51AC06AC500FFE6AD /* Social.framework in Frameworks */,
@@ -367,7 +368,6 @@
 				DE0051D319B7D2D70053D2EB /* CoreBluetooth.framework in Frameworks */,
 				DE7AE47019B76AC80001567E /* AudioToolbox.framework in Frameworks */,
 				DE7AE47119B76AC80001567E /* CFNetwork.framework in Frameworks */,
-				DE7AE47219B76AC80001567E /* CoreLocation.framework in Frameworks */,
 				DE7AE47319B76AC80001567E /* libz.dylib in Frameworks */,
 				DE7AE47419B76AC80001567E /* MobileCoreServices.framework in Frameworks */,
 				DE7AE47519B76AC80001567E /* QuartzCore.framework in Frameworks */,

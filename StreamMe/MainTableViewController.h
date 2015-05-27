@@ -8,6 +8,7 @@
 
 #import <UIKit/UIKit.h>
 #import <AVFoundation/AVFoundation.h>
+#import <CoreLocation/CoreLocation.h>
 #import "MainTableViewCell.h"
 #import "AppDelegate.h"
 #import "MainDatabase.h"
@@ -20,8 +21,8 @@
 
 
 #include "REMenu.h"
-#define STREAMS_PER_PAGE 50
-#define SHARES_PER_PAGE 10
+#define STREAMS_PER_PAGE 20
+#define SHARES_PER_PAGE 5
 #define LOADING_CELL_TAG 1337
 #define STREAM_CELL_TAG 1234
 #define END_LOADING_SHARE_TAG 1111
@@ -38,14 +39,18 @@
 #define PICTURE_SIZE 100
 #define TABLE_VIEW_X_ORIGIN 16
 #define COLLECTION_VIEW_WIDTH 262.5 //260 for width and 2.5 for spacing between cells
+#define GPS_TIME 1
 
-@interface MainTableViewController : UITableViewController <UITextFieldDelegate,UINavigationControllerDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextViewDelegate, UIPickerViewDataSource, UIPickerViewDelegate, UICollectionViewDataSource, UICollectionViewDelegate, UIPopoverPresentationControllerDelegate>
+@interface MainTableViewController : UITableViewController <UITextFieldDelegate,UINavigationControllerDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextViewDelegate, UIPickerViewDataSource, UIPickerViewDelegate, UICollectionViewDataSource, UICollectionViewDelegate, UIPopoverPresentationControllerDelegate,CLLocationManagerDelegate>
 {
     NSArray* showStreamsArray;
 }
 - (IBAction)addStreamAction:(id)sender;
 //-(void) updateMethod;
-
+@property (strong, nonatomic) CLLocationManager *locationManager;
+@property (strong, nonatomic) CLLocation* currentLocation;
+@property (nonatomic, readwrite) bool refreshingStreams;
+@property (nonatomic, readwrite) bool gettingLocation;
 @property (strong, nonatomic) IBOutlet UITableView *streamsTableView;
 @property (weak, nonatomic) IBOutlet UISwitch *switchButton;
 //- (IBAction)switchToggleAction:(id)sender;
@@ -92,4 +97,5 @@
 @property (nonatomic, readwrite) bool showingAnywhere;
 @property (nonatomic, readwrite) bool loadingViral;
 @property (strong, nonatomic) NSString* currentPopover;
+@property (strong, nonatomic) NSTimer* timerGPS;
 @end

@@ -73,7 +73,8 @@
     _menu = [[REMenu alloc] initWithItems:@[popularNearbyItem,newestItem]];
     [_menu setTextColor:[UIColor whiteColor]];
     [_menu setBackgroundColor:[UIColor blackColor]];
-    
+    _locationManager = [[CLLocationManager alloc] init];
+    _currentLocation = nil;
     AppDelegate *appDelegate = [[UIApplication sharedApplication] delegate];
     _central = [appDelegate central];
     _finishedDownload = YES;
@@ -81,7 +82,8 @@
     _queue= dispatch_queue_create("user_queue", DISPATCH_QUEUE_SERIAL);
     _totalValidStreams = 0;
     _currentPage = _totalPages = 1;
-    
+    _refreshingStreams = NO;
+    _gettingLocation = NO;
     _isReloading = NO;
     _openedWithShake = NO;
     _downloadingStreams = NO;
@@ -116,6 +118,15 @@
                                              selector:@selector(mainNotification:)
                                                  name:@"dismissCameraPopover"
                                                object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(mainNotification:)
+                                                 name:@"updatedLocation"
+                                               object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(mainNotification:)
+                                                 name:@"updatedLocationForCreation"
+                                               object:nil];
+    
     
     
     //Adding pull to refresh
@@ -438,6 +449,29 @@
 
 }
 
+- (void)getCurrentLocation{
+    NSLog(@"getting current location");
+    _timerGPS =[NSTimer scheduledTimerWithTimeInterval:GPS_TIME target:self selector:@selector(timerGPSFired) userInfo:nil repeats:NO];
+    
+    _gettingLocation = YES;
+    _locationManager.delegate = self;
+    [_locationManager requestWhenInUseAuthorization];
+    _locationManager.desiredAccuracy = kCLLocationAccuracyBest;
+    NSLog(@"location manager is %@", _locationManager);
+    [_locationManager startUpdatingLocation];
+    
+}
+
+-(void) timerGPSFired
+{
+    if(_refreshingStreams)
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"updatedLocation" object:self];
+    else
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"updatedLocationForCreation" object:self];
+    _refreshingStreams = NO;
+    [_timerGPS invalidate];
+}
+
 -(void) presentNoCameraAlert
 {
     UIAlertController *alertController = [UIAlertController
@@ -510,10 +544,7 @@
     else if ([[notification name] isEqualToString:@"newUserStreams"])
     {
         //get the total amount of streams
-        PFQuery* countStreamsQuery = [PFQuery queryWithClassName:@"UserStreams"];
-        [countStreamsQuery whereKey:@"user" equalTo:[PFUser currentUser]];
-        [countStreamsQuery whereKey:@"isIgnored" equalTo:[NSNumber numberWithBool:NO]];
-        [countStreamsQuery countObjectsInBackgroundWithBlock:^(int number, NSError *error) {
+        [PFCloud callFunctionInBackground:@"countUserStreams" withParameters:@{} block:^(id object, NSError *error) {
             if(error)
             {
                 NSLog(@"error in counting streams");
@@ -521,6 +552,7 @@
             }
             else
             {
+                int number = ((NSNumber*)object).intValue;
                 _totalValidStreams = number;
                 NSLog(@"total valid streams is %d", _totalValidStreams);
                 //total pages is 1 if there aren't any streams
@@ -549,6 +581,12 @@
         [self sortStreams];
     else if ([[notification name] isEqualToString:@"dismissCameraPopover"])
         [self popoverDismissed];
+    else if ([[notification name] isEqualToString:@"updatedLocation"])
+        [self getStreams];
+    else if ([[notification name] isEqualToString:@"updatedLocationForCreation"])
+    {
+        [self publishNew];
+    }
 }
 
 
@@ -574,18 +612,7 @@
     
     NSLog(@"PAGE LOAD");
     
-    AppDelegate* appDelegate = [[UIApplication sharedApplication] delegate];
-    NSMutableArray* streams = [appDelegate streams];
-    
-    NSMutableArray* streamIds = [[NSMutableArray alloc] init];
-    for(Stream* stream in streams)
-        [streamIds addObject:stream.stream.objectId];
-    
-    //get the total amount of streams
-    PFQuery* countStreamsQuery = [PFQuery queryWithClassName:@"UserStreams"];
-    [countStreamsQuery whereKey:@"user" equalTo:[PFUser currentUser]];
-    [countStreamsQuery whereKey:@"isIgnored" equalTo:[NSNumber numberWithBool:NO]];
-    [countStreamsQuery countObjectsInBackgroundWithBlock:^(int number, NSError *error) {
+    [PFCloud callFunctionInBackground:@"countUserStreams" withParameters:@{} block:^(id object, NSError *error) {
         if(error)
         {
             NSLog(@"error in counting streams");
@@ -593,6 +620,7 @@
         }
         else
         {
+            int number = ((NSNumber*)object).intValue;
             _totalValidStreams = number;
             NSLog(@"total valid streams is %d", _totalValidStreams);
             //total pages is 1 if there aren't any streams
@@ -605,6 +633,13 @@
         }
     }];
     
+    //first get the location
+    _refreshingStreams = YES;
+    [self getCurrentLocation];
+    
+}
+
+-(void) getStreams{
     
     
     //get nearby user streams first
@@ -631,6 +666,13 @@
     while(inQueue)
         ;
     
+    AppDelegate* appDelegate = [[UIApplication sharedApplication] delegate];
+    NSMutableArray* streams = [appDelegate streams];
+    
+    NSMutableArray* streamIds = [[NSMutableArray alloc] init];
+    for(Stream* stream in streams)
+        [streamIds addObject:stream.stream.objectId];
+    
     //count the user ids
     if(userIds.count)
     {
@@ -641,7 +683,6 @@
             {
                 NSLog(@"error for nearby user streams is %@", error);
             }
-            
             
             //either way call get streams for user
             [PFCloud callFunctionInBackground:@"getStreamsForUser" withParameters:@{@"currentStreamsIds":streamIds, @"limit":[NSNumber numberWithInt:STREAMS_PER_PAGE]} block:^(id object, NSError *error) {
@@ -657,7 +698,12 @@
                 
                 NSArray* newStreams = object;
                 NSLog(@"new streams = %@", newStreams);
+                //get array of all of the stream objects we have
+                NSMutableArray* streamObjects = [[NSMutableArray alloc] init];
                 
+                //have array of streams in streams array
+                for(Stream* s in streams)
+                    [streamObjects addObject:s.stream.objectId];
                 //see if the array already contains it before we add it
                 for(NSDictionary* dict in newStreams)
                 {
@@ -669,16 +715,10 @@
                     //add id to the streamids array
                     [streamIds addObject:stream.objectId];
                     
-                    //get array of all of the stream objects we have
-                    NSMutableArray* streamObjects = [[NSMutableArray alloc] init];
-                    
-                    //have array of streams in streams array
-                    for(Stream* s in streams)
-                        [streamObjects addObject:s.stream];
-                    
                     //if the stream isn't in the array then add it
-                    if(![streamObjects containsObject:stream])
+                    if(![streamObjects containsObject:stream.objectId])
                     {
+                        NSLog(@"new stream object id is %@", stream.objectId);
                         //initialize a new stream
                         Stream* newStream = [[Stream alloc] init];
                         newStream.stream = stream;
@@ -698,6 +738,7 @@
                             [self loadSharesRight:stream limitOf:SHARES_PER_PAGE];
                         else
                             [self loadSharesCenter:stream];
+                        [streamObjects addObject:stream.objectId];
                     }
                 }
                 _tableFirstLoad = NO;
@@ -710,7 +751,6 @@
     }
     else
     {
-    
         [PFCloud callFunctionInBackground:@"getStreamsForUser" withParameters:@{@"currentStreamsIds":streamIds, @"limit":[NSNumber numberWithInt:STREAMS_PER_PAGE]} block:^(id object, NSError *error) {
             if(error)
             {
@@ -725,6 +765,12 @@
             NSArray* newStreams = object;
             NSLog(@"new streams = %@", newStreams);
             
+            //get array of all of the stream objects we have
+            NSMutableArray* streamObjects = [[NSMutableArray alloc] init];
+            
+            //have array of streams in streams array
+            for(Stream* s in streams)
+                [streamObjects addObject:s.stream.objectId];
             //see if the array already contains it before we add it
             for(NSDictionary* dict in newStreams)
             {
@@ -736,16 +782,10 @@
                 //add id to the streamids array
                 [streamIds addObject:stream.objectId];
                 
-                //get array of all of the stream objects we have
-                NSMutableArray* streamObjects = [[NSMutableArray alloc] init];
-                
-                //have array of streams in streams array
-                for(Stream* s in streams)
-                    [streamObjects addObject:s.stream];
-                
                 //if the stream isn't in the array then add it
-                if(![streamObjects containsObject:stream])
+                if(![streamObjects containsObject:stream.objectId])
                 {
+                    NSLog(@"new stream object id is %@", stream.objectId);
                     //initialize a new stream
                     Stream* newStream = [[Stream alloc] init];
                     newStream.stream = stream;
@@ -764,6 +804,7 @@
                         [self loadSharesRight:stream limitOf:SHARES_PER_PAGE];
                     else
                         [self loadSharesCenter:stream];
+                    [streamObjects addObject:stream.objectId];
                 }
             }
             _tableFirstLoad = NO;
@@ -771,7 +812,7 @@
             [self countStreamShares:streamIds];
         }];
     }
-    
+
 }
 
 //lazy load shares right
@@ -1060,6 +1101,7 @@
             //find the correct stream and update the last value in the array
             for(Stream* s in streams)
             {
+                NSLog(@"getting count for stream %@", [s.stream objectForKey:@"name"]);
                 //found the match
                 if([s.stream.objectId isEqualToString:streamId])
                 {
@@ -1068,6 +1110,10 @@
                     
                     PFObject* streamShare = object[1];
                     NSInteger previousShareTotal = s.totalShares;
+                    //update the total shares in the array
+                    s.totalShares = totalShares.integerValue;
+                    s.newestShareCreationTime = streamShare.createdAt;
+                    NSLog(@"new total shares count is %d", (int)s.totalShares);
                     //see if we got more shares
                     if(totalShares.integerValue > previousShareTotal)
                     {
@@ -1078,7 +1124,10 @@
                         {
                             //if downloading then return
                             if(s.isDownloadingAfter)
+                            {
+                                NSLog(@"downloading after so break");
                                 break;
+                            }
                         
                             //if number of shares until next page is not shares per page then update
                             if(numberOfSharesUntilNextPage != SHARES_PER_PAGE)
@@ -1087,13 +1136,7 @@
                                 [self loadSharesRight:s.stream limitOf:numberOfSharesUntilNextPage];
                             }
                         }
-                        
-                        
                     }
-                    
-                    //update the total shares in the array
-                    s.totalShares = totalShares.integerValue;
-                    s.newestShareCreationTime = streamShare.createdAt;
                     break;
                 }
             }
@@ -1102,9 +1145,14 @@
             //when looped through all count results go ahead and update
             if(i == streamIds.count)
             {
+                NSLog(@"i is at stream count and will sort streams");
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [self sortStreams];
                 });
+            }
+            else
+            {
+                NSLog(@"i is %d and won't call sort streams", i);
             }
         }];
         
@@ -1234,7 +1282,7 @@
         [picture addGestureRecognizer:pictureTap];
         
         //bluetooth isn't on naturally
-        messageLabel.text = @"Your bluetooth is turned off!  Go to Settings->Bluetooth and make sure bluetooth is enable to get the full functionality of this application! ";
+        messageLabel.text = @"Your bluetooth is turned off!  Go to Settings->Bluetooth and make sure bluetooth is enabled to get the full functionality of this application! ";
         
         /*else
          messageLabel.text = @"You are currently undiscoverable and cannot see other profiles.  Toggle discoverable in settings to see other people!";*/
@@ -1396,6 +1444,7 @@
         NSDate* endTime = [s.stream objectForKey:@"endTime"];
         NSString* timeLeft;
         NSTimeInterval interval = [endTime timeIntervalSinceDate:[NSDate date]];
+        expiration.textColor = [UIColor whiteColor];
         //stream if over
         if(isnan(interval) || interval<=0)
         {
@@ -1415,7 +1464,6 @@
                 timeLeft = [NSString stringWithFormat:@"Expires: < %dm",(int) ceil(interval)];
         }
         expiration.text = timeLeft;
-        expiration.textColor = [UIColor whiteColor];
 
         //creation time label
         /*UILabel *creationLabel = [[UILabel alloc] initWithFrame:CGRectMake(5, halfHeight, width/3.0, quarterHeight)];
@@ -1747,8 +1795,11 @@ forRowAtIndexPath:(NSIndexPath *)indexPath
     PFObject* lastShare = [s.streamShares lastObject];
     NSDate* newestShareTime = s.newestShareCreationTime;
     bool hasNewestShare = NO;
-    if(NSOrderedSame == ([newestShareTime compare:lastShare.createdAt]))
+    NSComparisonResult comp = [newestShareTime compare:lastShare.createdAt];
+    if(NSOrderedSame == comp || NSOrderedAscending == comp)
+    {
         hasNewestShare = YES;
+    }
     
     return count+!hasNewestShare+!hasFirstShare;
 }
@@ -1815,8 +1866,11 @@ forRowAtIndexPath:(NSIndexPath *)indexPath
         PFObject* lastShare = [s.streamShares lastObject];
         NSDate* newestShareTime = s.newestShareCreationTime;
         bool hasNewestShare = NO;
-        if(NSOrderedSame == ([newestShareTime compare:lastShare.createdAt]))
+        NSComparisonResult comp = [newestShareTime compare:lastShare.createdAt];
+        if(NSOrderedSame == comp || NSOrderedAscending == comp)
+        {
             hasNewestShare = YES;
+        }
         NSLog(@"at end loading with count %d, has first share %d, and has newest %d", (int)s.streamShares.count, hasFirstShare, hasNewestShare);
         cell.tag = END_LOADING_SHARE_TAG;
         cell.shareImageView.image = [UIImage imageNamed:@"pictures-512.png"];
@@ -1861,6 +1915,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         SelectStreamsTableViewController* controller = (SelectStreamsTableViewController*)segue.destinationViewController;
         controller.imageData = _imageData;
         controller.captionText = caption.text;
+        controller.currentLocation = _currentLocation;
     }
 }
 
@@ -2011,7 +2066,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     caption = [[UITextView alloc] initWithFrame:CGRectMake(0, pickerHeight-2*TOOLBAR_HEIGHT, screenWidth, TOOLBAR_HEIGHT)];
     caption.delegate = self;
     caption.text = @"Enter Caption:";
-    caption.textColor = [UIColor grayColor];
+    caption.textColor = [UIColor whiteColor];
     [caption.layer setBorderColor:[[[UIColor grayColor] colorWithAlphaComponent:0.5] CGColor]];
     [caption.layer setBorderWidth:2.0];
     //The rounded corner part, where you specify your view's corner radius:
@@ -2613,6 +2668,11 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 
 -(void) publishClicked:(id)sender
 {
+    [self getCurrentLocation];
+}
+
+-(void) publishNew
+{
     if(_currentPopover)
         return;
     activityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
@@ -2816,6 +2876,9 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     share[@"username"] = user.username;
     share[@"isPrivate"] = [NSNumber numberWithBool:NO];
     share[@"type"] = @"img";
+    PFGeoPoint* currentLocation = [PFGeoPoint geoPointWithLocation:_currentLocation];
+    if(currentLocation)
+        share[@"location"] = currentLocation;
     [share setObject:pictureFile forKey:@"file"];
     [share setACL:defaultACL];
     
@@ -2852,6 +2915,9 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         stream[@"creator"] = user;
         stream[@"endTime"] = endDate;
         stream[@"firstShare"] = share;
+        stream[@"isValid"] = [NSNumber numberWithBool:YES];
+        if(currentLocation)
+            stream[@"location"] = currentLocation;
         [stream setACL:defaultACL];
         
         [stream saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
@@ -3127,7 +3193,9 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     share[@"username"] = user.username;
     share[@"isPrivate"] = [NSNumber numberWithBool:NO];
     share[@"type"] = @"img";
-    [share setObject:pictureFile forKey:@"file"];
+    PFGeoPoint* currentLocation = [PFGeoPoint geoPointWithLocation:_currentLocation];
+    if(currentLocation)
+        share[@"location"] = currentLocation;    [share setObject:pictureFile forKey:@"file"];
     [share setACL:defaultACL];
     
     //create the stream share
@@ -3206,7 +3274,7 @@ shouldChangeTextInRange:(NSRange)range
     if(!textView.text.length || [textView.text isEqualToString:@"Enter Caption:"])
     {
         textView.text = @"Enter Caption:";
-        textView.textColor = [UIColor grayColor];
+        textView.textColor = [UIColor whiteColor];
     }
     customPicker.view.center = _originalCenter;
     [textView resignFirstResponder];
@@ -3316,6 +3384,43 @@ shouldChangeTextInRange:(NSRange)range
     UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
     return newImage;
+}
+
+#pragma mark - CLLocationManagerDelegate
+
+- (void)locationManager:(CLLocationManager *)manager didFailWithError:(NSError *)error
+{
+    if(!_gettingLocation)
+        return;
+    [_locationManager stopUpdatingLocation];
+    NSLog(@"current location is %@ in failed with error", _currentLocation);
+    if(_refreshingStreams)
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"updatedLocation" object:self];
+    else
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"updatedLocationForCreation" object:self];
+    _refreshingStreams = NO;
+    _gettingLocation = NO;
+    [_timerGPS invalidate];
+}
+
+- (void)locationManager:(CLLocationManager *)manager didUpdateToLocation:(CLLocation *)newLocation fromLocation:(CLLocation *)oldLocation
+{
+    if(!_gettingLocation)
+        return;
+    NSLog(@"didUpdateToLocation: %@", newLocation);
+    _currentLocation = newLocation;
+    NSLog(@"current location is %@", _currentLocation);
+    if(!_currentLocation)
+        return;
+    [_locationManager stopUpdatingLocation];
+    if(_refreshingStreams)
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"updatedLocation" object:self];
+    else
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"updatedLocationForCreation" object:self];
+    _refreshingStreams = NO;
+    _gettingLocation = NO;
+    [_timerGPS invalidate];
+    
 }
 
 

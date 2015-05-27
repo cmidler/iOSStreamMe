@@ -165,7 +165,10 @@
     share[@"username"] = user.username;
     share[@"isPrivate"] = [NSNumber numberWithBool:NO];
     share[@"type"] = @"img";
-    [share setObject:pictureFile forKey:@"file"];
+    
+    PFGeoPoint* currentLocation = [PFGeoPoint geoPointWithLocation:_currentLocation];
+    if(currentLocation)
+        share[@"location"] = currentLocation;    [share setObject:pictureFile forKey:@"file"];
     [share setACL:defaultACL];
     
     //add share to pfobjects
