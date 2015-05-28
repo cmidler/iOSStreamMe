@@ -8,10 +8,11 @@
 
 #import <UIKit/UIKit.h>
 #import <Parse/Parse.h>
-#import "StreamCollectionViewCell.h"
+//#import "StreamCollectionViewCell.h"
 @interface MainTableViewCell : PFTableViewCell
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *activityIndicator;
-@property (weak, nonatomic) IBOutlet UICollectionView *streamCollectionView;
--(void)setCollectionViewDataSourceDelegate:(id<UICollectionViewDataSource, UICollectionViewDelegate>)dataSourceDelegate index:(NSInteger)index;
+//@property (weak, nonatomic) IBOutlet UICollectionView *streamCollectionView;
+//-(void)setCollectionViewDataSourceDelegate:(id<UICollectionViewDataSource, UICollectionViewDelegate>)dataSourceDelegate index:(NSInteger)index;
+@property (weak, nonatomic) IBOutlet PFImageView *shareImageView;
 
 @end

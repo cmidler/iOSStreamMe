@@ -156,15 +156,15 @@
         return;
     
     //if we have already done the streams of content then return
-    NSNumber *showStreamOfContentTutorial =
+    /*NSNumber *showStreamOfContentTutorial =
     [[NSUserDefaults standardUserDefaults] objectForKey:@"ShowStreamOfContentTutorial"];
     if(showStreamOfContentTutorial)
-        return;
+        return;*/
     
     //see if we have to do the popover right now
     NSNumber *showedAddStreamMainTutorial =
     [[NSUserDefaults standardUserDefaults] objectForKey:@"ShowedAddStreamMainTutorial"];
-    if (showedAddStreamMainTutorial && (!showStreamsArray || !showStreamsArray.count))
+    if (showedAddStreamMainTutorial )//&& (!showStreamsArray || !showStreamsArray.count))
         return;
     
     //ok we have to show tutorials
@@ -198,7 +198,7 @@
     }
     
     //show stream content tutorial
-    if(!showStreamOfContentTutorial && showStreamsArray && showStreamsArray.count && !_popoverOpen)
+    /*if(!showStreamOfContentTutorial && showStreamsArray && showStreamsArray.count && !_popoverOpen)
     {
         NSLog(@"inside of main tutorial for stream");
         if(!_currentPopover)
@@ -244,7 +244,7 @@
             popoverController.permittedArrowDirections = UIPopoverArrowDirectionUp;
             popoverController.delegate = self;
             [self presentViewController:pvc animated:YES completion:nil];
-            pvc.popoverLabel.text = @"Quick scroll through multiple pictures and select a photo for a more comprehensive view.";
+            pvc.popoverLabel.text = @"Click the picture to see all of the photos in the stream.";
             pvc.popoverLabel.textAlignment = NSTextAlignmentCenter;
             pvc.popoverLabel.numberOfLines = 0;
             
@@ -303,7 +303,7 @@
             [defaults synchronize];
             
         }
-    }
+    }*/
     
 }
 
@@ -468,6 +468,7 @@
 
 -(void) timerGPSFired
 {
+    NSLog(@"timer gps fired");
     if(_refreshingStreams)
         [[NSNotificationCenter defaultCenter] postNotificationName:@"updatedLocation" object:self];
     else
@@ -542,7 +543,7 @@
                 continue;
             [streamIds addObject:s.stream.objectId];
         }
-        
+        NSLog(@"count timer fired");
         [self countStreamShares:streamIds];
     }
     else if ([[notification name] isEqualToString:@"newUserStreams"])
@@ -578,15 +579,22 @@
     }
     else if ([[notification name] isEqualToString:@"countStreams"])
     {
+        NSLog(@"count streams fired");
         NSDictionary* userInfo = [notification userInfo];
         [self countStreamShares:[userInfo objectForKey:@"streamIds"]];
     }
     else if ([[notification name] isEqualToString:@"reloadSection"])
+    {
+        NSLog(@"reload section called");
         [self sortStreams];
+    }
     else if ([[notification name] isEqualToString:@"dismissCameraPopover"])
         [self popoverDismissed];
     else if ([[notification name] isEqualToString:@"updatedLocation"])
+    {
+        NSLog(@"updated location being called");
         [self getStreams];
+    }
     else if ([[notification name] isEqualToString:@"updatedLocationForCreation"])
     {
         [self publishNew];
@@ -645,30 +653,7 @@
 
 -(void) getStreams{
     
-    
-    //get nearby user streams first
-    MainDatabase* md = [MainDatabase shared];
-    __block bool inQueue = YES;
-    NSMutableArray* userIds = [[NSMutableArray alloc] init];
-    [md.queue inDatabase:^(FMDatabase *db) {
-        
-        
-        //need to delete the peripherals that are about to expire
-        NSString *userSQL = @"SELECT DISTINCT user_id FROM user WHERE is_me != ?";
-        NSArray* values = @[[NSNumber numberWithInt:1]];
-        FMResultSet *s = [db executeQuery:userSQL withArgumentsInArray:values];
-        //get the peripheral ids
-        while([s next])
-        {
-            NSLog(@"found user");
-            [userIds addObject:[s stringForColumnIndex:0]];
-        }
-        inQueue = NO;
-    }];
-    
-    //busy loop
-    while(inQueue)
-        ;
+    NSLog(@"get streams called");
     
     AppDelegate* appDelegate = [[UIApplication sharedApplication] delegate];
     NSMutableArray* streams = [appDelegate streams];
@@ -702,159 +687,76 @@
             NSLog(@"error for find streams by gps is %@", error);
         }
     
-        //count the user ids
-        if(userIds.count)
-        {
-            NSLog(@"calling new streams from nearby users");
-            [PFCloud callFunctionInBackground:@"getNewStreamsFromNearbyUsers" withParameters:@{@"userIds":userIds} block:^(id object, NSError *error) {
-                //error
-                if(error)
-                {
-                    NSLog(@"error for nearby user streams is %@", error);
-                }
-                
-                //either way call get streams for user
-                [PFCloud callFunctionInBackground:@"getStreamsForUser" withParameters:parameters block:^(id object, NSError *error) {
-                    if(error)
-                    {
-                        _tableFirstLoad = NO;
-                        _downloadingStreams = NO;
-                        NSLog(@"error is %@", error);
-                        [self.refreshControl endRefreshing];
-                        [self sortStreams];
-                        return;
-                    }
-                    
-                    NSArray* newStreams = object;
-                    NSLog(@"new streams = %@", newStreams);
-                    //get array of all of the stream objects we have
-                    NSMutableArray* streamObjects = [[NSMutableArray alloc] init];
-                    
-                    //have array of streams in streams array
-                    for(Stream* s in streams)
-                        [streamObjects addObject:s.stream.objectId];
-                    //see if the array already contains it before we add it
-                    for(NSDictionary* dict in newStreams)
-                    {
-                        PFObject* stream = [dict objectForKey:@"stream"];
-                        PFObject* share = [dict objectForKey:@"share"];
-                        PFObject* streamShare = [dict objectForKey:@"stream_share"];
-                        streamShare[@"share"] = share;
-                        NSString* username = [dict objectForKey:@"username"];
-                        bool gotByBluetooth = ((NSNumber*)[dict objectForKey:@"gotByBluetooth"]).boolValue;
-                        //add id to the streamids array
-                        [streamIds addObject:stream.objectId];
-                        
-                        //if the stream isn't in the array then add it
-                        if(![streamObjects containsObject:stream.objectId])
-                        {
-                            NSLog(@"new stream object id is %@", stream.objectId);
-                            //initialize a new stream
-                            Stream* newStream = [[Stream alloc] init];
-                            newStream.stream = stream;
-                            
-                            //want to create an array of shares so we can lazy load the next ones
-                            [newStream.streamShares addObject:streamShare];
-                            
-                            //add the username
-                            newStream.username = username;
-                            //newest time of streamShare
-                            newStream.newestShareCreationTime = streamShare.createdAt;
-                            newStream.gotByBluetooth = gotByBluetooth;
-                            
-                            NSLog(@"got by bluetooth is %d", newStream.gotByBluetooth);
-                            //add the new stream object to the streams array
-                            [streams addObject:newStream];
-                            //get first share
-                            NSString* firstShareId = ((PFObject*)[stream objectForKey:@"firstShare"]).objectId;
-                            if([firstShareId isEqualToString:share.objectId])
-                                [self loadSharesRight:stream limitOf:SHARES_PER_PAGE];
-                            else
-                                [self loadSharesCenter:stream];
-                            [streamObjects addObject:stream.objectId];
-                        }
-                    }
-                    _tableFirstLoad = NO;
-                    _downloadingStreams = NO;
-                    [self countStreamShares:streamIds];
-                }];
-                
-                
-            }];
-        }
-        else
-        {
-            [PFCloud callFunctionInBackground:@"getStreamsForUser" withParameters:parameters block:^(id object, NSError *error) {
-                if(error)
-                {
-                    _tableFirstLoad = NO;
-                    _downloadingStreams = NO;
-                    NSLog(@"error is %@", error);
-                    [self.refreshControl endRefreshing];
-                    [self sortStreams];
-                    return;
-                }
-                
-                NSArray* newStreams = object;
-                NSLog(@"new streams = %@", newStreams);
-                
-                //get array of all of the stream objects we have
-                NSMutableArray* streamObjects = [[NSMutableArray alloc] init];
-                
-                //have array of streams in streams array
-                for(Stream* s in streams)
-                    [streamObjects addObject:s.stream.objectId];
-                //see if the array already contains it before we add it
-                for(NSDictionary* dict in newStreams)
-                {
-                    PFObject* stream = [dict objectForKey:@"stream"];
-                    PFObject* share = [dict objectForKey:@"share"];
-                    PFObject* streamShare = [dict objectForKey:@"stream_share"];
-                    streamShare[@"share"] = share;
-                    NSString* username = [dict objectForKey:@"username"];
-                    bool gotByBluetooth = ((NSNumber*)[dict objectForKey:@"gotByBluetooth"]).boolValue;
-
-                    //add id to the streamids array
-                    [streamIds addObject:stream.objectId];
-                    
-                    //if the stream isn't in the array then add it
-                    if(![streamObjects containsObject:stream.objectId])
-                    {
-                        NSLog(@"new stream object id is %@", stream.objectId);
-                        //initialize a new stream
-                        Stream* newStream = [[Stream alloc] init];
-                        newStream.stream = stream;
-                        
-                        //want to create an array of shares so we can lazy load the next ones
-                        [newStream.streamShares addObject:streamShare];
-                        //add the username
-                        newStream.username = username;
-                        //newest time of streamShare
-                        newStream.newestShareCreationTime = streamShare.createdAt;
-                        newStream.gotByBluetooth = gotByBluetooth;
-                        
-                        NSLog(@"got by bluetooth is %d", newStream.gotByBluetooth);
-                        //add the new stream object to the streams array
-                        [streams addObject:newStream];
-                        //get first share
-                        NSString* firstShareId = ((PFObject*)[stream objectForKey:@"firstShare"]).objectId;
-                        if([firstShareId isEqualToString:share.objectId])
-                            [self loadSharesRight:stream limitOf:SHARES_PER_PAGE];
-                        else
-                            [self loadSharesCenter:stream];
-                        [streamObjects addObject:stream.objectId];
-                    }
-                }
+        [PFCloud callFunctionInBackground:@"getStreamsForUser" withParameters:parameters block:^(id object, NSError *error) {
+            if(error)
+            {
                 _tableFirstLoad = NO;
                 _downloadingStreams = NO;
-                [self countStreamShares:streamIds];
-            }];
-        }
+                NSLog(@"error is %@", error);
+                [self.refreshControl endRefreshing];
+                [self sortStreams];
+                return;
+            }
+            
+            NSArray* newStreams = object;
+            NSLog(@"new streams = %@", newStreams);
+            
+            //get array of all of the stream objects we have
+            NSMutableArray* streamObjects = [[NSMutableArray alloc] init];
+            
+            //have array of streams in streams array
+            for(Stream* s in streams)
+                [streamObjects addObject:s.stream.objectId];
+            //see if the array already contains it before we add it
+            for(NSDictionary* dict in newStreams)
+            {
+                PFObject* stream = [dict objectForKey:@"stream"];
+                PFObject* share = [dict objectForKey:@"share"];
+                PFObject* streamShare = [dict objectForKey:@"stream_share"];
+                streamShare[@"share"] = share;
+                NSString* username = [dict objectForKey:@"username"];
+                bool gotByBluetooth = ((NSNumber*)[dict objectForKey:@"gotByBluetooth"]).boolValue;
+
+                //add id to the streamids array
+                [streamIds addObject:stream.objectId];
+                
+                //if the stream isn't in the array then add it
+                if(![streamObjects containsObject:stream.objectId])
+                {
+                    NSLog(@"new stream object id is %@", stream.objectId);
+                    //initialize a new stream
+                    Stream* newStream = [[Stream alloc] init];
+                    newStream.stream = stream;
+                    
+                    //want to create an array of shares so we can lazy load the next ones
+                    [newStream.streamShares addObject:streamShare];
+                    //add the username
+                    newStream.username = username;
+                    //newest time of streamShare
+                    newStream.newestShareCreationTime = streamShare.createdAt;
+                    newStream.gotByBluetooth = gotByBluetooth;
+                    
+                    NSLog(@"got by bluetooth is %d", newStream.gotByBluetooth);
+                    //add the new stream object to the streams array
+                    [streams addObject:newStream];
+                    //get first share
+                    /*NSString* firstShareId = ((PFObject*)[stream objectForKey:@"firstShare"]).objectId;
+                    if([firstShareId isEqualToString:share.objectId])
+                        [self loadSharesRight:stream limitOf:SHARES_PER_PAGE];
+                    else
+                        [self loadSharesCenter:stream];*/
+                    [streamObjects addObject:stream.objectId];
+                }
+            }
+            _tableFirstLoad = NO;
+            _downloadingStreams = NO;
+            [self countStreamShares:streamIds];
+        }];
     }];
 }
 
 //lazy load shares right
--(void) loadSharesRight:(PFObject*) stream limitOf:(int)limit
+/*-(void) loadSharesRight:(PFObject*) stream limitOf:(int)limit
 {
     [self countStreamShares:@[stream.objectId]];
     //get the streams
@@ -1005,10 +907,11 @@
         //});
         //[streamsTableView reloadSections:[NSIndexSet indexSetWithIndex:0] withRowAnimation:UITableViewRowAnimationNone];
     }];
-}
+}*/
 
 -(void) sortStreams
 {
+    NSLog(@"sort streams called");
     @synchronized(self)
     {
         if(_loadingTableView)
@@ -1100,7 +1003,7 @@
     
     
     [streamsTableView reloadData];
-    //[streamsTableView layoutIfNeeded];
+    [streamsTableView layoutIfNeeded];
     @synchronized(self)
     {
         _loadingTableView = NO;
@@ -1118,7 +1021,7 @@
             [self sortStreams];
         //});
     }
-    NSLog(@"countStreamShares:()");
+    //NSLog(@"countStreamShares:()");
     AppDelegate* appDelegate = [[UIApplication sharedApplication] delegate];
     NSMutableArray* streams = [appDelegate streams];
     __block int i = 0;
@@ -1135,11 +1038,11 @@
                 i++;
                 return;
             }
-            NSLog(@"in count shares for streams");
+            //NSLog(@"in count shares for streams");
             //find the correct stream and update the last value in the array
             for(Stream* s in streams)
             {
-                NSLog(@"getting count for stream %@", [s.stream objectForKey:@"name"]);
+                //NSLog(@"getting count for stream %@", [s.stream objectForKey:@"name"]);
                 //found the match
                 if([s.stream.objectId isEqualToString:streamId])
                 {
@@ -1147,13 +1050,13 @@
                     NSNumber* totalShares = object[0];
                     
                     PFObject* streamShare = object[1];
-                    NSInteger previousShareTotal = s.totalShares;
+                    //NSInteger previousShareTotal = s.totalShares;
                     //update the total shares in the array
                     s.totalShares = totalShares.integerValue;
                     s.newestShareCreationTime = streamShare.createdAt;
-                    NSLog(@"new total shares count is %d", (int)s.totalShares);
+                    //NSLog(@"new total shares count is %d", (int)s.totalShares);
                     //see if we got more shares
-                    if(totalShares.integerValue > previousShareTotal)
+                    /*if(totalShares.integerValue > previousShareTotal)
                     {
                         //get the number of shares until the next page
                         int numberOfSharesUntilNextPage = SHARES_PER_PAGE - previousShareTotal%SHARES_PER_PAGE;
@@ -1174,7 +1077,7 @@
                                 [self loadSharesRight:s.stream limitOf:numberOfSharesUntilNextPage];
                             }
                         }
-                    }
+                    }*/
                     break;
                 }
             }
@@ -1187,10 +1090,6 @@
                 //dispatch_async(dispatch_get_main_queue(), ^{
                     [self sortStreams];
                 //});
-            }
-            else
-            {
-                NSLog(@"i is %d and won't call sort streams", i);
             }
         }];
         
@@ -1265,7 +1164,7 @@
     _menuOpened = NO;
     NSLog(@"current row is %d", (int)_selectedCellIndex);
     //scroll to right position
-    if(_isPoppingBack)
+    /*if(_isPoppingBack)
     {
         @synchronized(self)
         {
@@ -1288,7 +1187,7 @@
         }
     }
     _isPoppingBack = NO;
-    [self sortStreams];
+    [self sortStreams];*/
 }
 
 
@@ -1401,7 +1300,7 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    NSLog(@"in number of rows with count = %d", (int) showStreamsArray.count);
+    //NSLog(@"in number of rows with count = %d", (int) showStreamsArray.count);
     
     //Want to add an extra row if we filled up all of the pages so far and there are still more to download
     if((_currentPage<_totalPages) && ([showStreamsArray count] < _totalValidStreams))
@@ -1419,6 +1318,7 @@
 //Show data in cells
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
+    NSLog(@"cell for row at index path called");
     static NSString *CellIdentifier = @"mainCell";
     MainTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier forIndexPath:indexPath];
     cell.separatorInset = UIEdgeInsetsZero;
@@ -1426,15 +1326,15 @@
     [cell.activityIndicator stopAnimating];
     [cell setUserInteractionEnabled:YES];
     //[cell setUserInteractionEnabled:NO];
-    cell.streamCollectionView.hidden = YES;
-    cell.streamCollectionView.tag = indexPath.section;
+    //cell.streamCollectionView.hidden = YES;
+    //cell.streamCollectionView.tag = indexPath.section;
     
     //loop through subviews and if pfimage is there remove it
     for(UIView* view in cell.subviews)
     {
         //remove imageview
-        if([view isKindOfClass:[PFImageView class]])
-            [view removeFromSuperview];
+        /*if([view isKindOfClass:[PFImageView class]])
+            [view removeFromSuperview];*/
         //remove old headerview
         if(view.tag == HEADER_TAG)
         {
@@ -1502,29 +1402,6 @@
                 timeLeft = [NSString stringWithFormat:@"Expires: < %dm",(int) ceil(interval)];
         }
         expiration.text = timeLeft;
-        
-
-        //creation time label
-        /*UILabel *creationLabel = [[UILabel alloc] initWithFrame:CGRectMake(5, halfHeight, width/3.0, quarterHeight)];
-        creationLabel.font = [UIFont systemFontOfSize:10.0];
-        creationLabel.numberOfLines = 1;
-        NSDate* createdAt = s.stream.createdAt;
-        NSDateFormatter *dateFormatter = [[NSDateFormatter alloc]init];
-        dateFormatter.dateFormat = @"hh:mm a";
-        NSString *dateString = [dateFormatter stringFromDate: createdAt];
-        creationLabel.text = [NSString stringWithFormat:@"Started: %@",dateString];
-        
-        //add image for people
-        UIImageView* peopleImageView = [[UIImageView alloc] initWithFrame:CGRectMake(width/3.0 , threeQuarterHeight, halfHeight*3.0/4.0, quarterHeight)];
-        peopleImageView.image = [UIImage imageNamed:@"people.png"];
-        
-        //add number of people
-        UILabel *viewers = [[UILabel alloc] initWithFrame:CGRectMake(peopleImageView.frame.origin.x+peopleImageView.frame.size.width + 5, threeQuarterHeight, width/6, quarterHeight)];
-        viewers.font = [UIFont systemFontOfSize:10.0];
-        viewers.numberOfLines = 1;
-        viewers.text = [NSString stringWithFormat:@"%d",(int)s.totalViewers ];
-        //[viewers sizeToFit];*/
-        
         //add image for pictures
         UIImageView* pictureImageView = [[UIImageView alloc] initWithFrame:CGRectMake(2.5, halfHeight+2.5, quarterHeight, quarterHeight)];
         pictureImageView.image = [UIImage imageNamed:@"white_pictures.png"];
@@ -1535,16 +1412,8 @@
         contributions.numberOfLines = 1;
         contributions.text = [NSString stringWithFormat:@"%d",(int)s.totalShares];
         contributions.textColor = [UIColor whiteColor];
-
-        //[contributions sizeToFit];
         
-        //add the creator's username
-        /*UILabel* addContent = [[UILabel alloc] initWithFrame:CGRectMake(contributions.frame.origin.x+contributions.frame.size.width, threeQuarterHeight, width -(contributions.frame.origin.x+contributions.frame.size.width)-5 , quarterHeight)];
-        addContent.font = [UIFont boldSystemFontOfSize:12.0];
-        addContent.numberOfLines = 0;
-        addContent.text = @"Add To This Stream";
-        addContent.textAlignment = NSTextAlignmentRight;*/
-        
+        //add distance label
         UILabel* distance = [[UILabel alloc] initWithFrame:CGRectMake(0, threeQuarterHeight, width-threeQuarterHeight-10, quarterHeight)];
         distance.font = [UIFont boldSystemFontOfSize:10.0];
         distance.numberOfLines = 1;
@@ -1586,19 +1455,15 @@
         
         [headerView addSubview:title];
         [headerView addSubview:expiration];
-        /*[headerView addSubview:creationLabel];
-        [headerView addSubview:peopleImageView];
-        [headerView addSubview:viewers];*/
         [headerView addSubview:pictureImageView];
         [headerView addSubview:contributions];
         [headerView addSubview:addSharesImageView];
         [headerView addSubview:distance];
         [headerView addSubview:lineView];
-        //[headerView addSubview:addContent];
         [cell addSubview:headerView];
         
         //for tutorial purposes add a view at the bottom for it to be hooked to
-        UIView* tutorialView = [[UIView alloc] initWithFrame:CGRectMake(cell.frame.size.width/2, cell.frame.size.height*2.0/3.0, 1, 1)];
+        UIView* tutorialView = [[UIView alloc] initWithFrame:CGRectMake(cell.frame.size.width/2, cell.frame.size.height/2.0, 1, 1)];
         [tutorialView setBackgroundColor:[UIColor clearColor]];
         tutorialView.tag = TUTORIAL_VIEW_TAG;
         [cell addSubview:tutorialView];
@@ -1607,72 +1472,63 @@
         cell.tag = STREAM_CELL_TAG;
         cell.backgroundView = nil;
         
-        //if there is only one photo, then make an image view to fit the cell
-        //otherwise allow the collection view
-        if(s.streamShares.count > 1 && !isnan(interval) && interval>0)
+        PFImageView* cellImageView = cell.shareImageView;
+        //see if we have a thumbnail already
+        if(s.thumbnail)
         {
-            
-            NSInteger offset = s.offset*COLLECTION_VIEW_WIDTH;
-            cell.backgroundColor = [UIColor blackColor];
-            cell.streamCollectionView.hidden = NO;
-            [cell.streamCollectionView reloadData];
-            if(offset)
-            {
-                [cell.streamCollectionView setContentOffset:CGPointMake(offset,0)];
-                NSLog(@"offset is %d", (int)offset);
-            }
-            s.offset = 0;
-            
+            cellImageView.image = s.thumbnail;
+            NSLog(@"using thumbnail on section %d", (int)indexPath.section);
         }
-        else // create an imageview
+        else
         {
-            CGRect rect = CGRectMake(0, 0, cell.frame.size.width, cell.frame.size.height);
-            PFImageView* cellImageView = [[PFImageView alloc] initWithFrame:rect];
-            //[cellImageView setContentMode:UIViewContentModeScaleToFill];
-            [cellImageView setBounds:rect];
             PFObject* share = [s.streamShares[0] objectForKey:@"share"];
             cell.activityIndicator.hidden = NO;
             [cell.activityIndicator startAnimating];
-            cellImageView.image = [UIImage imageNamed:@"pictures-512.png"];
+            [cell bringSubviewToFront:activityIndicator];
+            cellImageView.image = [UIImage imageNamed:@"pictures-320.png"];
             cellImageView.file = [share objectForKey:@"file"];
+            [cellImageView setUserInteractionEnabled:NO];
+            NSLog(@"before loading image %@", [s.stream objectForKey:@"name"]);
             [cellImageView loadInBackground:^(UIImage *image, NSError *error) {
-                //image = [self fixOrientation:image withOrientation:image.imageOrientation];
+                if(error)
+                    NSLog(@"error loading pffile");
+                else
+                    NSLog(@"loading stream %@", [s.stream objectForKey:@"name"]);
                 image = [self imageWithImage:image scaledToFillSize:cell.frame.size];
                 UIImage* tmpImage = [self fixOrientation:image withOrientation:image.imageOrientation];
-                /*CGImageRef imageRef = CGImageCreateWithImageInRect([tmpImage CGImage], rect);
-                 UIImage *newImage = [UIImage imageWithCGImage:imageRef];*/
-                cellImageView.image = tmpImage;
+                s.thumbnail = cellImageView.image = tmpImage;
+                [cellImageView setUserInteractionEnabled:YES];
                 cellImageView.backgroundColor = [UIColor blackColor];
                 cell.activityIndicator.hidden = YES;
                 [cell.activityIndicator stopAnimating];
             }];
-            if(isnan(interval) || interval<=0)
-            {
-                [cell setUserInteractionEnabled:NO];
-                // create effect
-                UIBlurEffect *blur = [UIBlurEffect effectWithStyle:UIBlurEffectStyleLight];
-                
-                // add effect to an effect view
-                UIVisualEffectView *effectView = [[UIVisualEffectView alloc]initWithEffect:blur];
-                effectView.frame = cellImageView.frame;
-                
-                // add the effect view to the image view
-                [cellImageView addSubview:effectView];
-                [cellImageView bringSubviewToFront:effectView];
-            }
-            else
-            {
-                UITapGestureRecognizer *pictureImageTap =  [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(singlePictureTapDetected:)];
-                pictureImageTap.numberOfTapsRequired = 1;
-                [cellImageView setUserInteractionEnabled:YES];
-                cellImageView.tag = indexPath.section;
-                [cellImageView addGestureRecognizer:pictureImageTap];
-                [cell setUserInteractionEnabled:YES];
-                //cell.backgroundColor = [UIColor whiteColor];
-            }
-            [cell addSubview:cellImageView];
-            
         }
+        if(isnan(interval) || interval<=0)
+        {
+            [cell setUserInteractionEnabled:NO];
+            // create effect
+            UIBlurEffect *blur = [UIBlurEffect effectWithStyle:UIBlurEffectStyleLight];
+            
+            // add effect to an effect view
+            UIVisualEffectView *effectView = [[UIVisualEffectView alloc]initWithEffect:blur];
+            effectView.frame = cellImageView.frame;
+            
+            // add the effect view to the image view
+            [cellImageView addSubview:effectView];
+            [cellImageView bringSubviewToFront:effectView];
+        }
+        else
+        {
+            UITapGestureRecognizer *pictureImageTap =  [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(singlePictureTapDetected:)];
+            pictureImageTap.numberOfTapsRequired = 1;
+            [cellImageView setUserInteractionEnabled:YES];
+            cellImageView.tag = indexPath.section;
+            [cellImageView addGestureRecognizer:pictureImageTap];
+            [cell setUserInteractionEnabled:YES];
+        }
+        
+            
+        //}
         [cell bringSubviewToFront:headerView];
         [cell bringSubviewToFront:tutorialView];
         
@@ -1727,7 +1583,7 @@
     
 }
 
-- (void)tableView:(UITableView *)tableView
+/*- (void)tableView:(UITableView *)tableView
 didEndDisplayingCell:(UITableViewCell *)cell
 forRowAtIndexPath:(NSIndexPath *)indexPath
 {
@@ -1736,16 +1592,17 @@ forRowAtIndexPath:(NSIndexPath *)indexPath
         //if we have already done the streams of content then return
         NSNumber *showStreamOfContentTutorial =
         [[NSUserDefaults standardUserDefaults] objectForKey:@"ShowStreamOfContentTutorial"];
-        NSLog(@"at end of tableview with content %d", showStreamOfContentTutorial.boolValue);
+        //NSLog(@"at end of tableview with content %d", showStreamOfContentTutorial.boolValue);
+        
         if(!showStreamOfContentTutorial && showStreamsArray && showStreamsArray.count)
         {
             NSLog(@"loading main tutorial");
             [self mainTutorial];
         }
     }
-}
+}*/
 
-- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView{
+/*- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView{
     
     if(![scrollView isKindOfClass:[UICollectionView class]])
         return;
@@ -1841,7 +1698,7 @@ forRowAtIndexPath:(NSIndexPath *)indexPath
 
 }
 
-/*collection view delegates*/
+//collection view delegates
 -(NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView {
     return 1;
 }
@@ -1964,7 +1821,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     _selectedSectionIndex = collectionView.tag;
     _selectedCellIndex = indexPath.row-!hasFirstShare;
     [self performSegueWithIdentifier:@"viewStreamSegue" sender:self];
-}
+}*/
 
 //Prepare segue
 - (void) prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {

@@ -41,7 +41,7 @@
 #define COLLECTION_VIEW_WIDTH 262.5 //260 for width and 2.5 for spacing between cells
 #define GPS_TIME 1
 
-@interface MainTableViewController : UITableViewController <UITextFieldDelegate,UINavigationControllerDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextViewDelegate, UIPickerViewDataSource, UIPickerViewDelegate, UICollectionViewDataSource, UICollectionViewDelegate, UIPopoverPresentationControllerDelegate,CLLocationManagerDelegate>
+@interface MainTableViewController : UITableViewController <UITextFieldDelegate,UINavigationControllerDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextViewDelegate, UIPickerViewDataSource, UIPickerViewDelegate,  UIPopoverPresentationControllerDelegate,CLLocationManagerDelegate>//UICollectionViewDataSource, UICollectionViewDelegate,
 {
     NSArray* showStreamsArray;
 }

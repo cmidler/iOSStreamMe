@@ -21,4 +21,5 @@
 @property (nonatomic, readwrite) BOOL isDownloadingPrevious;
 @property (nonatomic, readwrite) BOOL isDownloadingAfter;
 @property (nonatomic, readwrite) BOOL gotByBluetooth;
+@property (strong, nonatomic) UIImage* thumbnail;
 @end

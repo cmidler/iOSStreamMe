@@ -89,49 +89,27 @@
                                     <rect key="frame" x="0.0" y="0.0" width="320" height="159"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                     <subviews>
+                                        <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="nvn-Be-8EX" customClass="PFImageView">
+                                            <rect key="frame" x="0.0" y="0.0" width="320" height="268"/>
+                                            <constraints>
+                                                <constraint firstAttribute="height" constant="268" id="Dw4-WT-vqD"/>
+                                                <constraint firstAttribute="width" constant="320" id="Q4t-r0-qTb"/>
+                                            </constraints>
+                                        </imageView>
                                         <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" style="whiteLarge" translatesAutoresizingMaskIntoConstraints="NO" id="qSF-Ep-C5B">
-                                            <rect key="frame" x="150" y="150" width="37" height="37"/>
+                                            <rect key="frame" x="142" y="111" width="37" height="37"/>
                                             <color key="color" red="0.43529411759999997" green="0.4431372549" blue="0.47450980390000003" alpha="1" colorSpace="calibratedRGB"/>
                                         </activityIndicatorView>
-                                        <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" fixedFrame="YES" alwaysBounceHorizontal="YES" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="DU8-1r-IM7">
-                                            <rect key="frame" x="0.0" y="0.0" width="320" height="260"/>
-                                            <collectionViewFlowLayout key="collectionViewLayout" scrollDirection="horizontal" minimumLineSpacing="2.5" minimumInteritemSpacing="2.5" id="kPM-3g-1Og">
-                                                <size key="itemSize" width="260" height="260"/>
-                                                <size key="headerReferenceSize" width="0.0" height="0.0"/>
-                                                <size key="footerReferenceSize" width="0.0" height="0.0"/>
-                                                <inset key="sectionInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
-                                            </collectionViewFlowLayout>
-                                            <cells>
-                                                <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="streamCell" id="v4F-mH-qBW" customClass="StreamCollectionViewCell">
-                                                    <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
-                                                    <autoresizingMask key="autoresizingMask"/>
-                                                    <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
-                                                        <rect key="frame" x="0.0" y="0.0" width="260" height="260"/>
-                                                        <autoresizingMask key="autoresizingMask"/>
-                                                        <subviews>
-                                                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="N4M-mH-MUS" customClass="PFImageView">
-                                                                <rect key="frame" x="0.0" y="0.0" width="260" height="260"/>
-                                                            </imageView>
-                                                        </subviews>
-                                                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
-                                                    </view>
-                                                    <size key="customSize" width="260" height="260"/>
-                                                    <connections>
-                                                        <outlet property="shareImageView" destination="N4M-mH-MUS" id="QgS-Ef-0z7"/>
-                                                    </connections>
-                                                </collectionViewCell>
-                                            </cells>
-                                            <connections>
-                                                <outlet property="dataSource" destination="jAo-Dj-Xj5" id="P6M-KW-fik"/>
-                                                <outlet property="delegate" destination="jAo-Dj-Xj5" id="swx-94-G3X"/>
-                                            </connections>
-                                        </collectionView>
                                     </subviews>
+                                    <constraints>
+                                        <constraint firstAttribute="centerX" secondItem="nvn-Be-8EX" secondAttribute="centerX" id="Jpp-dj-AK5"/>
+                                        <constraint firstAttribute="centerY" secondItem="nvn-Be-8EX" secondAttribute="centerY" constant="-4" id="NaI-3E-6FM"/>
+                                    </constraints>
                                 </tableViewCellContentView>
                                 <inset key="separatorInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
                                 <connections>
                                     <outlet property="activityIndicator" destination="qSF-Ep-C5B" id="fdS-oW-D0o"/>
-                                    <outlet property="streamCollectionView" destination="DU8-1r-IM7" id="dq7-Vd-dzq"/>
+                                    <outlet property="shareImageView" destination="nvn-Be-8EX" id="W9a-B8-Gi5"/>
                                 </connections>
                             </tableViewCell>
                         </prototypes>
@@ -540,7 +518,7 @@
         <scene sceneID="CtV-v5-uoh">
             <objects>
                 <navigationController restorationIdentifier="mainNavigationViewController" definesPresentationContext="YES" id="QkY-hy-LKm" customClass="MainNavigationViewController" sceneMemberID="viewController">
-                    <tabBarItem key="tabBarItem" title="In Range" image="F5C693BA-6F76-46A6-A0DE-BBB277A30977" id="QWG-JZ-FhN"/>
+                    <tabBarItem key="tabBarItem" title="In Range" image="9E471CCD-390A-49A7-A833-516DBAE6EC74" id="QWG-JZ-FhN"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="10q-K2-WDE">
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
@@ -573,7 +551,7 @@
         </scene>
     </scenes>
     <resources>
-        <image name="F5C693BA-6F76-46A6-A0DE-BBB277A30977" width="16" height="16">
+        <image name="9E471CCD-390A-49A7-A833-516DBAE6EC74" width="16" height="16">
             <mutableData key="keyedArchiveRepresentation">
 YnBsaXN0MDDUAQIDBAUGOzxYJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK0HCBEW
 GxwgISksLzU4VSRudWxs1AkKCwwNDg8QViRjbGFzc1xOU0ltYWdlRmxhZ3NWTlNSZXBzV05TQ29sb3KA

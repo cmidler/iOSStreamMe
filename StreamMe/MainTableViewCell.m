@@ -37,14 +37,14 @@
     //NSLog(@"set highlighted!!!");
 }
 
--(void)setCollectionViewDataSourceDelegate:(id<UICollectionViewDataSource, UICollectionViewDelegate>)dataSourceDelegate index:(NSInteger)index
+/*-(void)setCollectionViewDataSourceDelegate:(id<UICollectionViewDataSource, UICollectionViewDelegate>)dataSourceDelegate index:(NSInteger)index
 {
     self.streamCollectionView.dataSource = dataSourceDelegate;
     self.streamCollectionView.delegate = dataSourceDelegate;
     self.streamCollectionView.tag = index;
     self.streamCollectionView.alwaysBounceHorizontal = YES;
     [self.streamCollectionView reloadData];
-}
+}*/
 
 
 @end

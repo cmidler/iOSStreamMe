@@ -18,6 +18,7 @@
         _offset = 0;
         _isDownloadingPrevious = NO;
         _isDownloadingAfter = NO;
+        _thumbnail = nil;
     }
     return self;
 }
