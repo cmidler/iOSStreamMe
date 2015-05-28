@@ -33,10 +33,8 @@
     _password = nil;
     _username = nil;
     
-    [_forgotPasswordLabel setUserInteractionEnabled:YES];
-    UITapGestureRecognizer *forgotTap =  [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(forgotTapDetected:)];
-    forgotTap.numberOfTapsRequired = 1;
-    [_forgotPasswordLabel addGestureRecognizer:forgotTap];
+    
+    
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(initialNotification:)
                                                  name:@"showRegisterOption"
@@ -52,143 +50,6 @@
     }
 }
 
--(void) forgotTapDetected:(id) sender
-{
-    
-    //alert to get email
-    UIAlertController *alertController = [UIAlertController
-                                          alertControllerWithTitle:@"Enter Email Address"
-                                          message:@"Enter the email address with which you registered your account."
-                                          preferredStyle:UIAlertControllerStyleAlert];
-    [alertController addTextFieldWithConfigurationHandler:^(UITextField *textField)
-     {
-         textField.tag = EMAIL_TAG;
-         textField.delegate = self;
-         textField.placeholder = NSLocalizedString(@"Email", @"Email");
-         if(_email)
-             textField.text = _email;
-         [textField setKeyboardType: UIKeyboardTypeEmailAddress];
-     }];
-    UIAlertAction *okAction = [UIAlertAction
-                               actionWithTitle:NSLocalizedString(@"OK", @"Ok action")
-                               style:UIAlertActionStyleDefault
-                               handler:^(UIAlertAction *action)
-                               {
-                                   
-                                   _email = ((UITextField*)alertController.textFields.firstObject).text;
-                                   //do some email regex
-                                   NSString *emailRegex = @"[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-z0-9])?.)+\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?";
-                                   NSError  *error = nil;
-                                   NSRange   searchedRange = NSMakeRange(0, _email.length);
-                                   NSRegularExpression* regex = [NSRegularExpression regularExpressionWithPattern: emailRegex options:0 error:&error];
-                                   
-                                   NSArray* matches = [regex matchesInString:_email options:0 range:searchedRange];
-                                   [_activityIndicator startAnimating];
-                                   [_activityIndicator setHidden:NO];
-                                   //check if the email address matches the regex
-                                   if(!_email.length || !matches.count)
-                                   {
-                                       UIAlertController *alertController = [UIAlertController
-                                                                             alertControllerWithTitle:@"Bad Email"
-                                                                             message:@"Please enter a valid email address."
-                                                                             preferredStyle:UIAlertControllerStyleAlert];
-                                       UIAlertAction *okAction = [UIAlertAction
-                                                                  actionWithTitle:NSLocalizedString(@"Ok", @"Ok action")
-                                                                  style:UIAlertActionStyleDefault
-                                                                  handler:^(UIAlertAction *action)
-                                                                  {
-                                                                      NSLog(@"Ok action");
-                                                                      [_activityIndicator stopAnimating];
-                                                                      [_activityIndicator setHidden:YES];
-                                                                      [self forgotTapDetected:self];
-                                                                      return;
-                                                                  }];
-                                       
-                                       [alertController addAction:okAction];
-                                       [self presentViewController:alertController animated:YES completion:nil];
-                                       return;
-                                   }
-
-                                   //send reset email
-                                   [PFUser requestPasswordResetForEmailInBackground:_email block:^(BOOL succeeded, NSError *error) {
-                                   
-                                       UIAlertController *alertController;
-                                       UIAlertAction *okAction;
-                                       //email not found for user
-                                       if(error.code == 205)
-                                       {
-                                           alertController = [UIAlertController alertControllerWithTitle:@"Email Not Sent"
-                                                                                                 message:@"That email address is not associated with a user.  Make sure you entered the correct email address and try again."
-                                                                                          preferredStyle:UIAlertControllerStyleAlert];
-                                           okAction = [UIAlertAction
-                                                       actionWithTitle:NSLocalizedString(@"Ok", @"Ok action")
-                                                       style:UIAlertActionStyleDefault
-                                                       handler:^(UIAlertAction *action)
-                                                       {
-                                                           NSLog(@"Ok action");
-                                                           [_activityIndicator stopAnimating];
-                                                           [_activityIndicator setHidden:YES];
-                                                           [self forgotTapDetected:self];
-                                                           return;
-                                                       }];
-
-                                       }
-                                       else if (error)
-                                       {
-                                           alertController = [UIAlertController alertControllerWithTitle:@"Email Could Not Be Sent"
-                                                                                                 message:@"An error occurred.  Check your internet connection and try again."
-                                                                                          preferredStyle:UIAlertControllerStyleAlert];
-                                           okAction = [UIAlertAction
-                                                       actionWithTitle:NSLocalizedString(@"Ok", @"Ok action")
-                                                       style:UIAlertActionStyleDefault
-                                                       handler:^(UIAlertAction *action)
-                                                       {
-                                                           NSLog(@"Ok action");
-                                                           [_activityIndicator stopAnimating];
-                                                           [_activityIndicator setHidden:YES];
-                                                           [self forgotTapDetected:self];
-                                                           return;
-                                                       }];
-
-                                       }
-                                       else
-                                       {
-                                           alertController = [UIAlertController alertControllerWithTitle:@"Password Reset Email Sent"
-                                                                             message:@"You will receive an email shortly with a link to reset your password."
-                                                                             preferredStyle:UIAlertControllerStyleAlert];
-                                           okAction = [UIAlertAction
-                                                                  actionWithTitle:NSLocalizedString(@"Ok", @"Ok action")
-                                                                  style:UIAlertActionStyleDefault
-                                                                  handler:^(UIAlertAction *action)
-                                                                  {
-                                                                      NSLog(@"Ok action");
-                                                                      [_activityIndicator stopAnimating];
-                                                                      [_activityIndicator setHidden:YES];
-                                                                      return;
-                                                                  }];
-                                       }
-                                       [alertController addAction:okAction];
-                                       [self presentViewController:alertController animated:YES completion:nil];
-                                       return;
-                                   }];
-                               }];
-    
-    UIAlertAction *cancelAction = [UIAlertAction
-                                   actionWithTitle:NSLocalizedString(@"Cancel", @"Cancel action")
-                                   style:UIAlertActionStyleCancel
-                                   handler:^(UIAlertAction *action)
-                                   {
-                                       _email = nil;
-                                       NSLog(@"Cancel action");
-                                       return;
-                                   }];
-    
-    [alertController addAction:cancelAction];
-    [alertController addAction:okAction];
-    [self presentViewController:alertController animated:YES completion:nil];
-    
-}
-
 
 - (void) viewWillAppear:(BOOL)animated
 {
@@ -199,7 +60,7 @@
     UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
     
-    self.view.backgroundColor = [UIColor colorWithPatternImage:image];
+    //self.view.backgroundColor = [UIColor colorWithPatternImage:image];
     
     UIImageView* navigationTitle = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 88, 44)];
     navigationTitle.image = [UIImage imageNamed:@"streamme_banner_1.png"];
@@ -224,12 +85,12 @@
     if(user)
     {
         [self.navigationController setNavigationBarHidden:YES];
-        self.forgotPasswordLabel.hidden = YES;
+        //self.forgotPasswordLabel.hidden = YES;
     }
     else
     {
         [self.navigationController setNavigationBarHidden:NO];
-        self.forgotPasswordLabel.hidden = NO;
+        //self.forgotPasswordLabel.hidden = NO;
         [self tutorial];
     }
 }
@@ -746,8 +607,8 @@
     // Store the data
     
     //setup pages for tutorial
-    _pageTitles = @[@"StreamMe shares streams of pictures to those around you.  These streams are public.", @"StreamMe requires Bluetooth to be turned on for discovery of nearby streams.", @"To quickly share to one or more streams you can shake the phone to quick-open the camera."];
-    _pageImages = @[@"whoYuLogo.png", @"bluetooth_256.png", @"shake-gesture.png"];
+    _pageTitles = @[@"Share streams of photos to those around you.", @"View content that actually matters to you."];
+    _pageImages = @[@"iphone_stock_1.png", @"iphone_stock_2.png"];
     
     // Create page view controller
     self.pageViewController = [self.storyboard instantiateViewControllerWithIdentifier:@"MainTutorialPageViewController"];
@@ -757,12 +618,16 @@
     NSArray *viewControllers = @[startingViewController];
     [self.pageViewController setViewControllers:viewControllers direction:UIPageViewControllerNavigationDirectionForward animated:NO completion:nil];
     
+    CGFloat navBarHeight = self.navigationController.navigationBar.frame.size.height;
     // Change the size of page view controller
-    self.pageViewController.view.frame = CGRectMake(self.view.frame.size.width/16, self.view.frame.size.height/4, self.view.frame.size.width*7.0/8.0, self.view.frame.size.height/2);
+    self.pageViewController.view.frame = CGRectMake(0, navBarHeight, self.view.frame.size.width, self.view.frame.size.height-navBarHeight);
     
+    [self addChildViewController:_pageViewController];
+    [self.view addSubview:_pageViewController.view];
+    [self.pageViewController didMoveToParentViewController:self];
     //[self addChildViewController:_pageViewController];
     //[self.view addSubview:_pageViewController.view];
-    [self presentViewController:self.pageViewController animated:YES completion:NULL];
+    //[self presentViewController:self.pageViewController animated:YES completion:NULL];
     //[self.pageViewController didMoveToParentViewController:self];
     
 }

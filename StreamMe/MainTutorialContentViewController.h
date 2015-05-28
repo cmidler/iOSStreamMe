@@ -7,12 +7,15 @@
 //
 
 #import <UIKit/UIKit.h>
+#import <Parse/Parse.h>
+#define EMAIL_TAG 1337
 //#import "MainTableViewController.h"
-@interface MainTutorialContentViewController : UIViewController
+@interface MainTutorialContentViewController : UIViewController<UITextFieldDelegate>
 @property (weak, nonatomic) IBOutlet UILabel *titleLabel;
 @property (weak, nonatomic) IBOutlet UIImageView *imageView;
-- (IBAction)okAction:(id)sender;
+@property (weak, nonatomic) IBOutlet UILabel *forgotPasswordLabel;
 @property NSUInteger pageIndex;
 @property NSString *titleText;
 @property NSString *imageFile;
+@property (strong, nonatomic) NSString* email;
 @end

@@ -41,7 +41,18 @@
     
     
     //setting up title
-    _sortBy = 1;
+    __block PFUser* user = [PFUser currentUser];
+    NSNumber* userSort = [user objectForKey:@"sort"];
+    if(userSort)
+        _sortBy = userSort.intValue;
+    else
+        _sortBy = 0;
+    
+    user[@"sort"] = [NSNumber numberWithInt:_sortBy];
+    [user saveInBackground];
+    [user refreshInBackgroundWithBlock:^(PFObject *object, NSError *error) {if(!error)user = (PFUser*)object;}];
+    
+    
     [self setNavigationTitle];
     
     
@@ -52,11 +63,16 @@
                                               highlightedImage:nil
                                                         action:^(REMenuItem *item) {
                                                             bool oldSort = _sortBy;
-                                                            _sortBy = 0;
+                                                            _sortBy = 2;
                                                             _showingAnywhere = NO;
                                                             [self setNavigationTitle];
                                                             if(oldSort != _sortBy)
+                                                            {
+                                                                user[@"sort"] = [NSNumber numberWithInt:_sortBy];
+                                                                [user saveInBackground];
+                                                                [user refreshInBackgroundWithBlock:^(PFObject *object, NSError *error) {if(!error)user = (PFUser*)object;}];
                                                                 [self sortStreams];
+                                                            }
                                                             _menuOpened = NO;
                                                         }];
     
@@ -70,11 +86,35 @@
                                                            _showingAnywhere = NO;
                                                            [self setNavigationTitle];
                                                            if(oldSort != _sortBy)
+                                                           {
+                                                               user[@"sort"] = [NSNumber numberWithInt:_sortBy];
+                                                               [user saveInBackground];
+                                                               [user refreshInBackgroundWithBlock:^(PFObject *object, NSError *error) {if(!error)user = (PFUser*)object;}];
                                                                [self sortStreams];
+                                                           }
                                                            _menuOpened = NO;
                                                            
                                                        }];
-    _menu = [[REMenu alloc] initWithItems:@[popularNearbyItem,newestItem]];
+    REMenuItem *nearbyItem = [[REMenuItem alloc] initWithTitle:@"Closest"
+                                                             subtitle:@"Sort by the streams that are closest to you"
+                                                                image:nil
+                                                     highlightedImage:nil
+                                                               action:^(REMenuItem *item) {
+                                                                   bool oldSort = _sortBy;
+                                                                   _sortBy = 0;
+                                                                   _showingAnywhere = NO;
+                                                                   [self setNavigationTitle];
+                                                                   if(oldSort != _sortBy)
+                                                                   {
+                                                                       user[@"sort"] = [NSNumber numberWithInt:_sortBy];
+                                                                       [user saveInBackground];
+                                                                       [user refreshInBackgroundWithBlock:^(PFObject *object, NSError *error) {if(!error)user = (PFUser*)object;}];
+                                                                       [self sortStreams];
+                                                                   }
+                                                                   _menuOpened = NO;
+                                                                   
+                                                               }];
+    _menu = [[REMenu alloc] initWithItems:@[nearbyItem,popularNearbyItem,newestItem]];
     [_menu setTextColor:[UIColor whiteColor]];
     [_menu setBackgroundColor:[UIColor blackColor]];
     _locationManager = [[CLLocationManager alloc] init];
@@ -130,21 +170,32 @@
                                              selector:@selector(mainNotification:)
                                                  name:@"updatedLocationForCreation"
                                                object:nil];
+    //authorization check
+    if([CLLocationManager authorizationStatus] == kCLAuthorizationStatusNotDetermined)
+    {
+        //NSLog(@"authorization status is not determined");
+        _locationManager.delegate = self;
+        [_locationManager requestWhenInUseAuthorization];
+        
+    }
+    else
+    {
+        NSLog(@"authorization status is %d", [CLLocationManager authorizationStatus]);
     
+        //Adding pull to refresh
+        self.refreshControl = [[UIRefreshControl alloc] init];
+        [self.refreshControl addTarget:self
+                                action:@selector(pullToRefresh)
+                      forControlEvents:UIControlEventValueChanged];
+        //force refreshing on view load
+        NSLog(@"forcing refreshing");
+        [self.refreshControl beginRefreshing];
+        [streamsTableView setContentOffset:CGPointMake(0, -self.refreshControl.frame.size.height) animated:YES];
+        
+        
+        [self pullToRefresh];
     
-    
-    //Adding pull to refresh
-    self.refreshControl = [[UIRefreshControl alloc] init];
-    [self.refreshControl addTarget:self
-                            action:@selector(pullToRefresh)
-                  forControlEvents:UIControlEventValueChanged];
-    //force refreshing on view load
-    NSLog(@"forcing refreshing");
-    [self.refreshControl beginRefreshing];
-    [streamsTableView setContentOffset:CGPointMake(0, -self.refreshControl.frame.size.height) animated:YES];
-
-    
-    [self pullToRefresh];
+    }
     //[self checkCreateStreamInfo];
 }
 
@@ -315,9 +366,11 @@
     [menuButton addTarget:self action:@selector(menuSelected:) forControlEvents:UIControlEventTouchUpInside];
     //setting the title
     if(!_sortBy)
-        [menuButton setTitle:@"Newest" forState:UIControlStateNormal];
+        [menuButton setTitle:@"Closest" forState:UIControlStateNormal];
     else if(_sortBy==1)
         [menuButton setTitle:@"Popular" forState:UIControlStateNormal];
+    else if(_sortBy == 2)
+        [menuButton setTitle:@"Newest" forState:UIControlStateNormal];
     menuButton.titleLabel.textColor = [UIColor whiteColor];
     UIImage* image = [UIImage imageNamed:@"white-down-arrow.png"];
     //setting the down arrow
@@ -940,12 +993,11 @@
         [streams removeObjectsInArray:removeStreams];
     
     //sort the stream
-    
-    //Sort by newest
-    if(_sortBy == 0)
+    if(!_sortBy)
     {
         showStreamsArray = [streams sortedArrayUsingComparator: ^(Stream* obj1, Stream* obj2) {
-        
+            
+            
             //get the streams to sort upon
             PFObject* stream1 = obj1.stream;
             PFObject* stream2 = obj2.stream;
@@ -962,7 +1014,47 @@
             if(isnan(interval2) || interval2<=0)
                 return (NSComparisonResult)NSOrderedAscending;
             
-            //compare on created at
+            //sort on bluetooth first
+            if(obj1.gotByBluetooth && !obj2.gotByBluetooth)
+                return (NSComparisonResult)NSOrderedAscending;
+            else if (!obj1.gotByBluetooth && obj2.gotByBluetooth)
+                return (NSComparisonResult)NSOrderedDescending;
+            
+            //they have the same bluetooth value.  check for geo now
+            if(_currentLocation)
+            {
+                PFGeoPoint* geo1 = ((PFGeoPoint*)[stream1 objectForKey:@"location"]);
+                PFGeoPoint* geo2 = ((PFGeoPoint*)[stream2 objectForKey:@"location"]);
+                
+                if((geo1.latitude || geo1.longitude) && (!geo2.latitude && !geo2.longitude))//1 has location and 2 doesn't
+                    return (NSComparisonResult)NSOrderedAscending;
+                else if ((!geo1.latitude && !geo1.longitude) && (geo2.latitude || geo2.longitude))//1 does not have location and 2 does
+                    return (NSComparisonResult)NSOrderedDescending;
+                else if (geo1.longitude || geo1.latitude) //both of a location
+                {
+                    CLLocation* loc1 = [[CLLocation alloc] initWithLatitude:geo1.latitude longitude:geo1.longitude];
+                    CLLocation* loc2 = [[CLLocation alloc] initWithLatitude:geo2.latitude longitude:geo2.longitude];
+                    
+                    //need to get the distance from the current location
+                    CLLocationDistance distanceInMeters1 = [_currentLocation distanceFromLocation:loc1];
+                    CLLocationDistance distanceInMeters2 = [_currentLocation distanceFromLocation:loc2];
+                    
+                    if(distanceInMeters1<distanceInMeters2)
+                        return (NSComparisonResult)NSOrderedAscending;//1 is closer
+                    else if(distanceInMeters1>distanceInMeters2)
+                        return (NSComparisonResult)NSOrderedDescending;//2 is closer
+                }
+            }
+
+            //either the distance can't be figured out or they are the same distance apart
+            
+            //sort by popular
+            if(obj1.totalShares > obj2.totalShares)
+                return (NSComparisonResult)NSOrderedAscending;
+            else if(obj1.totalShares < obj2.totalShares)
+                return (NSComparisonResult)NSOrderedDescending;
+            
+            //sort by newest
             return [stream2.createdAt compare:stream1.createdAt];
         }];
     }
@@ -991,11 +1083,72 @@
                 return (NSComparisonResult)NSOrderedAscending;
             else if(obj1.totalShares < obj2.totalShares)
                 return (NSComparisonResult)NSOrderedDescending;
-            else
-                return (NSComparisonResult)NSOrderedSame;
+            
+            //sort on bluetooth first
+            if(obj1.gotByBluetooth && !obj2.gotByBluetooth)
+                return (NSComparisonResult)NSOrderedAscending;
+            else if (!obj1.gotByBluetooth && obj2.gotByBluetooth)
+                return (NSComparisonResult)NSOrderedDescending;
+            
+            //they have the same bluetooth value.  check for geo now
+            if(_currentLocation)
+            {
+                PFGeoPoint* geo1 = ((PFGeoPoint*)[stream1 objectForKey:@"location"]);
+                PFGeoPoint* geo2 = ((PFGeoPoint*)[stream2 objectForKey:@"location"]);
+                
+                if((geo1.latitude || geo1.longitude) && (!geo2.latitude && !geo2.longitude))//1 has location and 2 doesn't
+                    return (NSComparisonResult)NSOrderedAscending;
+                else if ((!geo1.latitude && !geo1.longitude) && (geo2.latitude || geo2.longitude))//1 does not have location and 2 does
+                    return (NSComparisonResult)NSOrderedDescending;
+                else if (geo1.longitude || geo1.latitude) //both of a location
+                {
+                    CLLocation* loc1 = [[CLLocation alloc] initWithLatitude:geo1.latitude longitude:geo1.longitude];
+                    CLLocation* loc2 = [[CLLocation alloc] initWithLatitude:geo2.latitude longitude:geo2.longitude];
+                    
+                    //need to get the distance from the current location
+                    CLLocationDistance distanceInMeters1 = [_currentLocation distanceFromLocation:loc1];
+                    CLLocationDistance distanceInMeters2 = [_currentLocation distanceFromLocation:loc2];
+                    
+                    if(distanceInMeters1<distanceInMeters2)
+                        return (NSComparisonResult)NSOrderedAscending;//1 is closer
+                    else if(distanceInMeters1>distanceInMeters2)
+                        return (NSComparisonResult)NSOrderedDescending;//2 is closer
+                }
+            }
+
+            
+            
+            
+            return [stream2.createdAt compare:stream1.createdAt];
             
         }];
     }
+    //Sort by newest
+    else if(_sortBy == 2)
+    {
+        showStreamsArray = [streams sortedArrayUsingComparator: ^(Stream* obj1, Stream* obj2) {
+            
+            //get the streams to sort upon
+            PFObject* stream1 = obj1.stream;
+            PFObject* stream2 = obj2.stream;
+            NSDate* date1 = [stream1 objectForKey:@"endTime"];
+            NSDate* date2 = [stream2 objectForKey:@"endTime"];
+            NSDate* now = [NSDate date];
+            NSTimeInterval interval1 = [date1 timeIntervalSinceDate:now];
+            NSTimeInterval interval2 = [date2 timeIntervalSinceDate:now];
+            
+            
+            //compare the date objects to see if they are in the past
+            if(isnan(interval1) || interval1<=0)
+                return (NSComparisonResult)NSOrderedDescending;
+            if(isnan(interval2) || interval2<=0)
+                return (NSComparisonResult)NSOrderedAscending;
+            
+            //compare on created at
+            return [stream2.createdAt compare:stream1.createdAt];
+        }];
+    }
+
     
     //now sort the stream based on how many photos it has
     [self.refreshControl endRefreshing];
@@ -1419,17 +1572,18 @@
         distance.numberOfLines = 1;
         distance.textColor = [UIColor whiteColor];
         distance.textAlignment = NSTextAlignmentRight;
-        
+        PFGeoPoint* geo = ((PFGeoPoint*)[s.stream objectForKey:@"location"]);
         //figure out the distance from current location
-        if(!_currentLocation && !s.gotByBluetooth)
+        if(s.gotByBluetooth)
+            distance.text = @"Right Here!";
+        else if((!_currentLocation && !s.gotByBluetooth) || !geo ||  (geo.latitude == 0 && geo.longitude == 0))
             distance.text = @"Distance Unknown";
         else
         {
-            PFGeoPoint* geo = ((PFGeoPoint*)[s.stream objectForKey:@"location"]);
             CLLocation* streamDistance = [[CLLocation alloc] initWithLatitude:geo.latitude longitude:geo.longitude];
             
             CLLocationDistance distanceInMeters = [_currentLocation distanceFromLocation:streamDistance];
-            //NSLog(@"distance in meters is %f", distanceInMeters);
+            NSLog(@"distance in meters is %f", distanceInMeters);
             
             int miles = floor(distanceInMeters*0.000621371192);//meters to miles conversion
             if(!miles)
@@ -1519,6 +1673,15 @@
         }
         else
         {
+            //loop through subviews and if pfimage is there remove it
+            for(UIView* view in cellImageView.subviews)
+            {
+                if([view isKindOfClass:[UIVisualEffectView class]])
+                {
+                    NSLog(@"removing tag");
+                    [view removeFromSuperview];
+                }
+            }
             UITapGestureRecognizer *pictureImageTap =  [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(singlePictureTapDetected:)];
             pictureImageTap.numberOfTapsRequired = 1;
             [cellImageView setUserInteractionEnabled:YES];
@@ -2042,7 +2205,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         [[NSUserDefaults standardUserDefaults] objectForKey:@"ShowTouchScreenForPhoto"];
         if (showTouchScreenForPhoto == nil) {
             UIAlertController *alertController = [UIAlertController
-                                                  alertControllerWithTitle:@"Take A Photo!"
+                                                  alertControllerWithTitle:@"Take A Photo"
                                                   message:@"To take a photograph with the camera just tap anywhere on the screen!"
                                                   preferredStyle:UIAlertControllerStyleAlert];
             UIAlertAction *okAction = [UIAlertAction
@@ -2050,9 +2213,23 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                                        style:UIAlertActionStyleDefault
                                        handler:^(UIAlertAction *action)
                                        {
-                                           NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-                                           [defaults setObject:@"YES" forKey:@"ShowTouchScreenForPhoto"];
-                                           [defaults synchronize];
+                                           UIAlertController *alertController = [UIAlertController
+                                                                                 alertControllerWithTitle:@"Fast Open And Close The Camera"
+                                                                                 message:@"Shake your phone to quickly open and close the camera.  This also allows you to share to multiple screens!"
+                                                                                 preferredStyle:UIAlertControllerStyleAlert];
+                                           UIAlertAction *okAction = [UIAlertAction
+                                                                      actionWithTitle:NSLocalizedString(@"Ok", @"Ok action")
+                                                                      style:UIAlertActionStyleDefault
+                                                                      handler:^(UIAlertAction *action)
+                                                                      {
+                                                                          NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+                                                                          [defaults setObject:@"YES" forKey:@"ShowTouchScreenForPhoto"];
+                                                                          [defaults synchronize];
+                                                                          return;
+                                                                      }];
+                                           [alertController addAction:okAction];
+                                           
+                                           [customPicker presentViewController:alertController animated:YES completion:nil];
                                            return;
                                        }];
             [alertController addAction:okAction];
@@ -2987,6 +3164,9 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                     while(inQueue)
                         ;
                     
+                    for(NSString* userId in userIds)
+                        NSLog(@"user id is %@",userId);
+                    
                     //send push
                     if(userIds && userIds.count)
                         [PFCloud callFunctionInBackground:@"sendPushForStream" withParameters:@{@"streamId":newStream.stream.objectId, @"userIds":userIds} block:^(id object, NSError *error) {}];
@@ -3325,10 +3505,11 @@ shouldChangeTextInRange:(NSRange)range
 
 - (void)locationManager:(CLLocationManager *)manager didFailWithError:(NSError *)error
 {
+    NSLog(@"current location is %@ in failed with error", _currentLocation);
     if(!_gettingLocation)
         return;
     [_locationManager stopUpdatingLocation];
-    NSLog(@"current location is %@ in failed with error", _currentLocation);
+    
     if(_refreshingStreams)
         [[NSNotificationCenter defaultCenter] postNotificationName:@"updatedLocation" object:self];
     else
@@ -3340,9 +3521,10 @@ shouldChangeTextInRange:(NSRange)range
 
 - (void)locationManager:(CLLocationManager *)manager didUpdateToLocation:(CLLocation *)newLocation fromLocation:(CLLocation *)oldLocation
 {
+    NSLog(@"didUpdateToLocation: %@", newLocation);
     if(!_gettingLocation)
         return;
-    NSLog(@"didUpdateToLocation: %@", newLocation);
+    
     _currentLocation = newLocation;
     NSLog(@"current location is %@", _currentLocation);
     if(!_currentLocation)
@@ -3356,6 +3538,25 @@ shouldChangeTextInRange:(NSRange)range
     _gettingLocation = NO;
     [_timerGPS invalidate];
     
+}
+
+- (void)locationManager:(CLLocationManager *)manager
+didChangeAuthorizationStatus:(CLAuthorizationStatus)status
+{
+    NSLog(@"authorization status is %d", [CLLocationManager authorizationStatus]);
+    
+    //Adding pull to refresh
+    self.refreshControl = [[UIRefreshControl alloc] init];
+    [self.refreshControl addTarget:self
+                            action:@selector(pullToRefresh)
+                  forControlEvents:UIControlEventValueChanged];
+    //force refreshing on view load
+    NSLog(@"forcing refreshing");
+    [self.refreshControl beginRefreshing];
+    [streamsTableView setContentOffset:CGPointMake(0, -self.refreshControl.frame.size.height) animated:YES];
+    
+    
+    [self pullToRefresh];
 }
 
 
