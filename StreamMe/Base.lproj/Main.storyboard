@@ -440,16 +440,6 @@
                         <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Forgot Password?" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="KA9-nY-W6D">
-                                <rect key="frame" x="100" y="542" width="120" height="18"/>
-                                <constraints>
-                                    <constraint firstAttribute="height" constant="18" id="Y0G-RK-nMJ"/>
-                                    <constraint firstAttribute="width" constant="120" id="b2Q-K7-Gux"/>
-                                </constraints>
-                                <fontDescription key="fontDescription" type="boldSystem" pointSize="10"/>
-                                <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                <nil key="highlightedColor"/>
-                            </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="center" lineBreakMode="wordWrap" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="LSI-me-gbD">
                                 <rect key="frame" x="16" y="20" width="288" height="66"/>
                                 <constraints>
@@ -467,18 +457,46 @@
                                     <constraint firstAttribute="width" constant="180" id="mAN-dJ-2eQ"/>
                                 </constraints>
                             </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Forgot Password?" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="KA9-nY-W6D">
+                                <rect key="frame" x="100" y="542" width="120" height="18"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="18" id="Y0G-RK-nMJ"/>
+                                    <constraint firstAttribute="width" constant="120" id="b2Q-K7-Gux"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="10"/>
+                                <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="PqL-gB-K3M">
+                                <rect key="frame" x="123" y="197" width="74" height="74"/>
+                                <subviews>
+                                    <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" animating="YES" style="whiteLarge" translatesAutoresizingMaskIntoConstraints="NO" id="paa-Ff-B4O">
+                                        <rect key="frame" x="19" y="18" width="37" height="37"/>
+                                    </activityIndicatorView>
+                                </subviews>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="74" id="3AL-cx-XLR"/>
+                                    <constraint firstAttribute="centerX" secondItem="paa-Ff-B4O" secondAttribute="centerX" constant="-0.5" id="6FZ-rU-XCb"/>
+                                    <constraint firstAttribute="centerY" secondItem="paa-Ff-B4O" secondAttribute="centerY" constant="0.5" id="QwZ-Er-u5y"/>
+                                    <constraint firstAttribute="height" constant="74" id="ZCP-t2-NTl"/>
+                                </constraints>
+                            </view>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
                             <constraint firstAttribute="centerX" secondItem="LSI-me-gbD" secondAttribute="centerX" id="FbC-zC-dVD"/>
                             <constraint firstAttribute="centerX" secondItem="KA9-nY-W6D" secondAttribute="centerX" id="IAO-Xf-KRk"/>
                             <constraint firstItem="LSI-me-gbD" firstAttribute="top" secondItem="pxg-FV-Duk" secondAttribute="top" constant="20" id="JTe-mf-IE9"/>
+                            <constraint firstAttribute="centerX" secondItem="PqL-gB-K3M" secondAttribute="centerX" id="MtJ-Ez-wze"/>
+                            <constraint firstAttribute="centerY" secondItem="PqL-gB-K3M" secondAttribute="centerY" constant="50" id="Uyu-gp-EHj"/>
                             <constraint firstItem="TwU-Wg-e1S" firstAttribute="top" secondItem="LSI-me-gbD" secondAttribute="bottom" constant="8" id="WOz-Ie-T2F"/>
                             <constraint firstItem="aD9-nc-yqq" firstAttribute="top" secondItem="KA9-nY-W6D" secondAttribute="bottom" constant="8" id="a5S-2R-I97"/>
                             <constraint firstAttribute="centerX" secondItem="TwU-Wg-e1S" secondAttribute="centerX" id="xiH-A7-l8d"/>
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="activityView" destination="PqL-gB-K3M" id="czN-de-sX0"/>
                         <outlet property="forgotPasswordLabel" destination="KA9-nY-W6D" id="yYd-Bn-Lh8"/>
                         <outlet property="imageView" destination="TwU-Wg-e1S" id="2bT-8F-L3n"/>
                         <outlet property="titleLabel" destination="LSI-me-gbD" id="sSA-T8-Cit"/>
@@ -500,7 +518,7 @@
         <scene sceneID="CtV-v5-uoh">
             <objects>
                 <navigationController restorationIdentifier="mainNavigationViewController" definesPresentationContext="YES" id="QkY-hy-LKm" customClass="MainNavigationViewController" sceneMemberID="viewController">
-                    <tabBarItem key="tabBarItem" title="In Range" image="A029E14C-0C7E-4FB6-8035-86353790D0CF" id="QWG-JZ-FhN"/>
+                    <tabBarItem key="tabBarItem" title="In Range" image="BAF418CD-0D8E-40D1-AECC-26436AF3E4A8" id="QWG-JZ-FhN"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="10q-K2-WDE">
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
@@ -533,7 +551,7 @@
         </scene>
     </scenes>
     <resources>
-        <image name="A029E14C-0C7E-4FB6-8035-86353790D0CF" width="16" height="16">
+        <image name="BAF418CD-0D8E-40D1-AECC-26436AF3E4A8" width="16" height="16">
             <mutableData key="keyedArchiveRepresentation">
 YnBsaXN0MDDUAQIDBAUGOzxYJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK0HCBEW
 GxwgISksLzU4VSRudWxs1AkKCwwNDg8QViRjbGFzc1xOU0ltYWdlRmxhZ3NWTlNSZXBzV05TQ29sb3KA

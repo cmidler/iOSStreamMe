@@ -161,6 +161,10 @@
                                                object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(mainNotification:)
+                                                 name:@"refreshStreams"
+                                               object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(mainNotification:)
                                                  name:@"dismissCameraPopover"
                                                object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self
@@ -669,6 +673,13 @@
         NSLog(@"reload section called");
         [self sortStreams];
     }
+    else if([[notification name] isEqualToString:@"refreshStreams"])
+    {
+        NSLog(@"reload section called");
+        [self pullToRefresh];
+    }
+
+    
     else if ([[notification name] isEqualToString:@"dismissCameraPopover"])
         [self popoverDismissed];
     else if ([[notification name] isEqualToString:@"updatedLocation"])
@@ -1505,7 +1516,8 @@
     cell.separatorInset = UIEdgeInsetsZero;
     cell.activityIndicator.hidden = YES;
     [cell.activityIndicator stopAnimating];
-    [cell setUserInteractionEnabled:YES];
+    [cell setUserInteractionEnabled:NO];
+    [cell.shareImageView setUserInteractionEnabled:NO];
     //[cell setUserInteractionEnabled:NO];
     //cell.streamCollectionView.hidden = YES;
     //cell.streamCollectionView.tag = indexPath.section;
@@ -1660,6 +1672,8 @@
         if(s.thumbnail)
         {
             cellImageView.image = s.thumbnail;
+            [cell setUserInteractionEnabled:YES];
+            [cell.shareImageView setUserInteractionEnabled:YES];
             NSLog(@"using thumbnail on section %d", (int)indexPath.section);
         }
         else
@@ -1670,7 +1684,8 @@
             [cell bringSubviewToFront:cell.activityIndicator];
             cellImageView.image = [UIImage imageNamed:@"pictures-320.png"];
             cellImageView.file = [share objectForKey:@"file"];
-            [cellImageView setUserInteractionEnabled:NO];
+            [cell setUserInteractionEnabled:NO];
+            [cell.shareImageView setUserInteractionEnabled:NO];
             NSLog(@"before loading image %@", [s.stream objectForKey:@"name"]);
             [cellImageView loadInBackground:^(UIImage *image, NSError *error) {
                 if(error)
@@ -1680,7 +1695,8 @@
                 image = [self imageWithImage:image scaledToFillSize:cell.frame.size];
                 UIImage* tmpImage = [self fixOrientation:image withOrientation:image.imageOrientation];
                 s.thumbnail = cellImageView.image = tmpImage;
-                [cellImageView setUserInteractionEnabled:YES];
+                [cell setUserInteractionEnabled:YES];
+                [cell.shareImageView setUserInteractionEnabled:YES];
                 cellImageView.backgroundColor = [UIColor blackColor];
                 cell.activityIndicator.hidden = YES;
                 [cell.activityIndicator stopAnimating];
@@ -1689,6 +1705,7 @@
         if(isnan(interval) || interval<=0)
         {
             [cell setUserInteractionEnabled:NO];
+            [cell.shareImageView setUserInteractionEnabled:NO];
             // create effect
             UIBlurEffect *blur = [UIBlurEffect effectWithStyle:UIBlurEffectStyleLight];
             
@@ -1713,7 +1730,8 @@
             }
             UITapGestureRecognizer *pictureImageTap =  [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(singlePictureTapDetected:)];
             pictureImageTap.numberOfTapsRequired = 1;
-            [cellImageView setUserInteractionEnabled:YES];
+            [cell setUserInteractionEnabled:YES];
+            [cell.shareImageView setUserInteractionEnabled:YES];
             cellImageView.tag = indexPath.section;
             [cellImageView addGestureRecognizer:pictureImageTap];
             [cell setUserInteractionEnabled:YES];

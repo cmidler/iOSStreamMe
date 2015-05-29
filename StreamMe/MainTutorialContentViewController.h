@@ -18,4 +18,5 @@
 @property NSString *titleText;
 @property NSString *imageFile;
 @property (strong, nonatomic) NSString* email;
+@property (weak, nonatomic) IBOutlet UIView *activityView;
 @end

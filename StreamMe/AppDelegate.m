@@ -312,8 +312,10 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))handler {
     //Fire immediately every time we launch
     //[_periodicTimer fire];
     _timer =[NSTimer scheduledTimerWithTimeInterval:GET_COUNT_TIMER target:self selector:@selector(countTimer) userInfo:nil repeats:YES];
-    [[NSNotificationCenter defaultCenter] postNotificationName:@"countTimerFired" object:self userInfo:nil];
-    [[NSNotificationCenter defaultCenter] postNotificationName:@"reloadSection" object:self];
+    
+    if([PFUser currentUser])
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"refreshStreams" object:self userInfo:nil];
+    //[[NSNotificationCenter defaultCenter] postNotificationName:@"reloadSection" object:self];
     //Turning central and peripheral on
     if(!_central)
         _central = [[CBCentralInterface alloc]init];

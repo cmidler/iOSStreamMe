@@ -29,6 +29,7 @@
     //Adding the data to the picture
 
     _activityIndicator.hidden = YES;
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"hideActivityView" object:self userInfo:nil];
     _email = nil;
     _password = nil;
     _username = nil;
@@ -110,6 +111,7 @@
     {
         _activityIndicator.hidden = NO;
         [_activityIndicator startAnimating];
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"showActivityView" object:self userInfo:nil];
         AppDelegate* appDelegate = [[UIApplication sharedApplication] delegate];
         CBPeripheralInterface* peripheral = [appDelegate peripheral];
         peripheral.userId = [PFUser currentUser].objectId;
@@ -181,6 +183,7 @@
                                    //we have info in both fields
                                    _activityIndicator.hidden = NO;
                                    [_activityIndicator startAnimating];
+                                   [[NSNotificationCenter defaultCenter] postNotificationName:@"showActivityView" object:self userInfo:nil];
                                    //get the username from backend based on email and then try to login
                                    
                                    PFQuery* userQuery = [PFUser query];
@@ -209,6 +212,7 @@
                                        {
                                            _activityIndicator.hidden = YES;
                                            [_activityIndicator stopAnimating];
+                                           [[NSNotificationCenter defaultCenter] postNotificationName:@"hideActivityView" object:self userInfo:nil];
                                            [alertController addAction:okAction];
                                            [self presentViewController:alertController animated:YES completion:nil];
                                            return;
@@ -254,6 +258,7 @@
                                             {
                                                 _activityIndicator.hidden = YES;
                                                 [_activityIndicator stopAnimating];
+                                                [[NSNotificationCenter defaultCenter] postNotificationName:@"hideActivityView" object:self userInfo:nil];
                                                 [alertController addAction:okAction];
                                                 [self presentViewController:alertController animated:YES completion:nil];
                                                 return;
@@ -392,6 +397,7 @@
                                    newUser.password = _password;
                                    _activityIndicator.hidden = NO;
                                    [_activityIndicator startAnimating];
+                                   [[NSNotificationCenter defaultCenter] postNotificationName:@"showActivityView" object:self userInfo:nil];
                                        
                                    
                                    //Sign up the user if possible and redirect to main page
@@ -445,7 +451,7 @@
                                                                {
                                                                    _activityIndicator.hidden = YES;
                                                                    [_activityIndicator stopAnimating];
-                                                                   
+                                                                   [[NSNotificationCenter defaultCenter] postNotificationName:@"hideActivityView" object:self userInfo:nil];
                                                                    [user deleteEventually];
                                                                    [self registerAction:self];
                                                                    return;
@@ -482,6 +488,7 @@
                                                                _email = nil;
                                                                _activityIndicator.hidden = YES;
                                                                [_activityIndicator stopAnimating];
+                                                               [[NSNotificationCenter defaultCenter] postNotificationName:@"hideActivityView" object:self userInfo:nil];
                                                                [self registerAction:self];
                                                                return;
                                                            }];
@@ -501,6 +508,7 @@
                                                                                _username = nil;
                                                                                _activityIndicator.hidden = YES;
                                                                                [_activityIndicator stopAnimating];
+                                                                               [[NSNotificationCenter defaultCenter] postNotificationName:@"hideActivityView" object:self userInfo:nil];
                                                                                [self registerAction:self];
                                                                                return;
                                                                            }];
@@ -519,7 +527,7 @@
                                                            {
                                                                _activityIndicator.hidden = YES;
                                                                [_activityIndicator stopAnimating];
-                                                               
+                                                               [[NSNotificationCenter defaultCenter] postNotificationName:@"hideActivityView" object:self userInfo:nil];
                                                                
                                                                [self registerAction:self];
                                                                return;

@@ -26,11 +26,35 @@
     self.imageView.layer.cornerRadius = 37;
     self.imageView.clipsToBounds = YES;
     self.titleLabel.text = self.titleText;
+    self.activityView.backgroundColor = [UIColor blackColor];
+    self.activityView.hidden = YES;
     
     [_forgotPasswordLabel setUserInteractionEnabled:YES];
     UITapGestureRecognizer *forgotTap =  [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(forgotTapDetected:)];
     forgotTap.numberOfTapsRequired = 1;
     [_forgotPasswordLabel addGestureRecognizer:forgotTap];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(activityNotification:)
+                                                 name:@"showActivityView"
+                                               object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(activityNotification:)
+                                                 name:@"hideActivityView"
+                                               object:nil];
+}
+
+/* calling load values on notification since viewwillappear is not working */
+- (void) activityNotification:(NSNotification *) notification
+{
+    if ([[notification name] isEqualToString:@"showActivityView"])
+    {
+        self.activityView.hidden = NO;
+    }
+    else if ([[notification name] isEqualToString:@"hideActivityView"])
+    {
+        self.activityView.hidden = YES;
+    }
 }
 
 - (void)didReceiveMemoryWarning {
@@ -71,6 +95,7 @@
                                    NSArray* matches = [regex matchesInString:_email options:0 range:searchedRange];
                                    //[_activityIndicator startAnimating];
                                    //[_activityIndicator setHidden:NO];
+                                   [[NSNotificationCenter defaultCenter] postNotificationName:@"showActivityView" object:self userInfo:nil];
                                    //check if the email address matches the regex
                                    if(!_email.length || !matches.count)
                                    {
@@ -84,8 +109,7 @@
                                                                   handler:^(UIAlertAction *action)
                                                                   {
                                                                       NSLog(@"Ok action");
-                                                                      //[_activityIndicator stopAnimating];
-                                                                      //[_activityIndicator setHidden:YES];
+                                                                      [[NSNotificationCenter defaultCenter] postNotificationName:@"hideActivityView" object:self userInfo:nil];
                                                                       [self forgotTapDetected:self];
                                                                       return;
                                                                   }];
@@ -114,6 +138,7 @@
                                                            NSLog(@"Ok action");
                                                            //[_activityIndicator stopAnimating];
                                                            //[_activityIndicator setHidden:YES];
+                                                           [[NSNotificationCenter defaultCenter] postNotificationName:@"hideActivityView" object:self userInfo:nil];
                                                            [self forgotTapDetected:self];
                                                            return;
                                                        }];
@@ -132,6 +157,7 @@
                                                            NSLog(@"Ok action");
                                                            //[_activityIndicator stopAnimating];
                                                            //[_activityIndicator setHidden:YES];
+                                                           [[NSNotificationCenter defaultCenter] postNotificationName:@"hideActivityView" object:self userInfo:nil];
                                                            [self forgotTapDetected:self];
                                                            return;
                                                        }];
@@ -150,6 +176,7 @@
                                                            NSLog(@"Ok action");
                                                            //[_activityIndicator stopAnimating];
                                                            //[_activityIndicator setHidden:YES];
+                                                           [[NSNotificationCenter defaultCenter] postNotificationName:@"hideActivityView" object:self userInfo:nil];
                                                            return;
                                                        }];
                                        }
@@ -174,6 +201,8 @@
     [self presentViewController:alertController animated:YES completion:nil];
     
 }
+
+
 
 
 /*
