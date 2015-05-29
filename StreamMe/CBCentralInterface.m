@@ -714,7 +714,7 @@
     }];
     
     //busy loop
-    /*while(inQueue)
+    while(inQueue)
         ;
     
     //count the user ids
@@ -722,7 +722,7 @@
     {
         NSLog(@"calling new streams from nearby users");
         [PFCloud callFunctionInBackground:@"getNewStreamsFromNearbyUsers" withParameters:@{@"userIds":userIds} block:^(id object, NSError *error) {if(error) NSLog(@"error for nearby user streams is %@", error);}];
-    }*/
+    }
     
 }
 

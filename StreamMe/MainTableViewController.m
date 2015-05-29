@@ -22,6 +22,7 @@
 @synthesize pickerView;
 @synthesize timeLabel;
 @synthesize activityIndicator;
+@synthesize activityView;
 - (id)initWithStyle:(UITableViewStyle)style
 {
     self = [super initWithStyle:style];
@@ -530,6 +531,33 @@
     [_timerGPS invalidate];
 }
 
+-(void) timeoutTimerFired
+{
+    NSLog(@"timer publish fired");
+    [_timeoutTimer invalidate];
+    NSLog(@"error saving share");
+    UIAlertController *alertController = [UIAlertController
+                                          alertControllerWithTitle:@"Timeout Occurred"
+                                          message:@"Your connection timed out.  Check your internet connection and try again."
+                                          preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *okAction = [UIAlertAction
+                               actionWithTitle:NSLocalizedString(@"Ok", @"Ok action")
+                               style:UIAlertActionStyleDefault
+                               handler:^(UIAlertAction *action)
+                               {
+                                   [activityView setHidden:YES];
+                                   [activityIndicator setHidden:YES];
+                                   [toolBar setHidden:NO];
+                                   [caption setHidden:NO];
+                                   return;
+                               }];
+    
+    [alertController addAction:okAction];
+    [customPicker presentViewController:alertController animated:YES completion:nil];
+    return;
+    
+}
+
 -(void) presentNoCameraAlert
 {
     UIAlertController *alertController = [UIAlertController
@@ -752,7 +780,7 @@
             }
             
             NSArray* newStreams = object;
-            NSLog(@"new streams = %@", newStreams);
+            //NSLog(@"new streams = %@", newStreams);
             
             //get array of all of the stream objects we have
             NSMutableArray* streamObjects = [[NSMutableArray alloc] init];
@@ -1573,10 +1601,11 @@
         distance.textColor = [UIColor whiteColor];
         distance.textAlignment = NSTextAlignmentRight;
         PFGeoPoint* geo = ((PFGeoPoint*)[s.stream objectForKey:@"location"]);
+        NSLog(@"geo latitude is %f and long %f", geo.latitude, geo.latitude);
         //figure out the distance from current location
         if(s.gotByBluetooth)
             distance.text = @"Right Here!";
-        else if((!_currentLocation && !s.gotByBluetooth) || !geo ||  (geo.latitude == 0 && geo.longitude == 0))
+        else if((!_currentLocation && !s.gotByBluetooth) || !geo ||  (!geo.latitude && !geo.longitude))
             distance.text = @"Distance Unknown";
         else
         {
@@ -1638,7 +1667,7 @@
             PFObject* share = [s.streamShares[0] objectForKey:@"share"];
             cell.activityIndicator.hidden = NO;
             [cell.activityIndicator startAnimating];
-            [cell bringSubviewToFront:activityIndicator];
+            [cell bringSubviewToFront:cell.activityIndicator];
             cellImageView.image = [UIImage imageNamed:@"pictures-320.png"];
             cellImageView.file = [share objectForKey:@"file"];
             [cellImageView setUserInteractionEnabled:NO];
@@ -1673,7 +1702,7 @@
         }
         else
         {
-            //loop through subviews and if pfimage is there remove it
+            //loop through subviews and remove blue effects
             for(UIView* view in cellImageView.subviews)
             {
                 if([view isKindOfClass:[UIVisualEffectView class]])
@@ -2773,13 +2802,27 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 
 -(void) publishNew
 {
+    
+    //start the timer
+    _timeoutTimer =[NSTimer scheduledTimerWithTimeInterval:TIMEOUT_TIMER_TIME target:self selector:@selector(timeoutTimerFired) userInfo:nil repeats:NO];
+    
     if(_currentPopover)
         return;
+    
     activityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+    activityView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, activityIndicator.frame.size.width*2, activityIndicator.frame.size.height*2)];
+    activityView.backgroundColor = [UIColor blackColor];
+    activityView.center = cameraOverlayView.center;
     activityIndicator.center = cameraOverlayView.center;
+    activityView.layer.cornerRadius = 5;
+    activityView.clipsToBounds = YES;
+    
     [activityIndicator startAnimating];
     [activityIndicator setHidden:NO];
+    [activityView setHidden:NO];
+    [customPicker.view addSubview:activityView];
     [customPicker.view addSubview:activityIndicator];
+    [customPicker.view bringSubviewToFront:activityIndicator];
     [toolBar setHidden:YES];
     [caption setHidden:YES];
     
@@ -2982,10 +3025,13 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     [share setObject:pictureFile forKey:@"file"];
     [share setACL:defaultACL];
     
+    NSLog(@"about to save new stream");
+    
     //do 4 requests so we know it actually saves
     [share saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
         if(error)
         {
+            NSLog(@"error saving share");
             UIAlertController *alertController = [UIAlertController
                                                   alertControllerWithTitle:@"Error Starting Stream"
                                                   message:@"An error occurred starting the stream.  Check your internet connection and try again."
@@ -2996,6 +3042,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                                        handler:^(UIAlertAction *action)
                                        {
                                            [share deleteInBackground];
+                                           [activityView setHidden:YES];
                                            [activityIndicator setHidden:YES];
                                            [toolBar setHidden:NO];
                                            [caption setHidden:NO];
@@ -3003,11 +3050,11 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                                        }];
             
             [alertController addAction:okAction];
-            [self presentViewController:alertController animated:YES completion:nil];
+            [customPicker presentViewController:alertController animated:YES completion:nil];
             return;
             
         }
-        
+        NSLog(@"saved share");
         //create the new stream
         PFObject* stream = [PFObject objectWithClassName:@"Stream"];
         stream[@"isPrivate"] = [NSNumber numberWithBool:NO]; //Just hardcoding this for now
@@ -3023,6 +3070,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         [stream saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
             if(error)
             {
+                NSLog(@"error saving stream");
                 UIAlertController *alertController = [UIAlertController
                                                       alertControllerWithTitle:@"Error Starting Stream"
                                                       message:@"An error occurred starting the stream.  Check your internet connection and try again."
@@ -3035,13 +3083,14 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                                                NSArray* pfObjects = [[NSArray alloc] initWithObjects:share,stream, nil];
                                                [PFObject deleteAllInBackground:pfObjects];
                                                [activityIndicator setHidden:YES];
+                                               [activityView setHidden:YES];
                                                [toolBar setHidden:NO];
                                                [caption setHidden:NO];
                                                return;
                                            }];
                 
                 [alertController addAction:okAction];
-                [self presentViewController:alertController animated:YES completion:nil];
+                [customPicker presentViewController:alertController animated:YES completion:nil];
                 return;
                 
             }
@@ -3057,6 +3106,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
             [streamShare saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
                 if(error)
                 {
+                    NSLog(@"error saving streamshare");
                     UIAlertController *alertController = [UIAlertController
                                                           alertControllerWithTitle:@"Error Starting Stream"
                                                           message:@"An error occurred starting the stream.  Check your internet connection and try again."
@@ -3068,6 +3118,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                                                {
                                                    NSArray* pfObjects = [[NSArray alloc] initWithObjects:share,stream,streamShare, nil];
                                                    [PFObject deleteAllInBackground:pfObjects];
+                                                   [activityView setHidden:YES];
                                                    [activityIndicator setHidden:YES];
                                                    [toolBar setHidden:NO];
                                                    [caption setHidden:NO];
@@ -3075,7 +3126,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                                                }];
                     
                     [alertController addAction:okAction];
-                    [self presentViewController:alertController animated:YES completion:nil];
+                    [customPicker presentViewController:alertController animated:YES completion:nil];
                     return;
                     
                 }
@@ -3095,6 +3146,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                 [userStream saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
                     if(error)
                     {
+                        NSLog(@"error saving userstream");
                         UIAlertController *alertController = [UIAlertController
                                                               alertControllerWithTitle:@"Error Starting Stream"
                                                               message:@"An error occurred starting the stream.  Check your internet connection and try again."
@@ -3106,6 +3158,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                                                    {
                                                        NSArray* pfObjects = [[NSArray alloc] initWithObjects:share,stream,streamShare,userStream, nil];
                                                        [PFObject deleteAllInBackground:pfObjects];
+                                                       [activityView setHidden:YES];
                                                        [activityIndicator setHidden:YES];
                                                        [toolBar setHidden:NO];
                                                        [caption setHidden:NO];
@@ -3113,7 +3166,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                                                    }];
                         
                         [alertController addAction:okAction];
-                        [self presentViewController:alertController animated:YES completion:nil];
+                        [customPicker presentViewController:alertController animated:YES completion:nil];
                         return;
                         
                     }

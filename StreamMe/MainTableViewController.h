@@ -40,7 +40,7 @@
 #define TABLE_VIEW_X_ORIGIN 16
 #define COLLECTION_VIEW_WIDTH 262.5 //260 for width and 2.5 for spacing between cells
 #define GPS_TIME 1
-
+#define TIMEOUT_TIMER_TIME 30
 @interface MainTableViewController : UITableViewController <UITextFieldDelegate,UINavigationControllerDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextViewDelegate, UIPickerViewDataSource, UIPickerViewDelegate,  UIPopoverPresentationControllerDelegate,CLLocationManagerDelegate>//UICollectionViewDataSource, UICollectionViewDelegate,
 {
     NSArray* showStreamsArray;
@@ -85,6 +85,7 @@
 @property (nonatomic, readwrite) bool pickerShown;
 @property (nonatomic, readwrite) bool imagePickerOpen;
 @property (strong, nonatomic) UIActivityIndicatorView* activityIndicator;
+@property (strong, nonatomic) UIView* activityView;
 @property (nonatomic, readwrite) int totalValidStreams;
 @property (nonatomic, readwrite) bool downloadingStreams;
 @property (nonatomic, readwrite) bool loadingTableView;
@@ -98,4 +99,5 @@
 @property (nonatomic, readwrite) bool loadingViral;
 @property (strong, nonatomic) NSString* currentPopover;
 @property (strong, nonatomic) NSTimer* timerGPS;
+@property (strong, nonatomic) NSTimer* timeoutTimer;
 @end
