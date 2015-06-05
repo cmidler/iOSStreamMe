@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="7702" systemVersion="14D136" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" initialViewController="5as-cS-lGH">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="7706" systemVersion="14D136" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" initialViewController="5as-cS-lGH">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="7701"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="7703"/>
         <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
         <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
     </dependencies>
@@ -37,16 +37,10 @@
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="9Sy-XZ-o0o">
-                        <barButtonItem key="leftBarButtonItem" title="Log In" id="ieG-os-Wwb">
+                        <barButtonItem key="rightBarButtonItem" title="Login" id="BgD-iX-f55">
                             <color key="tintColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                             <connections>
-                                <action selector="loginAction:" destination="vXZ-lx-hvc" id="qHk-9K-uKV"/>
-                            </connections>
-                        </barButtonItem>
-                        <barButtonItem key="rightBarButtonItem" title="Register" id="BgD-iX-f55">
-                            <color key="tintColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
-                            <connections>
-                                <action selector="registerAction:" destination="vXZ-lx-hvc" id="38j-Lt-d7l"/>
+                                <action selector="loginAction:" destination="vXZ-lx-hvc" id="7vh-GY-w7Z"/>
                             </connections>
                         </barButtonItem>
                     </navigationItem>
@@ -498,23 +492,6 @@
                                 <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="iphone_img.png" translatesAutoresizingMaskIntoConstraints="NO" id="TwU-Wg-e1S">
-                                <rect key="frame" x="70" y="94" width="180" height="280"/>
-                                <constraints>
-                                    <constraint firstAttribute="height" constant="280" id="T6j-b0-Q0j"/>
-                                    <constraint firstAttribute="width" constant="180" id="mAN-dJ-2eQ"/>
-                                </constraints>
-                            </imageView>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Forgot Password?" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="KA9-nY-W6D">
-                                <rect key="frame" x="100" y="542" width="120" height="18"/>
-                                <constraints>
-                                    <constraint firstAttribute="height" constant="18" id="Y0G-RK-nMJ"/>
-                                    <constraint firstAttribute="width" constant="120" id="b2Q-K7-Gux"/>
-                                </constraints>
-                                <fontDescription key="fontDescription" type="boldSystem" pointSize="10"/>
-                                <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                <nil key="highlightedColor"/>
-                            </label>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="PqL-gB-K3M">
                                 <rect key="frame" x="123" y="197" width="74" height="74"/>
                                 <subviews>
@@ -530,22 +507,20 @@
                                     <constraint firstAttribute="height" constant="74" id="ZCP-t2-NTl"/>
                                 </constraints>
                             </view>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="iphone_img.png" translatesAutoresizingMaskIntoConstraints="NO" id="TwU-Wg-e1S">
+                                <rect key="frame" x="70" y="94" width="180" height="300"/>
+                            </imageView>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
                             <constraint firstAttribute="centerX" secondItem="LSI-me-gbD" secondAttribute="centerX" id="FbC-zC-dVD"/>
-                            <constraint firstAttribute="centerX" secondItem="KA9-nY-W6D" secondAttribute="centerX" id="IAO-Xf-KRk"/>
                             <constraint firstItem="LSI-me-gbD" firstAttribute="top" secondItem="pxg-FV-Duk" secondAttribute="top" constant="20" id="JTe-mf-IE9"/>
                             <constraint firstAttribute="centerX" secondItem="PqL-gB-K3M" secondAttribute="centerX" id="MtJ-Ez-wze"/>
                             <constraint firstAttribute="centerY" secondItem="PqL-gB-K3M" secondAttribute="centerY" constant="50" id="Uyu-gp-EHj"/>
-                            <constraint firstItem="TwU-Wg-e1S" firstAttribute="top" secondItem="LSI-me-gbD" secondAttribute="bottom" constant="8" id="WOz-Ie-T2F"/>
-                            <constraint firstItem="aD9-nc-yqq" firstAttribute="top" secondItem="KA9-nY-W6D" secondAttribute="bottom" constant="8" id="a5S-2R-I97"/>
-                            <constraint firstAttribute="centerX" secondItem="TwU-Wg-e1S" secondAttribute="centerX" id="xiH-A7-l8d"/>
                         </constraints>
                     </view>
                     <connections>
                         <outlet property="activityView" destination="PqL-gB-K3M" id="czN-de-sX0"/>
-                        <outlet property="forgotPasswordLabel" destination="KA9-nY-W6D" id="yYd-Bn-Lh8"/>
                         <outlet property="imageView" destination="TwU-Wg-e1S" id="2bT-8F-L3n"/>
                         <outlet property="titleLabel" destination="LSI-me-gbD" id="sSA-T8-Cit"/>
                     </connections>
@@ -566,7 +541,7 @@
         <scene sceneID="CtV-v5-uoh">
             <objects>
                 <navigationController restorationIdentifier="mainNavigationViewController" definesPresentationContext="YES" id="QkY-hy-LKm" customClass="MainNavigationViewController" sceneMemberID="viewController">
-                    <tabBarItem key="tabBarItem" title="In Range" image="F76B01AF-A423-419A-8E0E-6AFFFCC1FE9A" id="QWG-JZ-FhN"/>
+                    <tabBarItem key="tabBarItem" title="In Range" image="12BFA3F3-243F-475A-8D71-3B7F14F0EC74" id="QWG-JZ-FhN"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="10q-K2-WDE">
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
@@ -599,7 +574,7 @@
         </scene>
     </scenes>
     <resources>
-        <image name="F76B01AF-A423-419A-8E0E-6AFFFCC1FE9A" width="16" height="16">
+        <image name="12BFA3F3-243F-475A-8D71-3B7F14F0EC74" width="16" height="16">
             <mutableData key="keyedArchiveRepresentation">
 YnBsaXN0MDDUAQIDBAUGOzxYJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK0HCBEW
 GxwgISksLzU4VSRudWxs1AkKCwwNDg8QViRjbGFzc1xOU0ltYWdlRmxhZ3NWTlNSZXBzV05TQ29sb3KA

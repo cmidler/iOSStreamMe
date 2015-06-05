@@ -153,6 +153,7 @@
 		DEDD89811B18A06D0042F347 /* StreamCollectionViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = DEDD89801B18A06D0042F347 /* StreamCollectionViewController.m */; };
 		DEDD89841B1D04E10042F347 /* forward_arrow@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = DEDD89821B1D04E10042F347 /* forward_arrow@2x.png */; };
 		DEDD89851B1D04E10042F347 /* forward_arrow@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = DEDD89831B1D04E10042F347 /* forward_arrow@3x.png */; };
+		DEDD89891B21FBC40042F347 /* ParseUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DEDD89871B21FBC40042F347 /* ParseUI.framework */; };
 		DEE6C5E619BA9EBB00904866 /* CharacteristicData.m in Sources */ = {isa = PBXBuildFile; fileRef = DEE6C5E519BA9EBB00904866 /* CharacteristicData.m */; };
 		DEEB45151ACA5D870032F212 /* CustomFlowLayout.m in Sources */ = {isa = PBXBuildFile; fileRef = DEEB45141ACA5D870032F212 /* CustomFlowLayout.m */; };
 		DEEB451B1ACAE6F20032F212 /* PushFadeSegue.m in Sources */ = {isa = PBXBuildFile; fileRef = DEEB451A1ACAE6F20032F212 /* PushFadeSegue.m */; };
@@ -359,6 +360,7 @@
 		DEDD89801B18A06D0042F347 /* StreamCollectionViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StreamCollectionViewController.m; sourceTree = "<group>"; };
 		DEDD89821B1D04E10042F347 /* forward_arrow@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "forward_arrow@2x.png"; sourceTree = "<group>"; };
 		DEDD89831B1D04E10042F347 /* forward_arrow@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "forward_arrow@3x.png"; sourceTree = "<group>"; };
+		DEDD89871B21FBC40042F347 /* ParseUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = ParseUI.framework; sourceTree = "<group>"; };
 		DEE6C5E419BA9EBB00904866 /* CharacteristicData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CharacteristicData.h; sourceTree = "<group>"; };
 		DEE6C5E519BA9EBB00904866 /* CharacteristicData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CharacteristicData.m; sourceTree = "<group>"; };
 		DEEB45131ACA5D870032F212 /* CustomFlowLayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CustomFlowLayout.h; sourceTree = "<group>"; };
@@ -385,6 +387,7 @@
 				DE0051D319B7D2D70053D2EB /* CoreBluetooth.framework in Frameworks */,
 				DE7AE47019B76AC80001567E /* AudioToolbox.framework in Frameworks */,
 				DE7AE47119B76AC80001567E /* CFNetwork.framework in Frameworks */,
+				DEDD89891B21FBC40042F347 /* ParseUI.framework in Frameworks */,
 				DE7AE47319B76AC80001567E /* libz.dylib in Frameworks */,
 				DE7AE47419B76AC80001567E /* MobileCoreServices.framework in Frameworks */,
 				DE7AE47519B76AC80001567E /* QuartzCore.framework in Frameworks */,
@@ -710,6 +713,7 @@
 		DE7AE46019B76A5D0001567E /* parse-library-1.2.21 */ = {
 			isa = PBXGroup;
 			children = (
+				DEDD89871B21FBC40042F347 /* ParseUI.framework */,
 				DE7AE46119B76A5D0001567E /* Bolts.framework */,
 				DE7AE46219B76A5D0001567E /* Parse.framework */,
 			);

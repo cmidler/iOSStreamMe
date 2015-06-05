@@ -51,7 +51,7 @@
     
     user[@"sort"] = [NSNumber numberWithInt:_sortBy];
     [user saveInBackground];
-    [user refreshInBackgroundWithBlock:^(PFObject *object, NSError *error) {if(!error)user = (PFUser*)object;}];
+    [user fetchIfNeededInBackground];
     
     
     [self setNavigationTitle];
@@ -71,7 +71,7 @@
                                                             {
                                                                 user[@"sort"] = [NSNumber numberWithInt:_sortBy];
                                                                 [user saveInBackground];
-                                                                [user refreshInBackgroundWithBlock:^(PFObject *object, NSError *error) {if(!error)user = (PFUser*)object;}];
+                                                                [user fetchIfNeededInBackground];
                                                                 [self sortStreams];
                                                             }
                                                             _menuOpened = NO;
@@ -90,7 +90,7 @@
                                                            {
                                                                user[@"sort"] = [NSNumber numberWithInt:_sortBy];
                                                                [user saveInBackground];
-                                                               [user refreshInBackgroundWithBlock:^(PFObject *object, NSError *error) {if(!error)user = (PFUser*)object;}];
+                                                               [user fetchIfNeededInBackground];
                                                                [self sortStreams];
                                                            }
                                                            _menuOpened = NO;
@@ -109,7 +109,7 @@
                                                                    {
                                                                        user[@"sort"] = [NSNumber numberWithInt:_sortBy];
                                                                        [user saveInBackground];
-                                                                       [user refreshInBackgroundWithBlock:^(PFObject *object, NSError *error) {if(!error)user = (PFUser*)object;}];
+                                                                       [user fetchIfNeededInBackground];
                                                                        [self sortStreams];
                                                                    }
                                                                    _menuOpened = NO;
@@ -2999,7 +2999,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     __block PFUser* user = [PFUser currentUser];
     user[@"streamTimeHours"] = [NSNumber numberWithFloat:_expirationTime];
     [user saveInBackground];
-    [user refreshInBackgroundWithBlock:^(PFObject *object, NSError *error) {if(!error)user = (PFUser*)object;}];
+    [user fetchIfNeededInBackground];
     
     //now we need to update the label
     timeLabel.text = [NSString stringWithFormat:@"%.01f",_expirationTime ];

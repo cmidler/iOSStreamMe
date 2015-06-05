@@ -16,14 +16,20 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    UIGraphicsBeginImageContext(self.view.frame.size);
+    /*UIGraphicsBeginImageContext(self.view.frame.size);
     [[UIImage imageNamed:@"Default-736.png"] drawInRect:self.view.bounds];
+    UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();*/
+    UIGraphicsBeginImageContext(self.view.frame.size);
+    [[UIImage imageNamed:@"BlueGradient.png"] drawInRect:self.view.bounds];
     UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
     
-    self.view.backgroundColor = [UIColor colorWithPatternImage:image]; 
+    self.view.backgroundColor = [UIColor colorWithPatternImage:image];
+    self.imageView.frame = CGRectMake(self.view.frame.size.width/4, self.titleLabel.frame.origin.y+self.titleLabel.frame.size.height+8, self.view.frame.size.width/2, self.view.frame.size.height/2);
     self.imageView.image = [UIImage imageNamed:self.imageFile];
-    self.imageView.layer.cornerRadius = 37;
+    [self.imageView setContentMode:UIViewContentModeScaleToFill];
+    self.imageView.layer.cornerRadius = 35;
     self.imageView.clipsToBounds = YES;
     self.titleLabel.text = self.titleText;
     self.activityView.backgroundColor = [UIColor blackColor];

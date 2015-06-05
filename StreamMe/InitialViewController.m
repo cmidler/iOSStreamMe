@@ -82,6 +82,8 @@
 {
     
     PFUser* user = [PFUser currentUser];
+    [self tutorial];
+
     //if the user is logged in, don't present navigation bar.  If not, then present the navigation bar
     if(user)
     {
@@ -92,7 +94,7 @@
     {
         [self.navigationController setNavigationBarHidden:NO];
         //self.forgotPasswordLabel.hidden = NO;
-        [self tutorial];
+        //[self tutorial];
     }
 }
 
@@ -115,6 +117,7 @@
         {
             _activityIndicator.hidden = NO;
             [_activityIndicator startAnimating];
+            self.navigationItem.rightBarButtonItem.enabled = NO;
             [[NSNotificationCenter defaultCenter] postNotificationName:@"showActivityView" object:self userInfo:nil];
             UIAlertController *alertController = [UIAlertController
                                                   alertControllerWithTitle:@"Error Logging In"
@@ -127,6 +130,7 @@
                                        {
                                            _activityIndicator.hidden = YES;
                                            [_activityIndicator stopAnimating];
+                                           self.navigationItem.rightBarButtonItem.enabled = YES;
                                            [[NSNotificationCenter defaultCenter] postNotificationName:@"hideActivityView" object:self userInfo:nil];
                                            return;
                                        }];
@@ -141,17 +145,12 @@
             [user saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
                 if(succeeded && !error)
                 {
-                    [user refreshInBackgroundWithBlock:^(PFObject *object, NSError *error) {
-                        if(!error)
-                        {
-                            user = (PFUser*)object;
-                        }
-                        AppDelegate* appDelegate = [[UIApplication sharedApplication] delegate];
-                        CBPeripheralInterface* peripheral = [appDelegate peripheral];
-                        peripheral.userId = [PFUser currentUser].objectId;
-                        [peripheral startAdvertisingProfile];
-                        [self performSegueWithIdentifier:@"loggedInSegue" sender:self];
-                        return;
+                    [PFUser logOutInBackgroundWithBlock:^(NSError* error)
+                    {
+                        _activityIndicator.hidden = YES;
+                        [_activityIndicator stopAnimating];
+                        [[NSNotificationCenter defaultCenter] postNotificationName:@"hideActivityView" object:self userInfo:nil];
+                        [self loginAction:self];
                     }];
                 }
                 else
@@ -207,6 +206,7 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
                                {
                                    _activityIndicator.hidden = YES;
                                    [_activityIndicator stopAnimating];
+                                   self.navigationItem.rightBarButtonItem.enabled = YES;
                                    [[NSNotificationCenter defaultCenter] postNotificationName:@"hideActivityView" object:self userInfo:nil];
                                    return;
                                }];
@@ -220,109 +220,109 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
              return;
          }
          
-         //make sure we change the user to be the current user
-         __block PFUser* currentUser = [PFUser currentUser];
-         //no error so we are now logged in.  now to see if we have to change the posting name or not
-         //user has logged in before.  See if an older version of login or not
-         NSString* postingName = [currentUser objectForKey:@"posting_name"];
-         if(!postingName)
-         {
-            //set password to nil, generate a random username for this user and set the old username to the posting name
-             postingName = [NSString stringWithString:user.username];
-             [currentUser setObject:postingName forKey:@"posting_name"];
-             currentUser.password = @"";
-             currentUser.username = [self randomStringWithLength:32];
-             [user saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
-                 if(succeeded && !error)
-                 {
-                     [user refreshInBackgroundWithBlock:^(PFObject *object, NSError *error) {
-                         if(!error)
-                         {
-                             currentUser = (PFUser*)object;
-                             
-                             PFInstallation *installation = [PFInstallation currentInstallation];
-                             [installation setValue:@"ios" forKey:@"deviceType"];
-                             installation[@"user"] = currentUser;
-                             installation[@"badge"] = [NSNumber numberWithInt:0];
-                             PFACL *defaultACL = [PFACL ACL];
-                             [defaultACL setReadAccess:true forUser:currentUser];
-                             [defaultACL setWriteAccess:true forUser:currentUser];
-                             [defaultACL setPublicReadAccess:false];
-                             [defaultACL setPublicWriteAccess:false];
-                             [installation setACL:defaultACL];
-                             [installation saveInBackground];
-                             
-                             //get the main database
-                             PFUser* user = [PFUser currentUser];
-                             MainDatabase* md = [MainDatabase shared];
-                             [md.queue inDatabase:^(FMDatabase *db) {
-                                 NSString *insertUserSQL = @"INSERT INTO user (user_id, is_me) VALUES (?,?)";
-                                 NSArray* userValues = @[user.objectId, [NSNumber numberWithInt:1]];
-                                 [db executeUpdate:insertUserSQL withArgumentsInArray:userValues];
-                             }];
-                             AppDelegate* appDelegate = [[UIApplication sharedApplication] delegate];
-                             CBPeripheralInterface* peripheral = [appDelegate peripheral];
-                             peripheral.userId = [PFUser currentUser].objectId;
-                             [peripheral startAdvertisingProfile];
-                             
-                             [self performSegueWithIdentifier:@"loggedInSegue"
-                                                       sender:self];
-                         }
-                         else
-                         {
-                             [alertController addAction:okAction];
-                             [self presentViewController:alertController animated:YES completion:nil];
-                             return;
-                         }
-                     }];
-                 }
-                 else
-                 {
-                     [alertController addAction:okAction];
-                     [self presentViewController:alertController animated:YES completion:nil];
-                     return;
-                 }
+         [PFCloud callFunctionInBackground:@"addUserPrivate" withParameters:@{} block:^(id object, NSError *error) {
+             
+             if(error)
+             {
+                 NSLog(@"error running cloud function");
+                 [alertController addAction:okAction];
+                 [self presentViewController:alertController animated:YES completion:nil];
+                 return;
+             }
+
+         
+             //make sure we change the user to be the current user
+             __block PFUser* currentUser = [PFUser currentUser];
+             //no error so we are now logged in.  now to see if we have to change the posting name or not
+             //user has logged in before.  See if an older version of login or not
+             NSString* postingName = [currentUser objectForKey:@"posting_name"];
+             if(!postingName)
+             {
+                //set password to nil, generate a random username for this user and set the old username to the posting name
+                 postingName = [NSString stringWithString:user.username];
+                 [currentUser setObject:postingName forKey:@"posting_name"];
+                 currentUser.password = @"";
+                 currentUser.username = [self randomStringWithLength:32];
+                 [user saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
+                     if(succeeded && !error)
+                     {
+                         [currentUser fetchIfNeededInBackground];
+                         PFInstallation *installation = [PFInstallation currentInstallation];
+                         [installation setValue:@"ios" forKey:@"deviceType"];
+                         installation[@"user"] = currentUser;
+                         installation[@"badge"] = [NSNumber numberWithInt:0];
+                         PFACL *defaultACL = [PFACL ACL];
+                         [defaultACL setReadAccess:true forUser:currentUser];
+                         [defaultACL setWriteAccess:true forUser:currentUser];
+                         [defaultACL setPublicReadAccess:false];
+                         [defaultACL setPublicWriteAccess:false];
+                         [installation setACL:defaultACL];
+                         [installation saveInBackground];
+                         
+                         //get the main database
+                         PFUser* user = [PFUser currentUser];
+                         MainDatabase* md = [MainDatabase shared];
+                         [md.queue inDatabase:^(FMDatabase *db) {
+                             NSString *insertUserSQL = @"INSERT INTO user (user_id, is_me) VALUES (?,?)";
+                             NSArray* userValues = @[user.objectId, [NSNumber numberWithInt:1]];
+                             [db executeUpdate:insertUserSQL withArgumentsInArray:userValues];
+                         }];
+                         AppDelegate* appDelegate = [[UIApplication sharedApplication] delegate];
+                         CBPeripheralInterface* peripheral = [appDelegate peripheral];
+                         peripheral.userId = [PFUser currentUser].objectId;
+                         [peripheral startAdvertisingProfile];
+                         
+                         [self performSegueWithIdentifier:@"loggedInSegue"
+                                                   sender:self];
+                     }
+                     else
+                     {
+                         [alertController addAction:okAction];
+                         [self presentViewController:alertController animated:YES completion:nil];
+                         return;
+                     }
+                     
+                 }];
+             }
+             else
+             {
+                 PFInstallation *installation = [PFInstallation currentInstallation];
+                 [installation setValue:@"ios" forKey:@"deviceType"];
+                 installation[@"user"] = currentUser;
+                 installation[@"badge"] = [NSNumber numberWithInt:0];
+                 PFACL *defaultACL = [PFACL ACL];
+                 [defaultACL setReadAccess:true forUser:currentUser];
+                 [defaultACL setWriteAccess:true forUser:currentUser];
+                 [defaultACL setPublicReadAccess:false];
+                 [defaultACL setPublicWriteAccess:false];
+                 [installation setACL:defaultACL];
+                 [installation saveInBackground];
                  
-             }];
-         }
-         else
-         {
-             PFInstallation *installation = [PFInstallation currentInstallation];
-             [installation setValue:@"ios" forKey:@"deviceType"];
-             installation[@"user"] = currentUser;
-             installation[@"badge"] = [NSNumber numberWithInt:0];
-             PFACL *defaultACL = [PFACL ACL];
-             [defaultACL setReadAccess:true forUser:currentUser];
-             [defaultACL setWriteAccess:true forUser:currentUser];
-             [defaultACL setPublicReadAccess:false];
-             [defaultACL setPublicWriteAccess:false];
-             [installation setACL:defaultACL];
-             [installation saveInBackground];
-             
-             //get the main database
-             PFUser* user = [PFUser currentUser];
-             MainDatabase* md = [MainDatabase shared];
-             [md.queue inDatabase:^(FMDatabase *db) {
-                 NSString *insertUserSQL = @"INSERT INTO user (user_id, is_me) VALUES (?,?)";
-                 NSArray* userValues = @[user.objectId, [NSNumber numberWithInt:1]];
-                 [db executeUpdate:insertUserSQL withArgumentsInArray:userValues];
-             }];
-             AppDelegate* appDelegate = [[UIApplication sharedApplication] delegate];
-             CBPeripheralInterface* peripheral = [appDelegate peripheral];
-             peripheral.userId = [PFUser currentUser].objectId;
-             [peripheral startAdvertisingProfile];
-             
-             [self performSegueWithIdentifier:@"loggedInSegue"
-                                       sender:self];
-         }
+                 //get the main database
+                 PFUser* user = [PFUser currentUser];
+                 MainDatabase* md = [MainDatabase shared];
+                 [md.queue inDatabase:^(FMDatabase *db) {
+                     NSString *insertUserSQL = @"INSERT INTO user (user_id, is_me) VALUES (?,?)";
+                     NSArray* userValues = @[user.objectId, [NSNumber numberWithInt:1]];
+                     [db executeUpdate:insertUserSQL withArgumentsInArray:userValues];
+                 }];
+                 AppDelegate* appDelegate = [[UIApplication sharedApplication] delegate];
+                 CBPeripheralInterface* peripheral = [appDelegate peripheral];
+                 peripheral.userId = [PFUser currentUser].objectId;
+                 [peripheral startAdvertisingProfile];
+                 
+                 [self performSegueWithIdentifier:@"loggedInSegue"
+                                           sender:self];
+             }
+         }];
      }];
 }
 
 
 - (IBAction)loginAction:(id)sender {
     
-    /*UIAlertController *alertController = [UIAlertController
-                                          alertControllerWithTitle:@"Error Loggin In"
+    UIAlertController *alertController = [UIAlertController
+                                          alertControllerWithTitle:@"Error Logging In"
                                           message:@"An error happened while trying to login.  Check your internet connection and try again."
                                           preferredStyle:UIAlertControllerStyleAlert];
     UIAlertAction *okAction = [UIAlertAction
@@ -332,6 +332,7 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
                                {
                                    _activityIndicator.hidden = YES;
                                    [_activityIndicator stopAnimating];
+                                   self.navigationItem.rightBarButtonItem.enabled = YES;
                                    [[NSNotificationCenter defaultCenter] postNotificationName:@"hideActivityView" object:self userInfo:nil];
                                    return;
                                }];
@@ -342,6 +343,7 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
     //query to see if we are registering the user or logging the user in
     PFInstallation *installation = [PFInstallation currentInstallation];
     _activityIndicator.hidden = NO;
+    self.navigationItem.rightBarButtonItem.enabled = NO;
     [_activityIndicator startAnimating];
     [[NSNotificationCenter defaultCenter] postNotificationName:@"showActivityView" object:self userInfo:nil];
     
@@ -400,9 +402,9 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
                 [self loginUser:user];
         }
     }];
-    */
     
-    UIAlertController *alertController = [UIAlertController
+    
+    /*UIAlertController *alertController = [UIAlertController
                                           alertControllerWithTitle:@"Log In"
                                           message:@"Enter Your Email And Password:"
                                           preferredStyle:UIAlertControllerStyleAlert];
@@ -437,7 +439,7 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
                                    _password = password.text;
                                    
                                    //present error for nil length
-                                   /*
+     
                                    if(!_email.length || !_password.length)
                                    {
                                        UIAlertController *alertController = [UIAlertController
@@ -459,7 +461,7 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
                                        [alertController addAction:okAction];
                                        [self presentViewController:alertController animated:YES completion:nil];
                                        return;
-                                   }*/
+                                   }
                                    
                                    //we have info in both fields
                                    _activityIndicator.hidden = NO;
@@ -562,12 +564,102 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
     
     [alertController addAction:cancelAction];
     [alertController addAction:okAction];
-    [self presentViewController:alertController animated:YES completion:nil];
+    [self presentViewController:alertController animated:YES completion:nil];*/
     
 }
 
 - (IBAction)registerAction:(id)sender {
+    
+    //just create a new random user
     UIAlertController *alertController = [UIAlertController
+                                          alertControllerWithTitle:@"Error Logging In"
+                                          message:@"An error happened while trying to login.  Check your internet connection and try again."
+                                          preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *okAction = [UIAlertAction
+                               actionWithTitle:NSLocalizedString(@"Ok", @"Ok action")
+                               style:UIAlertActionStyleDefault
+                               handler:^(UIAlertAction *action)
+                               {
+                                   _activityIndicator.hidden = YES;
+                                   [_activityIndicator stopAnimating];
+                                   self.navigationItem.rightBarButtonItem.enabled = YES;
+                                   [[NSNotificationCenter defaultCenter] postNotificationName:@"hideActivityView" object:self userInfo:nil];
+                                   return;
+                               }];
+
+    //set user data to be registered
+    PFUser* newUser = [PFUser user];
+    newUser.username = [self randomStringWithLength:32];
+    newUser.password = @"";
+    [newUser setObject:@"anon" forKey:@"posting_name"];
+    [newUser setObject:[NSNumber numberWithInt:0] forKey:@"sort"];
+    [newUser setObject:[NSNumber numberWithInt:2] forKey:@"streamTimeHours"];
+    _activityIndicator.hidden = NO;
+    [_activityIndicator startAnimating];
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"showActivityView" object:self userInfo:nil];
+    
+    
+    //Sign up the user if possible and redirect to main page
+    [newUser signUpInBackgroundWithBlock:^(BOOL succeeded, NSError *error)
+     {
+         if(error)
+         {
+             [alertController addAction:okAction];
+             [self presentViewController:alertController animated:YES completion:nil];
+             return;
+         }
+         
+         //successfully registered the new user
+         PFInstallation *installation = [PFInstallation currentInstallation];
+         [installation setValue:@"ios" forKey:@"deviceType"];
+         installation[@"user"] = newUser;
+         installation[@"badge"] = [NSNumber numberWithInt:0];
+         PFACL *defaultACL = [PFACL ACL];
+         [defaultACL setReadAccess:true forUser:newUser];
+         [defaultACL setWriteAccess:true forUser:newUser];
+         [defaultACL setPublicReadAccess:false];
+         [defaultACL setPublicWriteAccess:false];
+         [installation setACL:defaultACL];
+         [installation saveInBackground];
+         //save user id to database and add to peripheral
+         //get the main database
+         __block PFUser* user = [PFUser currentUser];
+         MainDatabase* md = [MainDatabase shared];
+         [md.queue inDatabase:^(FMDatabase *db) {
+             NSString *insertUserSQL = @"INSERT INTO user (user_id, is_me) VALUES (?,?)";
+             NSArray* userValues = @[user.objectId, [NSNumber numberWithInt:1]];
+             [db executeUpdate:insertUserSQL withArgumentsInArray:userValues];
+         }];
+         AppDelegate* appDelegate = [[UIApplication sharedApplication] delegate];
+         CBPeripheralInterface* peripheral = [appDelegate peripheral];
+         peripheral.userId = [PFUser currentUser].objectId;
+         [peripheral startAdvertisingProfile];
+         
+         
+         [PFCloud callFunctionInBackground:@"addUserPrivate" withParameters:@{} block:^(id object, NSError *error) {
+             
+             if(error)
+             {
+                 NSLog(@"error running cloud function");
+                 [alertController addAction:okAction];
+                 [self presentViewController:alertController animated:YES completion:nil];
+                 return;
+             }
+             else
+             {
+                 [user fetchIfNeededInBackground];
+                 NSLog(@"successful save.");
+                 [self performSegueWithIdentifier:@"loggedInSegue"
+                                           sender:self];
+             }
+         }];
+         
+     }];
+    
+    
+    
+    
+    /*UIAlertController *alertController = [UIAlertController
                                           alertControllerWithTitle:@"Register"
                                           message:@"Register For An Account:"
                                           preferredStyle:UIAlertControllerStyleAlert];
@@ -744,7 +836,7 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
                                                 }
                                                 else
                                                 {
-                                                    [user refreshInBackgroundWithBlock:^(PFObject *object, NSError *error) {if(!error)user = (PFUser*)object;}];
+                                                    [user fetchIfNeededInBackground];
                                                     NSLog(@"successful save.");
                                                     [self performSegueWithIdentifier:@"loggedInSegue"
                                                                               sender:self];
@@ -838,7 +930,7 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
     
     [alertController addAction:cancelAction];
     [alertController addAction:okAction];
-    [self presentViewController:alertController animated:YES completion:nil];
+    [self presentViewController:alertController animated:YES completion:nil];*/
 }
 
 - (UIViewController *)pageViewController:(UIPageViewController *)pageViewController viewControllerBeforeViewController:(UIViewController *)viewController
@@ -897,7 +989,7 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
     // Store the data
     
     //setup pages for tutorial
-    _pageTitles = @[@"Share streams of photos to those around you.", @"View content that actually matters to you."];
+    _pageTitles = @[@"Anonymously share streams of photos to those around you.", @"View content that actually matters to you right here and now."];
     _pageImages = @[@"iphone_stock_1.png", @"iphone_stock_2.png"];
     
     // Create page view controller

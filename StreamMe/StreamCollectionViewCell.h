@@ -8,6 +8,7 @@
 
 #import <UIKit/UIKit.h>
 #import <Parse/Parse.h>
+#import <ParseUI/ParseUI.h>
 @interface StreamCollectionViewCell : UICollectionViewCell
 @property (weak, nonatomic) IBOutlet PFImageView *shareImageView;
 
