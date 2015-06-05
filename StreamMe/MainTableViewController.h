@@ -18,11 +18,12 @@
 #import "SelectStreamsTableViewController.h"
 #import "PassthroughView.h"
 #import "Stream.h"
+#import "StreamCollectionViewController.h"
 
 
 #include "REMenu.h"
 #define STREAMS_PER_PAGE 20
-#define SHARES_PER_PAGE 5
+
 #define LOADING_CELL_TAG 1337
 #define STREAM_CELL_TAG 1234
 #define END_LOADING_SHARE_TAG 1111
@@ -40,7 +41,7 @@
 #define TABLE_VIEW_X_ORIGIN 16
 #define COLLECTION_VIEW_WIDTH 262.5 //260 for width and 2.5 for spacing between cells
 #define GPS_TIME 1
-#define TIMEOUT_TIMER_TIME 30
+//#define TIMEOUT_TIMER_TIME 30
 @interface MainTableViewController : UITableViewController <UITextFieldDelegate,UINavigationControllerDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextViewDelegate, UIPickerViewDataSource, UIPickerViewDelegate,  UIPopoverPresentationControllerDelegate,CLLocationManagerDelegate>//UICollectionViewDataSource, UICollectionViewDelegate,
 {
     NSArray* showStreamsArray;
@@ -99,5 +100,5 @@
 @property (nonatomic, readwrite) bool loadingViral;
 @property (strong, nonatomic) NSString* currentPopover;
 @property (strong, nonatomic) NSTimer* timerGPS;
-@property (strong, nonatomic) NSTimer* timeoutTimer;
+//@property (strong, nonatomic) NSTimer* timeoutTimer;
 @end

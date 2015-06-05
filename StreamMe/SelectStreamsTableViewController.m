@@ -144,8 +144,11 @@
     
     if(!captionText.length || [captionText isEqualToString:@"Enter Caption:"])
         captionText = @"No caption.";
-    PFUser* user = [PFUser currentUser];
-    
+    NSString* cap = [[NSString alloc] initWithString:captionText];
+    PFUser* user = [[PFUser alloc] init];
+    user.objectId = [NSString stringWithString:[PFUser currentUser].objectId];
+    user.username = [NSString stringWithString:[PFUser currentUser].username];
+
     //Create the default acl
     PFACL *defaultACL = [PFACL ACL];
     [defaultACL setReadAccess:true forUser:user];
@@ -160,7 +163,7 @@
     PFFile *pictureFile = [PFFile fileWithData:_imageData];
     
     PFObject* share = [PFObject objectWithClassName:@"Share"];
-    share[@"caption"] = captionText;
+    share[@"caption"] = cap;
     share[@"user"] = user;
     share[@"username"] = user.username;
     share[@"isPrivate"] = [NSNumber numberWithBool:NO];

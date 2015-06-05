@@ -103,25 +103,305 @@
     // Dispose of any resources that can be recreated.
 }
 
-
 - (void) viewDidAppear:(BOOL)animated
 {
-    PFUser* user = [PFUser currentUser];
+    __block PFUser* user = [PFUser currentUser];
     if(user)
     {
-        _activityIndicator.hidden = NO;
-        [_activityIndicator startAnimating];
-        [[NSNotificationCenter defaultCenter] postNotificationName:@"showActivityView" object:self userInfo:nil];
-        AppDelegate* appDelegate = [[UIApplication sharedApplication] delegate];
-        CBPeripheralInterface* peripheral = [appDelegate peripheral];
-        peripheral.userId = [PFUser currentUser].objectId;
-        [peripheral startAdvertisingProfile];
-        [self performSegueWithIdentifier:@"loggedInSegue" sender:self];
-        return;
+        
+        //user has logged in before.  See if an older version of login or not
+        NSString* postingName = [user objectForKey:@"posting_name"];
+        if(!postingName)
+        {
+            _activityIndicator.hidden = NO;
+            [_activityIndicator startAnimating];
+            [[NSNotificationCenter defaultCenter] postNotificationName:@"showActivityView" object:self userInfo:nil];
+            UIAlertController *alertController = [UIAlertController
+                                                  alertControllerWithTitle:@"Error Logging In"
+                                                  message:@"An error happened while trying to login.  Check your internet connection and try again."
+                                                  preferredStyle:UIAlertControllerStyleAlert];
+            UIAlertAction *okAction = [UIAlertAction
+                                       actionWithTitle:NSLocalizedString(@"Ok", @"Ok action")
+                                       style:UIAlertActionStyleDefault
+                                       handler:^(UIAlertAction *action)
+                                       {
+                                           _activityIndicator.hidden = YES;
+                                           [_activityIndicator stopAnimating];
+                                           [[NSNotificationCenter defaultCenter] postNotificationName:@"hideActivityView" object:self userInfo:nil];
+                                           return;
+                                       }];
+            
+            
+            
+            //set password to nil, generate a random username for this user and set the old username to the posting name
+            postingName = [NSString stringWithString:user.username];
+            [user setObject:postingName forKey:@"posting_name"];
+            user.password = @"";
+            user.username = [self randomStringWithLength:32];
+            [user saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
+                if(succeeded && !error)
+                {
+                    [user refreshInBackgroundWithBlock:^(PFObject *object, NSError *error) {
+                        if(!error)
+                        {
+                            user = (PFUser*)object;
+                        }
+                        AppDelegate* appDelegate = [[UIApplication sharedApplication] delegate];
+                        CBPeripheralInterface* peripheral = [appDelegate peripheral];
+                        peripheral.userId = [PFUser currentUser].objectId;
+                        [peripheral startAdvertisingProfile];
+                        [self performSegueWithIdentifier:@"loggedInSegue" sender:self];
+                        return;
+                    }];
+                }
+                else
+                {
+                    NSLog(@"error at 1");
+                    [alertController addAction:okAction];
+                    [self presentViewController:alertController animated:YES completion:nil];
+                    return;
+                }
+                
+            }];
+        }
+        else
+        {
+            _activityIndicator.hidden = NO;
+            [_activityIndicator startAnimating];
+            [[NSNotificationCenter defaultCenter] postNotificationName:@"showActivityView" object:self userInfo:nil];
+            AppDelegate* appDelegate = [[UIApplication sharedApplication] delegate];
+            CBPeripheralInterface* peripheral = [appDelegate peripheral];
+            peripheral.userId = [PFUser currentUser].objectId;
+            [peripheral startAdvertisingProfile];
+            [self performSegueWithIdentifier:@"loggedInSegue" sender:self];
+            return;
+        }
     }
+
 }
 
+NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+-(NSString *) randomStringWithLength: (int) len {
+    
+    NSMutableString *randomString = [NSMutableString stringWithCapacity: len];
+    
+    for (int i=0; i<len; i++) {
+        [randomString appendFormat: @"%C", [letters characterAtIndex: arc4random_uniform((int)[letters length])]];
+    }
+    
+    return randomString;
+}
+
+
+-(void) loginUser:(PFUser*) user
+{
+    UIAlertController *alertController = [UIAlertController
+                                          alertControllerWithTitle:@"Error Logging In"
+                                          message:@"An error happened while trying to login.  Check your internet connection and try again."
+                                          preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *okAction = [UIAlertAction
+                               actionWithTitle:NSLocalizedString(@"Ok", @"Ok action")
+                               style:UIAlertActionStyleDefault
+                               handler:^(UIAlertAction *action)
+                               {
+                                   _activityIndicator.hidden = YES;
+                                   [_activityIndicator stopAnimating];
+                                   [[NSNotificationCenter defaultCenter] postNotificationName:@"hideActivityView" object:self userInfo:nil];
+                                   return;
+                               }];
+    //login the user
+    [PFUser logInWithUsernameInBackground:user.username password:@"" block:^(PFUser *user, NSError *error)
+     {
+         if(error)
+         {
+             [alertController addAction:okAction];
+             [self presentViewController:alertController animated:YES completion:nil];
+             return;
+         }
+         
+         //make sure we change the user to be the current user
+         __block PFUser* currentUser = [PFUser currentUser];
+         //no error so we are now logged in.  now to see if we have to change the posting name or not
+         //user has logged in before.  See if an older version of login or not
+         NSString* postingName = [currentUser objectForKey:@"posting_name"];
+         if(!postingName)
+         {
+            //set password to nil, generate a random username for this user and set the old username to the posting name
+             postingName = [NSString stringWithString:user.username];
+             [currentUser setObject:postingName forKey:@"posting_name"];
+             currentUser.password = @"";
+             currentUser.username = [self randomStringWithLength:32];
+             [user saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
+                 if(succeeded && !error)
+                 {
+                     [user refreshInBackgroundWithBlock:^(PFObject *object, NSError *error) {
+                         if(!error)
+                         {
+                             currentUser = (PFUser*)object;
+                             
+                             PFInstallation *installation = [PFInstallation currentInstallation];
+                             [installation setValue:@"ios" forKey:@"deviceType"];
+                             installation[@"user"] = currentUser;
+                             installation[@"badge"] = [NSNumber numberWithInt:0];
+                             PFACL *defaultACL = [PFACL ACL];
+                             [defaultACL setReadAccess:true forUser:currentUser];
+                             [defaultACL setWriteAccess:true forUser:currentUser];
+                             [defaultACL setPublicReadAccess:false];
+                             [defaultACL setPublicWriteAccess:false];
+                             [installation setACL:defaultACL];
+                             [installation saveInBackground];
+                             
+                             //get the main database
+                             PFUser* user = [PFUser currentUser];
+                             MainDatabase* md = [MainDatabase shared];
+                             [md.queue inDatabase:^(FMDatabase *db) {
+                                 NSString *insertUserSQL = @"INSERT INTO user (user_id, is_me) VALUES (?,?)";
+                                 NSArray* userValues = @[user.objectId, [NSNumber numberWithInt:1]];
+                                 [db executeUpdate:insertUserSQL withArgumentsInArray:userValues];
+                             }];
+                             AppDelegate* appDelegate = [[UIApplication sharedApplication] delegate];
+                             CBPeripheralInterface* peripheral = [appDelegate peripheral];
+                             peripheral.userId = [PFUser currentUser].objectId;
+                             [peripheral startAdvertisingProfile];
+                             
+                             [self performSegueWithIdentifier:@"loggedInSegue"
+                                                       sender:self];
+                         }
+                         else
+                         {
+                             [alertController addAction:okAction];
+                             [self presentViewController:alertController animated:YES completion:nil];
+                             return;
+                         }
+                     }];
+                 }
+                 else
+                 {
+                     [alertController addAction:okAction];
+                     [self presentViewController:alertController animated:YES completion:nil];
+                     return;
+                 }
+                 
+             }];
+         }
+         else
+         {
+             PFInstallation *installation = [PFInstallation currentInstallation];
+             [installation setValue:@"ios" forKey:@"deviceType"];
+             installation[@"user"] = currentUser;
+             installation[@"badge"] = [NSNumber numberWithInt:0];
+             PFACL *defaultACL = [PFACL ACL];
+             [defaultACL setReadAccess:true forUser:currentUser];
+             [defaultACL setWriteAccess:true forUser:currentUser];
+             [defaultACL setPublicReadAccess:false];
+             [defaultACL setPublicWriteAccess:false];
+             [installation setACL:defaultACL];
+             [installation saveInBackground];
+             
+             //get the main database
+             PFUser* user = [PFUser currentUser];
+             MainDatabase* md = [MainDatabase shared];
+             [md.queue inDatabase:^(FMDatabase *db) {
+                 NSString *insertUserSQL = @"INSERT INTO user (user_id, is_me) VALUES (?,?)";
+                 NSArray* userValues = @[user.objectId, [NSNumber numberWithInt:1]];
+                 [db executeUpdate:insertUserSQL withArgumentsInArray:userValues];
+             }];
+             AppDelegate* appDelegate = [[UIApplication sharedApplication] delegate];
+             CBPeripheralInterface* peripheral = [appDelegate peripheral];
+             peripheral.userId = [PFUser currentUser].objectId;
+             [peripheral startAdvertisingProfile];
+             
+             [self performSegueWithIdentifier:@"loggedInSegue"
+                                       sender:self];
+         }
+     }];
+}
+
+
 - (IBAction)loginAction:(id)sender {
+    
+    /*UIAlertController *alertController = [UIAlertController
+                                          alertControllerWithTitle:@"Error Loggin In"
+                                          message:@"An error happened while trying to login.  Check your internet connection and try again."
+                                          preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *okAction = [UIAlertAction
+                               actionWithTitle:NSLocalizedString(@"Ok", @"Ok action")
+                               style:UIAlertActionStyleDefault
+                               handler:^(UIAlertAction *action)
+                               {
+                                   _activityIndicator.hidden = YES;
+                                   [_activityIndicator stopAnimating];
+                                   [[NSNotificationCenter defaultCenter] postNotificationName:@"hideActivityView" object:self userInfo:nil];
+                                   return;
+                               }];
+
+    
+    
+    
+    //query to see if we are registering the user or logging the user in
+    PFInstallation *installation = [PFInstallation currentInstallation];
+    _activityIndicator.hidden = NO;
+    [_activityIndicator startAnimating];
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"showActivityView" object:self userInfo:nil];
+    
+    NSLog(@"deviceToken is %@", installation.deviceToken);
+    [PFCloud callFunctionInBackground:@"getInstallationForIOS" withParameters:@{@"deviceToken":installation.deviceToken} block:^(id object, NSError *error) {
+        
+        if(error)
+        {
+            [alertController addAction:okAction];
+            [self presentViewController:alertController animated:YES completion:nil];
+            return;
+        }
+    
+        NSLog(@"object is %@", object);
+        
+        //see if there are objects
+        if(object == [NSNull null])
+        {
+            //register user
+            [self registerAction:self];
+            return;
+        }
+        else
+        {
+            //we have the installation so it needs to be a login and not a register
+            PFUser* user = [((PFInstallation*)object) objectForKey:@"user"];
+            
+            //if there is no postingname then we need to reset the password to nil on the server
+            NSString* postingName = [user objectForKey:@"posting_name"];
+            if(!postingName)
+            {
+                //reset the password to empty
+                [PFCloud callFunctionInBackground:@"resetPassword" withParameters:@{@"userId":user.objectId} block:^(id object, NSError *error) {
+                    
+                    if(error)
+                    {
+                        [alertController addAction:okAction];
+                        [self presentViewController:alertController animated:YES completion:nil];
+                        return;
+                    }
+                    
+                    //check if we didn't find a user to reset passwords
+                    if([object isEqualToString:@"Register"])
+                    {
+                        //register user
+                        [self registerAction:self];
+                        return;
+                    }
+                    
+                    //ok we can now login the user
+                    [self loginUser:user];
+                    
+                }];
+            }
+            else
+                [self loginUser:user];
+        }
+    }];
+    */
+    
     UIAlertController *alertController = [UIAlertController
                                           alertControllerWithTitle:@"Log In"
                                           message:@"Enter Your Email And Password:"
@@ -157,6 +437,7 @@
                                    _password = password.text;
                                    
                                    //present error for nil length
+                                   /*
                                    if(!_email.length || !_password.length)
                                    {
                                        UIAlertController *alertController = [UIAlertController
@@ -178,7 +459,7 @@
                                        [alertController addAction:okAction];
                                        [self presentViewController:alertController animated:YES completion:nil];
                                        return;
-                                   }
+                                   }*/
                                    
                                    //we have info in both fields
                                    _activityIndicator.hidden = NO;
@@ -282,6 +563,7 @@
     [alertController addAction:cancelAction];
     [alertController addAction:okAction];
     [self presentViewController:alertController animated:YES completion:nil];
+    
 }
 
 - (IBAction)registerAction:(id)sender {

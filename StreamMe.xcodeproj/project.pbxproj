@@ -150,6 +150,9 @@
 		DEDD89761B1762D00042F347 /* iphone_img.png in Resources */ = {isa = PBXBuildFile; fileRef = DEDD89751B1762D00042F347 /* iphone_img.png */; };
 		DEDD897C1B177A670042F347 /* iphone_stock_2.png in Resources */ = {isa = PBXBuildFile; fileRef = DEDD897B1B177A670042F347 /* iphone_stock_2.png */; };
 		DEDD897E1B1780100042F347 /* iphone_stock_1.png in Resources */ = {isa = PBXBuildFile; fileRef = DEDD897D1B1780100042F347 /* iphone_stock_1.png */; };
+		DEDD89811B18A06D0042F347 /* StreamCollectionViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = DEDD89801B18A06D0042F347 /* StreamCollectionViewController.m */; };
+		DEDD89841B1D04E10042F347 /* forward_arrow@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = DEDD89821B1D04E10042F347 /* forward_arrow@2x.png */; };
+		DEDD89851B1D04E10042F347 /* forward_arrow@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = DEDD89831B1D04E10042F347 /* forward_arrow@3x.png */; };
 		DEE6C5E619BA9EBB00904866 /* CharacteristicData.m in Sources */ = {isa = PBXBuildFile; fileRef = DEE6C5E519BA9EBB00904866 /* CharacteristicData.m */; };
 		DEEB45151ACA5D870032F212 /* CustomFlowLayout.m in Sources */ = {isa = PBXBuildFile; fileRef = DEEB45141ACA5D870032F212 /* CustomFlowLayout.m */; };
 		DEEB451B1ACAE6F20032F212 /* PushFadeSegue.m in Sources */ = {isa = PBXBuildFile; fileRef = DEEB451A1ACAE6F20032F212 /* PushFadeSegue.m */; };
@@ -352,6 +355,10 @@
 		DEDD89751B1762D00042F347 /* iphone_img.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = iphone_img.png; sourceTree = "<group>"; };
 		DEDD897B1B177A670042F347 /* iphone_stock_2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = iphone_stock_2.png; sourceTree = "<group>"; };
 		DEDD897D1B1780100042F347 /* iphone_stock_1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = iphone_stock_1.png; sourceTree = "<group>"; };
+		DEDD897F1B18A06D0042F347 /* StreamCollectionViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StreamCollectionViewController.h; sourceTree = "<group>"; };
+		DEDD89801B18A06D0042F347 /* StreamCollectionViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StreamCollectionViewController.m; sourceTree = "<group>"; };
+		DEDD89821B1D04E10042F347 /* forward_arrow@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "forward_arrow@2x.png"; sourceTree = "<group>"; };
+		DEDD89831B1D04E10042F347 /* forward_arrow@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "forward_arrow@3x.png"; sourceTree = "<group>"; };
 		DEE6C5E419BA9EBB00904866 /* CharacteristicData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CharacteristicData.h; sourceTree = "<group>"; };
 		DEE6C5E519BA9EBB00904866 /* CharacteristicData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CharacteristicData.m; sourceTree = "<group>"; };
 		DEEB45131ACA5D870032F212 /* CustomFlowLayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CustomFlowLayout.h; sourceTree = "<group>"; };
@@ -434,6 +441,8 @@
 		DE0051C419B7C1770053D2EB /* Images */ = {
 			isa = PBXGroup;
 			children = (
+				DEDD89821B1D04E10042F347 /* forward_arrow@2x.png */,
+				DEDD89831B1D04E10042F347 /* forward_arrow@3x.png */,
 				DEDD897D1B1780100042F347 /* iphone_stock_1.png */,
 				DEDD897B1B177A670042F347 /* iphone_stock_2.png */,
 				DEDD89751B1762D00042F347 /* iphone_img.png */,
@@ -654,6 +663,8 @@
 				DE502AA01ACC4F3100410FE7 /* SelectStreamsTableViewController.m */,
 				DEC67BA31AA8BDD1004991C2 /* SettingsViewController.h */,
 				DEC67BA41AA8BDD1004991C2 /* SettingsViewController.m */,
+				DEDD897F1B18A06D0042F347 /* StreamCollectionViewController.h */,
+				DEDD89801B18A06D0042F347 /* StreamCollectionViewController.m */,
 				DEB874AC1ACA105F003B5996 /* ViewStreamCollectionViewController.h */,
 				DEB874AD1ACA105F003B5996 /* ViewStreamCollectionViewController.m */,
 				DE7AE44119B762C90001567E /* Images.xcassets */,
@@ -851,6 +862,7 @@
 				DEBC57271AAA648F002F0E5E /* phone@3x.png in Resources */,
 				DE8E518F1AF941420079B1F7 /* shutter.png in Resources */,
 				DEC67BBC1AA94F65004991C2 /* edit@3x.png in Resources */,
+				DEDD89841B1D04E10042F347 /* forward_arrow@2x.png in Resources */,
 				DEB874911AC62981003B5996 /* pictures@2x.png in Resources */,
 				DEB874861AC4E5EC003B5996 /* noFlash@3x.png in Resources */,
 				DEF789C81AD6FF96005676AF /* logout@3x.png in Resources */,
@@ -881,6 +893,7 @@
 				DEC2ED541A7FD4E300B08A8B /* whoYuLogo.png in Resources */,
 				DEBC572E1AAA6592002F0E5E /* notepad@2x.png in Resources */,
 				DE6DBB4D1B0CFEEB009921B9 /* white_pictures@2x.png in Resources */,
+				DEDD89851B1D04E10042F347 /* forward_arrow@3x.png in Resources */,
 				DED9F56A1AE99C1200D1BF28 /* bluetooth_256.png in Resources */,
 				DED227091AC0C97900FFE6AD /* publish@3x.png in Resources */,
 			);
@@ -962,6 +975,7 @@
 				DEC0A55A1A59E9C500D17D8A /* CopyableTextField.m in Sources */,
 				DEC67BA51AA8BDD1004991C2 /* SettingsViewController.m in Sources */,
 				DE0051EB19B8FE560053D2EB /* CBPeripheralInterface.m in Sources */,
+				DEDD89811B18A06D0042F347 /* StreamCollectionViewController.m in Sources */,
 				DE774FDC1A8FE82F001CF995 /* MainDatabase.m in Sources */,
 				DE0051F719B9FCCB0053D2EB /* BluetoothProfile.m in Sources */,
 				DEB874591AC49351003B5996 /* MeViewController.m in Sources */,

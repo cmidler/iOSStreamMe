@@ -535,7 +535,7 @@
     [_timerGPS invalidate];
 }
 
--(void) timeoutTimerFired
+/*-(void) timeoutTimerFired
 {
     NSLog(@"timer publish fired");
     [_timeoutTimer invalidate];
@@ -560,7 +560,7 @@
     [customPicker presentViewController:alertController animated:YES completion:nil];
     return;
     
-}
+}*/
 
 -(void) presentNoCameraAlert
 {
@@ -1230,6 +1230,7 @@
                 i++;
                 return;
             }
+            
             //NSLog(@"in count shares for streams");
             //find the correct stream and update the last value in the array
             for(Stream* s in streams)
@@ -1246,6 +1247,10 @@
                     //update the total shares in the array
                     s.totalShares = totalShares.integerValue;
                     s.newestShareCreationTime = streamShare.createdAt;
+                    
+                    //send notification that the total shares are updated
+                    [[NSNotificationCenter defaultCenter] postNotificationName:@"streamCountDone" object:self userInfo:nil];
+                    
                     //NSLog(@"new total shares count is %d", (int)s.totalShares);
                     //see if we got more shares
                     /*if(totalShares.integerValue > previousShareTotal)
@@ -1526,8 +1531,6 @@
     for(UIView* view in cell.subviews)
     {
         //remove imageview
-        /*if([view isKindOfClass:[PFImageView class]])
-            [view removeFromSuperview];*/
         //remove old headerview
         if(view.tag == HEADER_TAG)
         {
@@ -2037,7 +2040,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 - (void) prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
     //If we are segueing to selectedProfile then we need to save profile ID
     if([segue.identifier isEqualToString:@"viewStreamSegue"]){
-        ViewStreamCollectionViewController* controller = (ViewStreamCollectionViewController*)segue.destinationViewController;
+        StreamCollectionViewController* controller = (StreamCollectionViewController*)segue.destinationViewController;
         //NSLog(@"selected section and row %d, %d", _selectedSectionIndex, _selectedCellIndex);
         
         controller.streamObject = showStreamsArray[_selectedSectionIndex];
@@ -2822,7 +2825,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 {
     
     //start the timer
-    _timeoutTimer =[NSTimer scheduledTimerWithTimeInterval:TIMEOUT_TIMER_TIME target:self selector:@selector(timeoutTimerFired) userInfo:nil repeats:NO];
+    //_timeoutTimer =[NSTimer scheduledTimerWithTimeInterval:TIMEOUT_TIMER_TIME target:self selector:@selector(timeoutTimerFired) userInfo:nil repeats:NO];
     
     if(_currentPopover)
         return;
@@ -3017,7 +3020,11 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     if(!caption.text.length || [caption.text isEqualToString:@"Enter Caption:"])
         caption.text = @"No caption.";
     [caption setBackgroundColor: [[UIColor blackColor] colorWithAlphaComponent:0.2]];
-    PFUser* user = [PFUser currentUser];
+    NSLog(@"before user");
+    PFUser* user = [[PFUser alloc] init];
+    user.objectId = [NSString stringWithString:[PFUser currentUser].objectId];
+    user.username = [NSString stringWithString:[PFUser currentUser].username];
+    NSLog(@"after assigning user");
 
     //Create the default acl
     PFACL *defaultACL = [PFACL ACL];
@@ -3025,14 +3032,19 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     [defaultACL setWriteAccess:true forUser:user];
     [defaultACL setPublicReadAccess:false];
     [defaultACL setPublicWriteAccess:false];
-    
+    NSLog(@"after using user");
     
     //create the file
     PFFile *pictureFile = [PFFile fileWithData:_imageData];
     
+    NSString* cap = [[NSString alloc] initWithString:caption.text];
+    NSString* streamName = [[NSString alloc] initWithString:_streamName];
+    
+    
     //create the share
     PFObject* share = [PFObject objectWithClassName:@"Share"];
-    share[@"caption"] = caption.text;
+    share[@"caption"] = cap;
+    NSLog(@"before assigning user to user in share");
     share[@"user"] = user;
     share[@"username"] = user.username;
     share[@"isPrivate"] = [NSNumber numberWithBool:NO];
@@ -3050,7 +3062,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         if(error)
         {
             NSLog(@"error saving share");
-            UIAlertController *alertController = [UIAlertController
+            /*UIAlertController *alertController = [UIAlertController
                                                   alertControllerWithTitle:@"Error Starting Stream"
                                                   message:@"An error occurred starting the stream.  Check your internet connection and try again."
                                                   preferredStyle:UIAlertControllerStyleAlert];
@@ -3069,6 +3081,8 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
             
             [alertController addAction:okAction];
             [customPicker presentViewController:alertController animated:YES completion:nil];
+            */
+            [share deleteInBackground];
             return;
             
         }
@@ -3076,7 +3090,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         //create the new stream
         PFObject* stream = [PFObject objectWithClassName:@"Stream"];
         stream[@"isPrivate"] = [NSNumber numberWithBool:NO]; //Just hardcoding this for now
-        stream[@"name"] = _streamName;
+        stream[@"name"] = streamName;
         stream[@"creator"] = user;
         stream[@"endTime"] = endDate;
         stream[@"firstShare"] = share;
@@ -3089,7 +3103,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
             if(error)
             {
                 NSLog(@"error saving stream");
-                UIAlertController *alertController = [UIAlertController
+                /*UIAlertController *alertController = [UIAlertController
                                                       alertControllerWithTitle:@"Error Starting Stream"
                                                       message:@"An error occurred starting the stream.  Check your internet connection and try again."
                                                       preferredStyle:UIAlertControllerStyleAlert];
@@ -3108,7 +3122,9 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                                            }];
                 
                 [alertController addAction:okAction];
-                [customPicker presentViewController:alertController animated:YES completion:nil];
+                [customPicker presentViewController:alertController animated:YES completion:nil];*/
+                NSArray* pfObjects = [[NSArray alloc] initWithObjects:share,stream, nil];
+                [PFObject deleteAllInBackground:pfObjects];
                 return;
                 
             }
@@ -3125,7 +3141,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                 if(error)
                 {
                     NSLog(@"error saving streamshare");
-                    UIAlertController *alertController = [UIAlertController
+                    /*UIAlertController *alertController = [UIAlertController
                                                           alertControllerWithTitle:@"Error Starting Stream"
                                                           message:@"An error occurred starting the stream.  Check your internet connection and try again."
                                                           preferredStyle:UIAlertControllerStyleAlert];
@@ -3144,7 +3160,9 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                                                }];
                     
                     [alertController addAction:okAction];
-                    [customPicker presentViewController:alertController animated:YES completion:nil];
+                    [customPicker presentViewController:alertController animated:YES completion:nil];*/
+                    NSArray* pfObjects = [[NSArray alloc] initWithObjects:share,stream,streamShare, nil];
+                    [PFObject deleteAllInBackground:pfObjects];
                     return;
                     
                 }
@@ -3156,7 +3174,8 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                 userStream[@"share"] = share;
                 userStream[@"creator"] = user;
                 userStream[@"isIgnored"] = [NSNumber numberWithBool:NO];
-                userStream[@"location"] = currentLocation;
+                if(currentLocation)
+                    userStream[@"location"] = currentLocation;
                 userStream[@"gotByBluetooth"] = [NSNumber numberWithBool:YES];
                 userStream[@"isValid"] = [NSNumber numberWithBool:YES];
                 [userStream setACL:defaultACL];
@@ -3165,7 +3184,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                     if(error)
                     {
                         NSLog(@"error saving userstream");
-                        UIAlertController *alertController = [UIAlertController
+                        /*UIAlertController *alertController = [UIAlertController
                                                               alertControllerWithTitle:@"Error Starting Stream"
                                                               message:@"An error occurred starting the stream.  Check your internet connection and try again."
                                                               preferredStyle:UIAlertControllerStyleAlert];
@@ -3184,10 +3203,15 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                                                    }];
                         
                         [alertController addAction:okAction];
-                        [customPicker presentViewController:alertController animated:YES completion:nil];
+                        [customPicker presentViewController:alertController animated:YES completion:nil];*/
+                        NSArray* pfObjects = [[NSArray alloc] initWithObjects:share,stream,streamShare,userStream, nil];
+                        [PFObject deleteAllInBackground:pfObjects];
                         return;
                         
                     }
+                    
+                    //invalidate the timer
+                    //[_timeoutTimer invalidate];
                     
                     //no error.  Pop and return
                     AppDelegate* appDelegate = [[UIApplication sharedApplication] delegate];
@@ -3201,6 +3225,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                     newStream.newestShareCreationTime = streamShare.createdAt;
                     newStream.gotByBluetooth = YES;
                     [streams addObject:newStream];
+                    [self sortStreams];
                     //update the user's points total
                     [PFCloud callFunctionInBackground:@"createStreamUpdatePoints" withParameters:@{} block:^(id object, NSError *error) {}];
                     //send push to users
@@ -3241,7 +3266,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                     //send push
                     if(userIds && userIds.count)
                         [PFCloud callFunctionInBackground:@"sendPushForStream" withParameters:@{@"streamId":newStream.stream.objectId, @"userIds":userIds} block:^(id object, NSError *error) {}];
-                    [self dismissImagePickerView];
+                    //[self dismissImagePickerView];
                 }];
                 
             }];
@@ -3250,14 +3275,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 
     }];
     
-    
-    
-    
-    
-    
-    
-    
-    
+    [self dismissImagePickerView];
     
     /*[PFObject saveAllInBackground:pfObjects block:^(BOOL succeeded, NSError *error) {
         if(error)
@@ -3337,8 +3355,12 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     if(!captionText.length || [captionText isEqualToString:@"Enter Caption:"])
         captionText = @"No caption.";
     [caption setBackgroundColor:[[UIColor blackColor] colorWithAlphaComponent:0.2]];
-    PFUser* user = [PFUser currentUser];
     
+    NSString* cap = [[NSString alloc] initWithString:caption.text];
+    PFUser* user = [[PFUser alloc] init];
+    user.objectId = [NSString stringWithString:[PFUser currentUser].objectId];
+    user.username = [NSString stringWithString:[PFUser currentUser].username];
+
     //update the user's points total
     [PFCloud callFunctionInBackground:@"addToStreamUpdatePoints" withParameters:@{} block:^(id object, NSError *error) {}];
     
@@ -3374,7 +3396,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     PFFile *pictureFile = [PFFile fileWithData:_imageData];
     
     PFObject* share = [PFObject objectWithClassName:@"Share"];
-    share[@"caption"] = captionText;
+    share[@"caption"] = cap;
     share[@"user"] = user;
     share[@"username"] = user.username;
     share[@"isPrivate"] = [NSNumber numberWithBool:NO];

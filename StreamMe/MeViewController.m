@@ -85,7 +85,7 @@
     [workaroundView addSubview:navigationTitle];
     self.navigationItem.titleView=workaroundView;
     
-    UIImage *image = [UIImage imageNamed:@"stream.png"];
+    UIImage *image = [UIImage imageNamed:@"forward_arrow.png"];
     UIImage *leftImage = [UIImage imageNamed:@"settings.png"];
     UIBarButtonItem *buttonRight = [[UIBarButtonItem alloc] initWithImage:image style:UIBarButtonItemStyleDone target:self action:@selector(streamButton:)];
     self.navigationItem.rightBarButtonItem = buttonRight;
@@ -118,7 +118,7 @@
 
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
 {
-    return [NSString stringWithFormat:@"%@", [PFUser currentUser].username];
+    return [NSString stringWithFormat:@"%@", [[PFUser currentUser] objectForKey:@"posting_name"]];
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section

@@ -18,11 +18,26 @@
     [super viewDidLoad];
     
     streamShares = _streamObject.streamShares;
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(streamMonitor:)
+                                                 name:@"streamCountDone"
+                                               object:nil];
 }
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
+}
+
+/* calling load values on notification since viewwillappear is not working */
+- (void) streamMonitor:(NSNotification *) notification
+{
+    if ([[notification name] isEqualToString:@"streamCountDone"])
+    {
+        NSLog(@"stream count done");
+        [streamCollectionView reloadData];
+    }
 }
 
 - (void) viewWillAppear:(BOOL)animated
@@ -37,14 +52,6 @@
     // If we haven't done the initial scroll, do it once.
     if (!_initialScrollDone) {
         _initialScrollDone = YES;
-        
-        //see if we have the first share in the array or not
-        bool hasFirstShare = NO;
-        PFObject* firstShare = [streamShares[0] objectForKey:@"share"];
-        if([((PFObject*)[_streamObject.stream objectForKey:@"firstShare"]).objectId isEqualToString:firstShare.objectId])
-            hasFirstShare = YES;
-        
-        _currentRow = _currentRow + !hasFirstShare;
         
         NSIndexPath* path = [NSIndexPath indexPathForRow:_currentRow inSection:0];
         [streamCollectionView scrollToItemAtIndexPath:path atScrollPosition:UICollectionViewScrollPositionCenteredHorizontally animated:NO];
@@ -73,15 +80,6 @@
     UITapGestureRecognizer *gesture = (UITapGestureRecognizer *) sender;
     _currentRow = (int)gesture.view.tag;
 
-    
-    //checking for first share
-    bool hasFirstShare = NO;
-    PFObject* firstShare = [streamShares[0] objectForKey:@"share"];
-    if([((PFObject*)[_streamObject.stream objectForKey:@"firstShare"]).objectId isEqualToString:firstShare.objectId])
-        hasFirstShare = YES;
-    MainTableViewController* controller = self.navigationController.viewControllers[0];
-    controller.selectedCellIndex = _currentRow-!hasFirstShare;
-    controller.isPoppingBack = YES;
     [self performSegueWithIdentifier:@"popSegue" sender:self];
 }
 /*
@@ -102,12 +100,6 @@
 
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
-    //see if we have the first share in the array or not
-    bool hasFirstShare = NO;
-    PFObject* firstShare = [streamShares[0] objectForKey:@"share"];
-    if([((PFObject*)[_streamObject.stream objectForKey:@"firstShare"]).objectId isEqualToString:firstShare.objectId])
-        hasFirstShare = YES;
-    
     //see if we have the share with the most recent time
     PFObject* lastShare = [streamShares lastObject];
     NSDate* newestShareTime = _streamObject.newestShareCreationTime;
@@ -115,7 +107,7 @@
     if(NSOrderedSame == ([newestShareTime compare:lastShare.createdAt]))
         hasNewestShare = YES;
     
-    return streamShares.count+!hasNewestShare+!hasFirstShare;
+    return streamShares.count+!hasNewestShare;
     
 }
 
@@ -127,12 +119,6 @@
     float height = cell.frame.size.height;
     [cell setUserInteractionEnabled:YES];
     
-    
-    //checking for first share
-    bool hasFirstShare = NO;
-    PFObject* firstShare = [streamShares[0] objectForKey:@"share"];
-    if([((PFObject*)[_streamObject.stream objectForKey:@"firstShare"]).objectId isEqualToString:firstShare.objectId])
-        hasFirstShare = YES;
     
     cell.captionTextView.hidden = YES;
     cell.usernameLabel.hidden = YES;
@@ -150,24 +136,12 @@
     cell.captionTextView.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.2];
     cell.usernameLabel.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.2];
     //we are in the beginning loading row
-    if(!hasFirstShare && !indexPath.row)
-    {
-        cell.tag = BEGINNING_LOADING_SHARE_TAG;
-        cell.shareImageView.image = [UIImage imageNamed:@"pictures-512.png"];
-        UIActivityIndicatorView* collectionActivityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
-        collectionActivityIndicator.hidesWhenStopped = YES;
-        collectionActivityIndicator.hidden = NO;
-        [collectionActivityIndicator startAnimating];
-        collectionActivityIndicator.center = cell.shareImageView.center;
-        [cell.shareImageView addSubview:collectionActivityIndicator];
-        
-    }
-    else if(indexPath.row < streamShares.count+!hasFirstShare)
+    if(indexPath.row < streamShares.count)
     {
         cell.captionTextView.hidden = NO;
         cell.usernameLabel.hidden = NO;
         cell.createdLabel.hidden = NO;
-        PFObject* streamShare = streamShares[indexPath.row-!hasFirstShare];
+        PFObject* streamShare = streamShares[indexPath.row];
         PFObject* share = [streamShare objectForKey:@"share"];
         NSLog(@"caption is %@", [share objectForKey:@"caption"]);
             cell.shareImageView.image = [UIImage imageNamed:@"pictures-512.png"];
@@ -236,35 +210,11 @@
                 [self loadSharesRight:_streamObject.stream limitOf:SHARES_PER_PAGE];
             }
         }
-        else if(cell.tag == BEGINNING_LOADING_SHARE_TAG)
-        {
-            @synchronized(self)
-            {
-                //if downloading then return
-                if(_streamObject.isDownloadingPrevious)
-                    return;
-                
-                NSLog(@"at beginning loading cell with time %@", [NSDate date]);
-                //make sure we didn't download the beggining cell
-                //see if we have the first share in the array or not
-                PFObject* firstShare = [streamShares[0] objectForKey:@"share"];
-                if([((PFObject*)[_streamObject.stream objectForKey:@"firstShare"]).objectId isEqualToString:firstShare.objectId])
-                {
-                    NSLog(@"first share is %@ and first object is %@", ((PFObject*)[_streamObject.stream objectForKey:@"firstShare"]).objectId, firstShare.objectId);
-                    return;
-                }
-                [self loadSharesLeft:_streamObject.stream limitOf:SHARES_PER_PAGE];
-            }
-        }
         else
         {
             //see if we have the first share in the array or not
-            bool hasFirstShare = NO;
-            PFObject* firstShare = [streamShares[0] objectForKey:@"share"];
-            if([((PFObject*)[_streamObject.stream objectForKey:@"firstShare"]).objectId isEqualToString:firstShare.objectId])
-                hasFirstShare = YES;
             NSIndexPath *indexPath = [streamCollectionView indexPathForCell:cell];
-            _currentRow = indexPath.row-!hasFirstShare;
+            _currentRow = indexPath.row;
         }
     }
 }
@@ -286,13 +236,6 @@
         if(rows)
         {
             int row = rows;
-            //see if we have the first share in the array or not
-            bool hasFirstShare = NO;
-            PFObject* firstShare = [streamShares[0] objectForKey:@"share"];
-            if([((PFObject*)[_streamObject.stream objectForKey:@"firstShare"]).objectId isEqualToString:firstShare.objectId])
-                hasFirstShare = YES;
-            if(hasFirstShare)
-                row-=1;
             row+=_currentRow;
             NSIndexPath* path = [NSIndexPath indexPathForRow:row inSection:0];
             [streamCollectionView scrollToItemAtIndexPath:path atScrollPosition:UICollectionViewScrollPositionCenteredHorizontally animated:NO];
@@ -350,53 +293,6 @@
         _streamObject.isDownloadingAfter = NO;
         //reload section
         [self reloadDataFunction:0];
-    }];
-}
-//lazy load shares left
--(void) loadSharesLeft:(PFObject*) stream limitOf:(int)limit
-{
-    @synchronized(self)
-    {
-        if(_streamObject.isDownloadingPrevious)
-            return;
-        //change the boolean for downloading previous
-        _streamObject.isDownloadingPrevious = YES;
-    }
-    
-    //now get the current streamshare
-    PFObject* streamShare = (PFObject*)[streamShares objectAtIndex:0];
-    
-    //load shares with a time greater than current share's
-    [PFCloud callFunctionInBackground:@"getSharesForStream" withParameters:@{@"streamId":stream.objectId, @"lastShareTime":streamShare.createdAt, @"maxShares":[NSNumber numberWithInt:limit], @"direction":@"left"} block:^(id object, NSError *error) {
-        if(error)
-        {
-            //change the boolean for downloading previous
-            _streamObject.isDownloadingPrevious = NO;
-            return;
-        }
-        
-        //object returns an array of PFObjects
-        NSArray* streamShareObjects = object;
-        int i = 0;
-        for(PFObject* streamShare in streamShareObjects)
-        {
-            NSLog(@"streamshare left is %@", streamShare);
-            if(![streamShares containsObject:streamShare])
-            {
-                i++;
-                [streamShares insertObject:streamShare atIndex:0];
-            }
-        }
-        
-        
-        //if we loaded previous objects, then make sure we stay on the correct cell
-        if(i)
-            _streamObject.currentShareIndex += i;
-    
-        [self reloadDataFunction:i];
-        
-        //change the boolean for downloading previous
-        _streamObject.isDownloadingPrevious = NO;
     }];
 }
 

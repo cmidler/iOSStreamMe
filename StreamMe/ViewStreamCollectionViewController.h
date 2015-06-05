@@ -8,9 +8,13 @@
 
 #import <UIKit/UIKit.h>
 #import "ViewStreamCollectionViewCell.h"
-#import "MainTableViewController.h"
 #import "AppDelegate.h"
 #import "Stream.h"
+
+#define TOOLBAR_HEIGHT 44
+#define END_LOADING_SHARE_TAG 1111
+#define SHARES_PER_PAGE 25
+
 @interface ViewStreamCollectionViewController : UICollectionViewController
 {
     NSMutableArray* streamShares;
