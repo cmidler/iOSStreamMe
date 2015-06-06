@@ -165,7 +165,7 @@
     PFObject* share = [PFObject objectWithClassName:@"Share"];
     share[@"caption"] = cap;
     share[@"user"] = user;
-    share[@"username"] = user.username;
+    share[@"username"] = [user objectForKey:@"posting_name"];
     share[@"isPrivate"] = [NSNumber numberWithBool:NO];
     share[@"type"] = @"img";
     

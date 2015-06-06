@@ -34,6 +34,8 @@
     self.titleLabel.text = self.titleText;
     self.activityView.backgroundColor = [UIColor blackColor];
     self.activityView.hidden = YES;
+    self.activityView.center = self.imageView.center;
+    [self.view bringSubviewToFront:self.activityView];
     
     [_forgotPasswordLabel setUserInteractionEnabled:YES];
     UITapGestureRecognizer *forgotTap =  [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(forgotTapDetected:)];
@@ -55,10 +57,12 @@
 {
     if ([[notification name] isEqualToString:@"showActivityView"])
     {
+        NSLog(@"show activity view");
         self.activityView.hidden = NO;
     }
     else if ([[notification name] isEqualToString:@"hideActivityView"])
     {
+        NSLog(@"hide activity view");
         self.activityView.hidden = YES;
     }
 }

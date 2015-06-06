@@ -81,11 +81,11 @@
 -(void) loggedIn
 {
     
-    PFUser* user = [PFUser currentUser];
+    //PFUser* user = [PFUser currentUser];
     [self tutorial];
 
     //if the user is logged in, don't present navigation bar.  If not, then present the navigation bar
-    if(user)
+    /*if(user)
     {
         [self.navigationController setNavigationBarHidden:YES];
         //self.forgotPasswordLabel.hidden = YES;
@@ -95,7 +95,7 @@
         [self.navigationController setNavigationBarHidden:NO];
         //self.forgotPasswordLabel.hidden = NO;
         //[self tutorial];
-    }
+    }*/
 }
 
 
@@ -111,6 +111,8 @@
     if(user)
     {
         
+        NSLog(@"user is %@", user.username);
+        
         //user has logged in before.  See if an older version of login or not
         NSString* postingName = [user objectForKey:@"posting_name"];
         if(!postingName)
@@ -119,7 +121,7 @@
             [_activityIndicator startAnimating];
             self.navigationItem.rightBarButtonItem.enabled = NO;
             [[NSNotificationCenter defaultCenter] postNotificationName:@"showActivityView" object:self userInfo:nil];
-            UIAlertController *alertController = [UIAlertController
+            /*UIAlertController *alertController = [UIAlertController
                                                   alertControllerWithTitle:@"Error Logging In"
                                                   message:@"An error happened while trying to login.  Check your internet connection and try again."
                                                   preferredStyle:UIAlertControllerStyleAlert];
@@ -133,7 +135,7 @@
                                            self.navigationItem.rightBarButtonItem.enabled = YES;
                                            [[NSNotificationCenter defaultCenter] postNotificationName:@"hideActivityView" object:self userInfo:nil];
                                            return;
-                                       }];
+                                       }];*/
             
             
             
@@ -145,22 +147,24 @@
             [user saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
                 if(succeeded && !error)
                 {
-                    [PFUser logOutInBackgroundWithBlock:^(NSError* error)
-                    {
-                        _activityIndicator.hidden = YES;
-                        [_activityIndicator stopAnimating];
-                        [[NSNotificationCenter defaultCenter] postNotificationName:@"hideActivityView" object:self userInfo:nil];
-                        [self loginAction:self];
-                    }];
+                    NSLog(@"saved in background!");
                 }
                 else
                 {
+                    
                     NSLog(@"error at 1");
-                    [alertController addAction:okAction];
+                    /*[alertController addAction:okAction];
                     [self presentViewController:alertController animated:YES completion:nil];
-                    return;
+                    return;*/
                 }
-                
+                [PFUser logOutInBackgroundWithBlock:^(NSError* error)
+                 {
+                     _activityIndicator.hidden = YES;
+                     [_activityIndicator stopAnimating];
+                     [[NSNotificationCenter defaultCenter] postNotificationName:@"hideActivityView" object:self userInfo:nil];
+                     [self loginAction:self];
+                 }];
+
             }];
         }
         else

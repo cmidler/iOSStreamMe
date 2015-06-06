@@ -71,6 +71,8 @@
 		DEA50D251ACB95BF00D96F30 /* white-down-arrow@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = DEA50D231ACB95BF00D96F30 /* white-down-arrow@3x.png */; };
 		DEA691AF19CA384D0097BE65 /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = DE0051CD19B7CC300053D2EB /* libsqlite3.dylib */; };
 		DEA6944B1A11B51100E4D11F /* MainNavigationViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = DEA6944A1A11B51100E4D11F /* MainNavigationViewController.m */; };
+		DEAD081D1B237006002AE7F1 /* gallery@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = DEAD081B1B237006002AE7F1 /* gallery@2x.png */; };
+		DEAD081E1B237006002AE7F1 /* gallery@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = DEAD081C1B237006002AE7F1 /* gallery@3x.png */; };
 		DEB874591AC49351003B5996 /* MeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = DEB874581AC49351003B5996 /* MeViewController.m */; };
 		DEB8745F1AC496B8003B5996 /* CustomSegue.m in Sources */ = {isa = PBXBuildFile; fileRef = DEB8745E1AC496B8003B5996 /* CustomSegue.m */; };
 		DEB874621AC49C47003B5996 /* RightToLeftSegue.m in Sources */ = {isa = PBXBuildFile; fileRef = DEB874611AC49C47003B5996 /* RightToLeftSegue.m */; };
@@ -265,6 +267,8 @@
 		DEA694471A119CCD00E4D11F /* Accounts.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accounts.framework; path = System/Library/Frameworks/Accounts.framework; sourceTree = SDKROOT; };
 		DEA694491A11B51100E4D11F /* MainNavigationViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MainNavigationViewController.h; sourceTree = "<group>"; };
 		DEA6944A1A11B51100E4D11F /* MainNavigationViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MainNavigationViewController.m; sourceTree = "<group>"; };
+		DEAD081B1B237006002AE7F1 /* gallery@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "gallery@2x.png"; sourceTree = "<group>"; };
+		DEAD081C1B237006002AE7F1 /* gallery@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "gallery@3x.png"; sourceTree = "<group>"; };
 		DEB874571AC49351003B5996 /* MeViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MeViewController.h; sourceTree = "<group>"; };
 		DEB874581AC49351003B5996 /* MeViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MeViewController.m; sourceTree = "<group>"; };
 		DEB8745D1AC496B8003B5996 /* CustomSegue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CustomSegue.h; sourceTree = "<group>"; };
@@ -444,6 +448,8 @@
 		DE0051C419B7C1770053D2EB /* Images */ = {
 			isa = PBXGroup;
 			children = (
+				DEAD081B1B237006002AE7F1 /* gallery@2x.png */,
+				DEAD081C1B237006002AE7F1 /* gallery@3x.png */,
 				DEDD89821B1D04E10042F347 /* forward_arrow@2x.png */,
 				DEDD89831B1D04E10042F347 /* forward_arrow@3x.png */,
 				DEDD897D1B1780100042F347 /* iphone_stock_1.png */,
@@ -883,6 +889,7 @@
 				DEA50D251ACB95BF00D96F30 /* white-down-arrow@3x.png in Resources */,
 				DEBC57241AAA648F002F0E5E /* email@2x.png in Resources */,
 				DE7AE43419B762C90001567E /* InfoPlist.strings in Resources */,
+				DEAD081D1B237006002AE7F1 /* gallery@2x.png in Resources */,
 				DE29AB941A88FFC5000B010B /* SendingContact.Icon.png in Resources */,
 				DEB874A01AC9E1E0003B5996 /* add-pictures@3x.png in Resources */,
 				DE5187B21A8583D1004CB1A6 /* sendContactIcon.png in Resources */,
@@ -897,6 +904,7 @@
 				DEC2ED541A7FD4E300B08A8B /* whoYuLogo.png in Resources */,
 				DEBC572E1AAA6592002F0E5E /* notepad@2x.png in Resources */,
 				DE6DBB4D1B0CFEEB009921B9 /* white_pictures@2x.png in Resources */,
+				DEAD081E1B237006002AE7F1 /* gallery@3x.png in Resources */,
 				DEDD89851B1D04E10042F347 /* forward_arrow@3x.png in Resources */,
 				DED9F56A1AE99C1200D1BF28 /* bluetooth_256.png in Resources */,
 				DED227091AC0C97900FFE6AD /* publish@3x.png in Resources */,

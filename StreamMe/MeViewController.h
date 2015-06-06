@@ -20,15 +20,16 @@
 #define LEVEL_NINE_POINTS  125000
 
 #define LEVEL_ONE   "Noob"
-#define LEVEL_TWO   "Subpar"
-#define LEVEL_THREE "Plebeian"
-#define LEVEL_FOUR  "Mediocre"
-#define LEVEL_FIVE  "Gettin' there"
+#define LEVEL_TWO   "Upstart"
+#define LEVEL_THREE "You have some skill"
+#define LEVEL_FOUR  "Gettin' there"
+#define LEVEL_FIVE  "Selfie master"
 #define LEVEL_SIX   "The real deal"
 #define LEVEL_SEVEN "That's excessive"
 #define LEVEL_EIGHT "Stream pillager"
 #define LEVEL_NINE  "Too Powerful"
 #define LEVEL_TEN   "Wow... just wow."
+#define MAX_NAME_CHARS 24
 
 
 @interface MeViewController : UIViewController
@@ -39,4 +40,5 @@
 @property (weak, nonatomic) IBOutlet UITableView *meTableView;
 @property (nonatomic, readwrite) NSInteger points;
 @property (nonatomic, readwrite) bool spinnerActive;
+@property (strong, nonatomic) NSString* name;
 @end

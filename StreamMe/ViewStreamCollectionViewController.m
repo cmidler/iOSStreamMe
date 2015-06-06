@@ -18,7 +18,7 @@
     [super viewDidLoad];
     
     streamShares = _streamObject.streamShares;
-    
+    _navigationHidden = NO;
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(streamMonitor:)
                                                  name:@"streamCountDone"
@@ -43,9 +43,35 @@
 - (void) viewWillAppear:(BOOL)animated
 {
     _navigationHidden = NO;
-    [self toggleHideNavigation];
+    [[UIApplication sharedApplication] setStatusBarHidden:YES
+                                            withAnimation:UIStatusBarAnimationNone];
+    [self.navigationController.navigationBar setBackgroundImage:[UIImage new] forBarPosition:UIBarPositionAny barMetrics:UIBarMetricsDefault];
+    [self.navigationController.navigationBar setShadowImage:[UIImage new]];
+    //[self.navigationController.navigationBar setBarStyle:UIBarStyleBlack];
+    [self.navigationController.navigationBar setBackgroundColor:[[UIColor blackColor] colorWithAlphaComponent:0.2]];
+    [self.navigationController.navigationBar setTranslucent:YES];
+
+    [self.navigationController.navigationBar setBarTintColor:[[UIColor blackColor] colorWithAlphaComponent:0.2]];
+    UIBarButtonItem *buttonRight = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"gallery.png"] style:UIBarButtonItemStyleDone target:self action:@selector(galleryButton:)];
+    self.navigationItem.rightBarButtonItem = buttonRight;
+    //[self toggleHideNavigation];
     
 }
+
+-(void) viewWillDisappear:(BOOL)animated
+{
+    [[UIApplication sharedApplication] setStatusBarHidden:NO
+                                            withAnimation:UIStatusBarAnimationNone];
+    UIGraphicsBeginImageContext(self.view.frame.size);
+    [[UIImage imageNamed:@"BlueGradient.png"] drawInRect:self.view.bounds];
+    UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    [self.navigationController.navigationBar setBarTintColor:[UIColor colorWithPatternImage:image]];
+    [self.navigationController.navigationBar setBackgroundColor:[UIColor colorWithPatternImage:image]];
+    [self.navigationController.navigationBar setTranslucent:NO];
+}
+
+
 
 -(void)viewDidLayoutSubviews {
     
@@ -59,28 +85,35 @@
     }
 }
 
-- (void) toggleHideNavigation
+/*- (void) toggleHide
 {
-    [[UIApplication sharedApplication] setStatusBarHidden:!_navigationHidden
-                                            withAnimation:UIStatusBarAnimationNone];
-    [self.navigationController setNavigationBarHidden:!_navigationHidden];
     //toggle boolean value
     _navigationHidden = !_navigationHidden;
-}
+    
+    [self.navigationController.navigationBar setHidden:_navigationHidden];
+    
+}*/
 
--(void) streamButton:(id) sender
+-(void) galleryButton:(id) sender
 {
-    [self.navigationController popViewControllerAnimated:YES];
+    UITapGestureRecognizer *gesture = (UITapGestureRecognizer *) sender;
+    _currentRow = (int)gesture.view.tag;
+    
+    [self performSegueWithIdentifier:@"gallerySegue" sender:self];
 }
 
 -(void) pictureTapped:(id) sender
 {
     NSLog(@"picture is tapped");
-    [self toggleHideNavigation];
+    //[self toggleHideNavigation];
     UITapGestureRecognizer *gesture = (UITapGestureRecognizer *) sender;
     _currentRow = (int)gesture.view.tag;
 
-    [self performSegueWithIdentifier:@"popSegue" sender:self];
+    _navigationHidden = !_navigationHidden;
+    [self.navigationController.navigationBar setHidden:_navigationHidden];
+    [streamCollectionView reloadData];
+    
+    //[self performSegueWithIdentifier:@"popSegue" sender:self];
 }
 /*
 #pragma mark - Navigation
@@ -138,9 +171,13 @@
     //we are in the beginning loading row
     if(indexPath.row < streamShares.count)
     {
-        cell.captionTextView.hidden = NO;
-        cell.usernameLabel.hidden = NO;
-        cell.createdLabel.hidden = NO;
+        
+        if(!_navigationHidden)
+        {
+            cell.captionTextView.hidden = NO;
+            cell.usernameLabel.hidden = NO;
+            cell.createdLabel.hidden = NO;
+        }
         PFObject* streamShare = streamShares[indexPath.row];
         PFObject* share = [streamShare objectForKey:@"share"];
         NSLog(@"caption is %@", [share objectForKey:@"caption"]);

@@ -91,7 +91,7 @@
                                 <connections>
                                     <outlet property="activityIndicator" destination="qSF-Ep-C5B" id="fdS-oW-D0o"/>
                                     <outlet property="shareImageView" destination="nvn-Be-8EX" id="W9a-B8-Gi5"/>
-                                    <segue destination="2eF-B2-s9S" kind="custom" identifier="viewStreamSegue" customClass="PushFadeSegue" id="BCz-w7-GOP"/>
+                                    <segue destination="o3D-1M-WIy" kind="custom" identifier="viewStreamSegue" trigger="accessoryAction" customClass="PushFadeSegue" id="0cF-gm-gik"/>
                                 </connections>
                             </tableViewCell>
                         </prototypes>
@@ -269,7 +269,7 @@
                     <navigationItem key="navigationItem" id="m90-Qw-igM"/>
                     <connections>
                         <outlet property="streamCollectionView" destination="teI-cR-OBS" id="ya7-0I-Y2Q"/>
-                        <segue destination="2eF-B2-s9S" kind="custom" identifier="popSegue" customClass="PopRevealSegue" id="slW-ae-auh"/>
+                        <segue destination="2eF-B2-s9S" kind="custom" identifier="gallerySegue" customClass="PushFadeSegue" id="slW-ae-auh"/>
                     </connections>
                 </collectionViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="2DQ-ol-ZWm" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -381,7 +381,7 @@
                                                     <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
-                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Value" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="BNm-yU-JHd">
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Value" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="BNm-yU-JHd">
                                                     <rect key="frame" x="104" y="0.0" width="208" height="44"/>
                                                     <fontDescription key="fontDescription" type="boldSystem" pointSize="17"/>
                                                     <color key="textColor" red="0.40000000600000002" green="0.80000001190000003" blue="1" alpha="1" colorSpace="calibratedRGB"/>
@@ -390,10 +390,20 @@
                                                 <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" animating="YES" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="WFd-ru-LOx">
                                                     <rect key="frame" x="150" y="12" width="20" height="20"/>
                                                 </activityIndicatorView>
+                                                <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="right" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="nI6-xb-PQq">
+                                                    <rect key="frame" x="104" y="7" width="216" height="30"/>
+                                                    <color key="textColor" red="0.40000000600000002" green="0.80000001190000003" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                                    <fontDescription key="fontDescription" type="boldSystem" pointSize="17"/>
+                                                    <textInputTraits key="textInputTraits" returnKeyType="done"/>
+                                                    <connections>
+                                                        <outlet property="delegate" destination="4fQ-kl-7iq" id="QdJ-BG-9bf"/>
+                                                    </connections>
+                                                </textField>
                                             </subviews>
                                         </tableViewCellContentView>
                                         <connections>
                                             <outlet property="activityIndicator" destination="WFd-ru-LOx" id="mCz-oo-W92"/>
+                                            <outlet property="nameTextField" destination="nI6-xb-PQq" id="xYQ-Ch-eVA"/>
                                             <outlet property="titleLabel" destination="71o-RA-U7U" id="dkj-ag-mGQ"/>
                                             <outlet property="valueLabel" destination="BNm-yU-JHd" id="w5L-SN-USo"/>
                                         </connections>
@@ -541,7 +551,7 @@
         <scene sceneID="CtV-v5-uoh">
             <objects>
                 <navigationController restorationIdentifier="mainNavigationViewController" definesPresentationContext="YES" id="QkY-hy-LKm" customClass="MainNavigationViewController" sceneMemberID="viewController">
-                    <tabBarItem key="tabBarItem" title="In Range" image="12BFA3F3-243F-475A-8D71-3B7F14F0EC74" id="QWG-JZ-FhN"/>
+                    <tabBarItem key="tabBarItem" title="In Range" image="80171567-A114-4C26-87F7-37B9173C3E77" id="QWG-JZ-FhN"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="10q-K2-WDE">
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
@@ -574,7 +584,7 @@
         </scene>
     </scenes>
     <resources>
-        <image name="12BFA3F3-243F-475A-8D71-3B7F14F0EC74" width="16" height="16">
+        <image name="80171567-A114-4C26-87F7-37B9173C3E77" width="16" height="16">
             <mutableData key="keyedArchiveRepresentation">
 YnBsaXN0MDDUAQIDBAUGOzxYJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK0HCBEW
 GxwgISksLzU4VSRudWxs1AkKCwwNDg8QViRjbGFzc1xOU0ltYWdlRmxhZ3NWTlNSZXBzV05TQ29sb3KA
@@ -617,8 +627,8 @@ BdMF2AAAAAAAAAIBAAAAAAAAAD8AAAAAAAAAAAAAAAAAAAXaA
         <simulatedScreenMetrics key="destination" type="retina4"/>
     </simulatedMetricsContainer>
     <inferredMetricsTieBreakers>
-        <segue reference="slW-ae-auh"/>
-        <segue reference="dV1-VP-Mzd"/>
         <segue reference="rPK-9O-WPJ"/>
+        <segue reference="dV1-VP-Mzd"/>
+        <segue reference="0cF-gm-gik"/>
     </inferredMetricsTieBreakers>
 </document>

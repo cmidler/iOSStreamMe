@@ -1589,8 +1589,10 @@
         else
         {
             interval = interval/60;//let's get minutes accuracy
-            if(interval > 720)
-                timeLeft = @"Never Expires!";
+            if(interval > 525600)
+                timeLeft = [NSString stringWithFormat:@"Expires: < %dy", (int) ceil(interval/525600) ];
+            else if(interval > 1440)
+                timeLeft = [NSString stringWithFormat:@"Expires: < %dd", (int) ceil(interval/1440) ];
             //if more 30 minutes left then say less than the rounded up hour
             else if(interval>30)
                 timeLeft = [NSString stringWithFormat:@"Expires: < %dh",(int) ceil(interval/60)];
@@ -3046,7 +3048,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     share[@"caption"] = cap;
     NSLog(@"before assigning user to user in share");
     share[@"user"] = user;
-    share[@"username"] = user.username;
+    share[@"username"] = [user objectForKey:@"posting_name"];
     share[@"isPrivate"] = [NSNumber numberWithBool:NO];
     share[@"type"] = @"img";
     PFGeoPoint* currentLocation = [PFGeoPoint geoPointWithLocation:_currentLocation];
@@ -3220,7 +3222,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                     newStream.stream = stream;
                     //want to create an array of shares so we can lazy load the next ones
                     [newStream.streamShares addObject:streamShare];
-                    newStream.username = user.username;
+                    newStream.username = [user objectForKey:@"posting_name"];
                     //newest time of streamshare
                     newStream.newestShareCreationTime = streamShare.createdAt;
                     newStream.gotByBluetooth = YES;
@@ -3398,7 +3400,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     PFObject* share = [PFObject objectWithClassName:@"Share"];
     share[@"caption"] = cap;
     share[@"user"] = user;
-    share[@"username"] = user.username;
+    share[@"username"] = [user objectForKey:@"posting_name"];
     share[@"isPrivate"] = [NSNumber numberWithBool:NO];
     share[@"type"] = @"img";
     PFGeoPoint* currentLocation = [PFGeoPoint geoPointWithLocation:_currentLocation];

@@ -139,7 +139,7 @@
     MFMailComposeViewController *mc = [[MFMailComposeViewController alloc] init];
     mc.mailComposeDelegate = self;
     [mc setSubject:emailTitle];
-    [mc setToRecipients:@[@"support@whoYuInc.com"]];
+    [mc setToRecipients:@[@"nick@streamme.co"]];
     
     
     // Present mail view controller on screen

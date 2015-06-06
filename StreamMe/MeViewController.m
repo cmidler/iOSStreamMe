@@ -19,10 +19,10 @@
     // This will remove extra separators from tableview
     meTableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     [self getPoints];
-    meArray = @[@"Points:", @"Rank:"];
+    meArray = @[@"Name:", @"Points:", @"Rank:"];
     _spinnerActive = YES;
     _points = 0;
-    
+    _name = [[PFUser currentUser] objectForKey:@"posting_name"];
     //present an alert to tell the person to tap the screen to take the photo
     NSNumber *showPoints =
     [[NSUserDefaults standardUserDefaults] objectForKey:@"ShowPoints"];
@@ -76,14 +76,29 @@
 
 - (void) setupNavigation
 {
-    UILabel *navigationTitle=[[UILabel alloc]initWithFrame:CGRectMake(0, 0, 176, 44)];
+    //Set blue gradient background
+    /*UIGraphicsBeginImageContext(self.view.frame.size);
+    [[UIImage imageNamed:@"BlueGradient.png"] drawInRect:self.view.bounds];
+    UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();*/
+    
+    //self.view.backgroundColor = [UIColor colorWithPatternImage:image];
+    
+    UIImageView* navigationTitle = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 88, 44)];
+    navigationTitle.image = [UIImage imageNamed:@"streamme_banner_1.png"];
+    [self.view addSubview:navigationTitle];
+    UIImageView *workaroundView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 88, 44)];
+    [workaroundView addSubview:navigationTitle];
+    self.navigationItem.titleView=workaroundView;
+    
+    /*UILabel *navigationTitle=[[UILabel alloc]initWithFrame:CGRectMake(0, 0, 176, 44)];
     navigationTitle.text = @"StreamMe";
     navigationTitle.textColor = [UIColor whiteColor];
     navigationTitle.font = [UIFont boldSystemFontOfSize:17];
     navigationTitle.textAlignment = NSTextAlignmentCenter;
     UIImageView *workaroundView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 176, 44)];
     [workaroundView addSubview:navigationTitle];
-    self.navigationItem.titleView=workaroundView;
+    self.navigationItem.titleView=workaroundView;*/
     
     UIImage *image = [UIImage imageNamed:@"forward_arrow.png"];
     UIImage *leftImage = [UIImage imageNamed:@"settings.png"];
@@ -118,7 +133,8 @@
 
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
 {
-    return [NSString stringWithFormat:@"%@", [[PFUser currentUser] objectForKey:@"posting_name"]];
+    return @"You!";
+    //return [NSString stringWithFormat:@"%@", [[PFUser currentUser] objectForKey:@"posting_name"]];
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
@@ -140,40 +156,51 @@
         cell.activityIndicator.hidden = YES;
     cell.activityIndicator.center = cell.center;
     [cell setUserInteractionEnabled:NO];
+    cell.nameTextField.hidden = YES;
+    cell.valueLabel.hidden = YES;
+    
+    
     //setup the labels
     cell.titleLabel.text = meArray[indexPath.row];
     if(!indexPath.row)
     {
-        cell.valueLabel.text = [NSString stringWithFormat:@"%ld",(long)_points];
-        return cell;
+        [cell setUserInteractionEnabled:YES];
+        cell.nameTextField.hidden = NO;
+        cell.nameTextField.text = _name;
     }
-    
-    
-    NSString* level = @"";
-    //figure out the level first
-    if(_points < LEVEL_ONE_POINTS)
-        level = @LEVEL_ONE;
-    else if(_points < LEVEL_TWO_POINTS)
-        level = @LEVEL_TWO;
-    else if(_points < LEVEL_THREE_POINTS)
-        level = @LEVEL_THREE;
-    else if(_points < LEVEL_FOUR_POINTS)
-        level = @LEVEL_FOUR;
-    else if(_points < LEVEL_FIVE_POINTS)
-        level = @LEVEL_FIVE;
-    else if(_points < LEVEL_SIX_POINTS)
-        level = @LEVEL_SIX;
-    else if(_points < LEVEL_SEVEN_POINTS)
-        level = @LEVEL_SEVEN;
-    else if(_points < LEVEL_EIGHT_POINTS)
-        level = @LEVEL_EIGHT;
-    else if(_points < LEVEL_NINE_POINTS)
-        level = @LEVEL_NINE;
+    else if(indexPath.row == 1)
+    {
+        cell.valueLabel.hidden = NO;
+        cell.valueLabel.text = [NSString stringWithFormat:@"%ld",(long)_points];
+    }
     else
-        level = @LEVEL_TEN;
-    
-    cell.valueLabel.text = level;
-    
+    {
+        cell.valueLabel.hidden = NO;
+        NSString* level = @"";
+        //figure out the level first
+        if(_points < LEVEL_ONE_POINTS)
+            level = @LEVEL_ONE;
+        else if(_points < LEVEL_TWO_POINTS)
+            level = @LEVEL_TWO;
+        else if(_points < LEVEL_THREE_POINTS)
+            level = @LEVEL_THREE;
+        else if(_points < LEVEL_FOUR_POINTS)
+            level = @LEVEL_FOUR;
+        else if(_points < LEVEL_FIVE_POINTS)
+            level = @LEVEL_FIVE;
+        else if(_points < LEVEL_SIX_POINTS)
+            level = @LEVEL_SIX;
+        else if(_points < LEVEL_SEVEN_POINTS)
+            level = @LEVEL_SEVEN;
+        else if(_points < LEVEL_EIGHT_POINTS)
+            level = @LEVEL_EIGHT;
+        else if(_points < LEVEL_NINE_POINTS)
+            level = @LEVEL_NINE;
+        else
+            level = @LEVEL_TEN;
+        
+        cell.valueLabel.text = level;
+    }
     return cell;
 }
 
@@ -198,5 +225,58 @@
         [cell setLayoutMargins:UIEdgeInsetsZero];
     }
 }
+
+//Delegates for helping textview have placeholder text
+- (void)textFieldDidBeginEditing:(UITextField *)textField
+{
+    [textField becomeFirstResponder];
+}
+
+//Continuation delegate for placeholder text
+- (void)textFieldDidEndEditing:(UITextField *)textField
+{
+    if ([textField.text isEqualToString:@""])
+    {
+        textField.text = [[PFUser currentUser] objectForKey:@"posting_name"];
+    }
+    _name = textField.text;
+    [textField resignFirstResponder];
+}
+
+
+//used for updating status
+- (BOOL)textField:(UITextField *)textField
+shouldChangeCharactersInRange:(NSRange)range
+replacementString:(NSString *)text
+{
+    
+    //check if they user is trying to enter too many characters
+    if([[textField text] length] - range.length + text.length > MAX_NAME_CHARS && ![text isEqualToString:@"\n"])
+    {
+        return NO;
+    }
+    
+    //Make return key try to save the new status
+    if([text isEqualToString:@"\n"])
+    {
+        _name = textField.text;
+        PFUser* user = [PFUser currentUser];
+        NSString* postingName = [user objectForKey:@"posting_name"];
+        //save the new posting name
+        if(_name.length && ![_name isEqualToString:postingName])
+        {
+            [user setObject:_name forKey:@"posting_name"];
+            [user saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
+                if(succeeded && !error)
+                {
+                    [user fetchIfNeededInBackground];
+                }
+            }];
+        }
+        [textField resignFirstResponder];
+    }
+    return YES;
+}
+
 
 @end
