@@ -16,9 +16,6 @@
 @synthesize streamCollectionView;
 - (void)viewDidLoad {
     [super viewDidLoad];
-    
-    streamShares = _streamObject.streamShares;
-    _navigationHidden = NO;
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(streamMonitor:)
                                                  name:@"streamCountDone"
@@ -42,6 +39,7 @@
 
 - (void) viewWillAppear:(BOOL)animated
 {
+    streamShares = _streamObject.streamShares;
     _navigationHidden = NO;
     [[UIApplication sharedApplication] setStatusBarHidden:YES
                                             withAnimation:UIStatusBarAnimationNone];
@@ -54,7 +52,8 @@
     [self.navigationController.navigationBar setBarTintColor:[[UIColor blackColor] colorWithAlphaComponent:0.2]];
     UIBarButtonItem *buttonRight = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"gallery.png"] style:UIBarButtonItemStyleDone target:self action:@selector(galleryButton:)];
     self.navigationItem.rightBarButtonItem = buttonRight;
-    //[self toggleHideNavigation];
+    UIBarButtonItem *buttonLeft = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"back_arrow"] style:UIBarButtonItemStyleDone target:self action:@selector(backButton:)];
+    self.navigationItem.leftBarButtonItem = buttonLeft;
     
 }
 
@@ -85,14 +84,10 @@
     }
 }
 
-/*- (void) toggleHide
+-(void) backButton:(id) sender
 {
-    //toggle boolean value
-    _navigationHidden = !_navigationHidden;
-    
-    [self.navigationController.navigationBar setHidden:_navigationHidden];
-    
-}*/
+    [self performSegueWithIdentifier:@"popSegue" sender:self];
+}
 
 -(void) galleryButton:(id) sender
 {
@@ -115,15 +110,22 @@
     
     //[self performSegueWithIdentifier:@"popSegue" sender:self];
 }
-/*
-#pragma mark - Navigation
+
+
 
 // In a storyboard-based application, you will often want to do a little preparation before navigation
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
     // Get the new view controller using [segue destinationViewController].
     // Pass the selected object to the new view controller.
+    if([segue.identifier isEqualToString:@"gallerySegue"]){
+        StreamCollectionViewController* controller = (StreamCollectionViewController*)segue.destinationViewController;
+        //NSLog(@"selected section and row %d, %d", _selectedSectionIndex, _selectedCellIndex);
+        
+        controller.streamObject = _streamObject;
+        controller.currentRow = _currentRow;
+    }
 }
-*/
+
 
 #pragma mark <UICollectionViewDataSource>
 
@@ -151,8 +153,6 @@
     float width = cell.frame.size.width;
     float height = cell.frame.size.height;
     [cell setUserInteractionEnabled:YES];
-    
-    
     cell.captionTextView.hidden = YES;
     cell.usernameLabel.hidden = YES;
     cell.createdLabel.hidden = YES;
@@ -168,6 +168,7 @@
     cell.createdLabel.backgroundColor = [UIColor clearColor];
     cell.captionTextView.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.2];
     cell.usernameLabel.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.2];
+    cell.shareImageView.contentMode = UIViewContentModeScaleAspectFill;
     //we are in the beginning loading row
     if(indexPath.row < streamShares.count)
     {
@@ -193,6 +194,9 @@
                 for(UIView* view in [cell.shareImageView subviews])
                     if([view isKindOfClass:[UIActivityIndicatorView class]])
                         [view removeFromSuperview];
+                //CGRect screenRect = [[UIScreen mainScreen] bounds];
+                //cell.shareImageView.image = [self imageWithImage:image scaledToWidth:screenRect.size.width];
+                
         }];
         cell.usernameLabel.text = [NSString stringWithFormat:@"From: %@",[share objectForKey:@"username"] ];
         cell.captionTextView.text = [share objectForKey:@"caption"];
@@ -332,5 +336,20 @@
         [self reloadDataFunction:0];
     }];
 }
+
+/*-(UIImage*)imageWithImage: (UIImage*) sourceImage scaledToWidth: (float) i_width
+{
+    float oldWidth = sourceImage.size.width;
+    float scaleFactor = i_width / oldWidth;
+    
+    float newHeight = sourceImage.size.height * scaleFactor;
+    float newWidth = oldWidth * scaleFactor;
+    
+    UIGraphicsBeginImageContextWithOptions(CGSizeMake(newWidth, newHeight), NO, 0);
+    [sourceImage drawInRect:CGRectMake(0, 0, newWidth, newHeight)];
+    UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return newImage;
+}*/
 
 @end

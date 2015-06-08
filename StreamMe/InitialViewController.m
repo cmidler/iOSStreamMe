@@ -54,14 +54,18 @@
 
 - (void) viewWillAppear:(BOOL)animated
 {
-    
+    _showTutorial = NO;
     //Set blue gradient background
     UIGraphicsBeginImageContext(self.view.frame.size);
     [[UIImage imageNamed:@"BlueGradient.png"] drawInRect:self.view.bounds];
     UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
     
-    //self.view.backgroundColor = [UIColor colorWithPatternImage:image];
+    UIGraphicsBeginImageContext(self.view.frame.size);
+    [[UIImage imageNamed:@"Default-736.png"] drawInRect:self.view.bounds];
+    UIImage *bgImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    self.view.backgroundColor = [UIColor colorWithPatternImage:bgImage];
     
     UIImageView* navigationTitle = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 88, 44)];
     navigationTitle.image = [UIImage imageNamed:@"streamme_banner_1.png"];
@@ -81,11 +85,11 @@
 -(void) loggedIn
 {
     
-    //PFUser* user = [PFUser currentUser];
-    [self tutorial];
+    PFUser* user = [PFUser currentUser];
+    
 
     //if the user is logged in, don't present navigation bar.  If not, then present the navigation bar
-    /*if(user)
+    if(user)
     {
         [self.navigationController setNavigationBarHidden:YES];
         //self.forgotPasswordLabel.hidden = YES;
@@ -93,9 +97,10 @@
     else
     {
         [self.navigationController setNavigationBarHidden:NO];
+        [self tutorial];
         //self.forgotPasswordLabel.hidden = NO;
-        //[self tutorial];
-    }*/
+        
+    }
 }
 
 
@@ -212,6 +217,8 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
                                    [_activityIndicator stopAnimating];
                                    self.navigationItem.rightBarButtonItem.enabled = YES;
                                    [[NSNotificationCenter defaultCenter] postNotificationName:@"hideActivityView" object:self userInfo:nil];
+                                   [self.navigationController setNavigationBarHidden:NO];
+                                   [self tutorial];
                                    return;
                                }];
     //login the user
@@ -338,6 +345,8 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
                                    [_activityIndicator stopAnimating];
                                    self.navigationItem.rightBarButtonItem.enabled = YES;
                                    [[NSNotificationCenter defaultCenter] postNotificationName:@"hideActivityView" object:self userInfo:nil];
+                                   [self.navigationController setNavigationBarHidden:NO];
+                                   [self tutorial];
                                    return;
                                }];
 
@@ -352,61 +361,68 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
     [[NSNotificationCenter defaultCenter] postNotificationName:@"showActivityView" object:self userInfo:nil];
     
     NSLog(@"deviceToken is %@", installation.deviceToken);
-    [PFCloud callFunctionInBackground:@"getInstallationForIOS" withParameters:@{@"deviceToken":installation.deviceToken} block:^(id object, NSError *error) {
-        
-        if(error)
-        {
-            [alertController addAction:okAction];
-            [self presentViewController:alertController animated:YES completion:nil];
-            return;
-        }
-    
-        NSLog(@"object is %@", object);
-        
-        //see if there are objects
-        if(object == [NSNull null])
-        {
-            //register user
-            [self registerAction:self];
-            return;
-        }
-        else
-        {
-            //we have the installation so it needs to be a login and not a register
-            PFUser* user = [((PFInstallation*)object) objectForKey:@"user"];
+    if(installation.deviceToken)
+    {
+        [PFCloud callFunctionInBackground:@"getInstallationForIOS" withParameters:@{@"deviceToken":installation.deviceToken} block:^(id object, NSError *error) {
             
-            //if there is no postingname then we need to reset the password to nil on the server
-            NSString* postingName = [user objectForKey:@"posting_name"];
-            if(!postingName)
+            if(error)
             {
-                //reset the password to empty
-                [PFCloud callFunctionInBackground:@"resetPassword" withParameters:@{@"userId":user.objectId} block:^(id object, NSError *error) {
-                    
-                    if(error)
-                    {
-                        [alertController addAction:okAction];
-                        [self presentViewController:alertController animated:YES completion:nil];
-                        return;
-                    }
-                    
-                    //check if we didn't find a user to reset passwords
-                    if([object isEqualToString:@"Register"])
-                    {
-                        //register user
-                        [self registerAction:self];
-                        return;
-                    }
-                    
-                    //ok we can now login the user
-                    [self loginUser:user];
-                    
-                }];
+                [alertController addAction:okAction];
+                [self presentViewController:alertController animated:YES completion:nil];
+                return;
+            }
+        
+            NSLog(@"object is %@", object);
+            
+            //see if there are objects
+            if(object == [NSNull null])
+            {
+                //register user
+                [self registerAction:self];
+                return;
             }
             else
-                [self loginUser:user];
-        }
-    }];
-    
+            {
+                //we have the installation so it needs to be a login and not a register
+                PFUser* user = [((PFInstallation*)object) objectForKey:@"user"];
+                
+                //if there is no postingname then we need to reset the password to nil on the server
+                NSString* postingName = [user objectForKey:@"posting_name"];
+                if(!postingName)
+                {
+                    //reset the password to empty
+                    [PFCloud callFunctionInBackground:@"resetPassword" withParameters:@{@"userId":user.objectId} block:^(id object, NSError *error) {
+                        
+                        if(error)
+                        {
+                            [alertController addAction:okAction];
+                            [self presentViewController:alertController animated:YES completion:nil];
+                            return;
+                        }
+                        
+                        //check if we didn't find a user to reset passwords
+                        if([object isEqualToString:@"Register"])
+                        {
+                            //register user
+                            [self registerAction:self];
+                            return;
+                        }
+                        
+                        //ok we can now login the user
+                        [self loginUser:user];
+                        
+                    }];
+                }
+                else
+                    [self loginUser:user];
+            }
+        }];
+    }
+    else
+    {
+        [self registerAction:self];
+        return;
+    }
     
     /*UIAlertController *alertController = [UIAlertController
                                           alertControllerWithTitle:@"Log In"
@@ -588,6 +604,8 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
                                    [_activityIndicator stopAnimating];
                                    self.navigationItem.rightBarButtonItem.enabled = YES;
                                    [[NSNotificationCenter defaultCenter] postNotificationName:@"hideActivityView" object:self userInfo:nil];
+                                   [self.navigationController setNavigationBarHidden:NO];
+                                   [self tutorial];
                                    return;
                                }];
 
@@ -615,16 +633,19 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
          
          //successfully registered the new user
          PFInstallation *installation = [PFInstallation currentInstallation];
-         [installation setValue:@"ios" forKey:@"deviceType"];
-         installation[@"user"] = newUser;
-         installation[@"badge"] = [NSNumber numberWithInt:0];
-         PFACL *defaultACL = [PFACL ACL];
-         [defaultACL setReadAccess:true forUser:newUser];
-         [defaultACL setWriteAccess:true forUser:newUser];
-         [defaultACL setPublicReadAccess:false];
-         [defaultACL setPublicWriteAccess:false];
-         [installation setACL:defaultACL];
-         [installation saveInBackground];
+         if(installation.deviceToken)
+         {
+             [installation setValue:@"ios" forKey:@"deviceType"];
+             installation[@"user"] = newUser;
+             installation[@"badge"] = [NSNumber numberWithInt:0];
+             PFACL *defaultACL = [PFACL ACL];
+             [defaultACL setReadAccess:true forUser:newUser];
+             [defaultACL setWriteAccess:true forUser:newUser];
+             [defaultACL setPublicReadAccess:false];
+             [defaultACL setPublicWriteAccess:false];
+             [installation setACL:defaultACL];
+             [installation saveInBackground];
+         }
          //save user id to database and add to peripheral
          //get the main database
          __block PFUser* user = [PFUser currentUser];
@@ -991,7 +1012,11 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
 -(void) tutorial
 {
     // Store the data
-    
+    if(_showTutorial)
+        return;
+    _showTutorial = YES;
+    //reset the background color to white
+    self.view.backgroundColor = [UIColor whiteColor];
     //setup pages for tutorial
     _pageTitles = @[@"Anonymously share streams of photos to those around you.", @"View content that actually matters to you right here and now."];
     _pageImages = @[@"iphone_stock_1.png", @"iphone_stock_2.png"];

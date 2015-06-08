@@ -134,6 +134,14 @@
     _downloadingStreams = NO;
     _loadingTableView = NO;
     _showingAnywhere = NO;
+    
+    
+    //setting up swipes
+    UISwipeGestureRecognizer * recognizer = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(myRightAction:)];
+    [recognizer setDirection:(UISwipeGestureRecognizerDirectionRight)];
+    [self.view addGestureRecognizer:recognizer];
+    
+    
     //setting up notifications
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(mainNotification:)
@@ -202,6 +210,11 @@
     
     }
     //[self checkCreateStreamInfo];
+}
+
+-(void) myRightAction:(id) sender
+{
+    [self performSegueWithIdentifier:@"meSegue" sender:self];
 }
 
 -(void) mainTutorial
@@ -654,7 +667,8 @@
                 _totalPages = (number/STREAMS_PER_PAGE)+1;
             }
         }];
-        UILabel* newLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, TOOLBAR_HEIGHT/2)];
+        CGRect screenRect = [[UIScreen mainScreen] bounds];
+        UILabel* newLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, screenRect.size.width, TOOLBAR_HEIGHT/2)];
         newLabel.text = @"Pull To Refresh New Nearby Streams";
         newLabel.textAlignment = NSTextAlignmentCenter;
         newLabel.font = [UIFont systemFontOfSize:12];
@@ -2042,7 +2056,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 - (void) prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
     //If we are segueing to selectedProfile then we need to save profile ID
     if([segue.identifier isEqualToString:@"viewStreamSegue"]){
-        StreamCollectionViewController* controller = (StreamCollectionViewController*)segue.destinationViewController;
+        ViewStreamCollectionViewController* controller = (ViewStreamCollectionViewController*)segue.destinationViewController;
         //NSLog(@"selected section and row %d, %d", _selectedSectionIndex, _selectedCellIndex);
         
         controller.streamObject = showStreamsArray[_selectedSectionIndex];
@@ -2171,25 +2185,33 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     customPicker.sourceType = UIImagePickerControllerSourceTypeCamera;
     customPicker.showsCameraControls = NO;
     customPicker.canTakePicture = YES;
+    
     //helper variables
-    float screenWidth = self.view.frame.size.width;
-    float transformNumber = self.view.frame.size.height/self.view.frame.size.width;
-    NSLog(@"transform number is %f", transformNumber);
-    float pickerHeight = self.view.frame.size.height;
-    
+    CGRect screenRect = [[UIScreen mainScreen] bounds];
+    float screenWidth = screenRect.size.width;
+    float pickerHeight = screenRect.size.height;
+   
+    NSLog(@"picker height is %f", pickerHeight);
+    NSLog(@"custom picker height is %f", customPicker.view.frame.size.height);
     CGFloat cameraAspectRatio = 4.0f/3.0f;
+    for(UIView* view in customPicker.view.subviews)
+        NSLog(@"view is %f", view.frame.size.height);
+    CGFloat camViewHeight = screenWidth *cameraAspectRatio;
+    CGFloat scale = pickerHeight / camViewHeight;
     
-    CGFloat camViewHeight = screenWidth * cameraAspectRatio;
-    CGFloat scale = self.view.frame.size.height / camViewHeight;
     //CGFloat adjustedXPosition = (screenWidth*scale - screenWidth)/2;
     
     CGFloat adjustedYPosition = (pickerHeight - camViewHeight) / 2;
     NSLog(@"adjusted y position is %f", adjustedYPosition);
     NSLog(@"scale is %f",scale);
-    CGAffineTransform translate = CGAffineTransformMakeTranslation(0, adjustedYPosition);
-    customPicker.cameraViewTransform = translate;
-    customPicker.cameraViewTransform = CGAffineTransformScale(translate, scale, scale);
-    
+    //temporary fix
+    if(pickerHeight != 480)
+    {
+        CGAffineTransform translate = CGAffineTransformMakeTranslation(0, adjustedYPosition);
+        customPicker.cameraViewTransform = translate;
+        customPicker.cameraViewTransform = CGAffineTransformScale(translate, scale, scale);
+    }
+
     _flashMode = UIImagePickerControllerCameraFlashModeAuto;
     _isTakingPicture = YES;
     //set original center
@@ -2213,7 +2235,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     [caption setBackgroundColor:[[UIColor blackColor] colorWithAlphaComponent:0.2]];
     
     //setup the toolbar
-    toolBar = [[UIToolbar alloc] initWithFrame:CGRectMake(0, self.view.frame.size.height-TOOLBAR_HEIGHT, screenWidth, TOOLBAR_HEIGHT)];
+    toolBar = [[UIToolbar alloc] initWithFrame:CGRectMake(0, pickerHeight-TOOLBAR_HEIGHT, screenWidth, TOOLBAR_HEIGHT)];
     UIBarButtonItem *cancelButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel target:self action:@selector(cancelClicked:)];
     UIBarButtonItem *flipButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"cameraFlip.png"] style:UIBarButtonItemStyleDone target:self action:@selector(flipCamera:)];
     flashButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"automaticFlash.png"] style:UIBarButtonItemStyleDone target:self action:@selector(cameraFlash:)];
@@ -2292,27 +2314,39 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 }
 
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info {
+     //figure out the image
+    UIImage* originalImage =[info objectForKey:UIImagePickerControllerOriginalImage];
+    [NSThread detachNewThreadSelector:@selector(useImage:) toTarget:self withObject:originalImage];
     
+    
+}
+
+
+- (void)useImage:(UIImage *)originalImage {
     //Don't allow pictures to be taken
     customPicker.canTakePicture = NO;
     _isTakingPicture = NO;
     caption.hidden = NO;
     //helper var
-    float screenWidth = self.view.frame.size.width;
+    CGRect screenRect = [[UIScreen mainScreen] bounds];
+    float screenWidth = screenRect.size.width;
     _expirationTime = ((NSNumber*)[[PFUser currentUser] objectForKey:@"streamTimeHours"]).floatValue;
     
-    //figure out the image
-    UIImage* originalImage =[info objectForKey:UIImagePickerControllerOriginalImage];
     
     CGFloat imageHeight = originalImage.size.height;
     CGFloat imageWidth = originalImage.size.width;
+    
+    NSLog(@"image height width %f, %f", imageHeight, imageWidth);
+    NSLog(@"Screen height width %f, %f", screenRect.size.height,screenWidth);
     CGFloat cameraAspectRatio = 4.0f/3.0f;
     CGFloat camViewHeight = screenWidth * cameraAspectRatio;
-    CGFloat scale = self.view.frame.size.height / camViewHeight;
+    CGFloat scale = screenRect.size.height / camViewHeight;
+    
+    NSLog(@"scale is %f", scale);
     //NSLog(@"scale is %f", scale);
     CGFloat adjustedXPosition = (imageWidth*scale - imageWidth)/(2.0f*scale);
     CGFloat adjustedYPosition = (imageHeight*scale - imageHeight)/(2.0f*scale);
-    //NSLog(@"adjusted x = %f", adjustedXPosition);
+    NSLog(@"adjusted x = %f", adjustedXPosition);
     //NSLog(@"image width and height are %f, %f", imageWidth, imageHeight);
     // Create rectangle that represents a cropped image
     CGRect rect = CGRectMake(adjustedXPosition, 0 ,imageWidth-2.0f*adjustedXPosition, imageHeight);
@@ -2356,17 +2390,19 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         //depending on the orientation is how we flip it
         if(fixedImage.imageOrientation == 3)
             fixedImage = [UIImage imageWithCGImage:fixedImage.CGImage
-                                               scale:fixedImage.scale
-                                         orientation:UIImageOrientationLeftMirrored];
+                                             scale:fixedImage.scale
+                                       orientation:UIImageOrientationLeftMirrored];
         else
             fixedImage = [UIImage imageWithCGImage:fixedImage.CGImage
-                                               scale:fixedImage.scale
-                                         orientation:UIImageOrientationUpMirrored];
+                                             scale:fixedImage.scale
+                                       orientation:UIImageOrientationUpMirrored];
     }
     
     //set the image data
     _imageData = UIImageJPEGRepresentation(fixedImage, 1.0f);
     cameraOverlayView.image = fixedImage;
+    
+    NSLog(@"image size is %f,%f", fixedImage.size.height, fixedImage.size.width);
     
     //reset the toolbar
     UIBarButtonItem *cancelButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel target:self action:@selector(cancelClicked:)];
@@ -2427,11 +2463,10 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     
     [self popoverDismissed];
     
-
+    
     /*UIImage* backgroundImage = [UIImage imageNamed:@"black_box.png"];
      [self.navigationItem.rightBarButtonItem setBackgroundImage:backgroundImage forState:UIControlStateNormal barMetrics:UIBarMetricsDefault ];*/
     //barButtonView.backgroundColor = [UIColor blackColor];
-    
 }
 
 //Method to define how many columns/dials to show
@@ -2495,11 +2530,12 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 
 -(void) setupPicker
 {
-    pickerView = [[UIPickerView alloc] initWithFrame:CGRectMake(10,self.view.frame.size.height, self.view.frame.size.width-10, TOOLBAR_HEIGHT)];
+    CGRect screenRect = [[UIScreen mainScreen] bounds];
+    pickerView = [[UIPickerView alloc] initWithFrame:CGRectMake(10,screenRect.size.height, screenRect.size.width-10, TOOLBAR_HEIGHT)];
     pickerView.layer.cornerRadius = PICTURE_SIZE/10;
     pickerView.clipsToBounds = YES;
     pickerView.backgroundColor = [UIColor blackColor];
-    pickerView.center = CGPointMake(self.view.center.x,pickerView.frame.size.height+self.view.frame.size.height);
+    pickerView.center = CGPointMake(self.view.center.x,pickerView.frame.size.height+screenRect.size.height);
     [self.customPicker.view addSubview:pickerView];
     
     
@@ -2742,9 +2778,10 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     }
     else
     {
+        CGRect screenRect = [[UIScreen mainScreen] bounds];
         [UIView animateWithDuration:0.5
                          animations:^{
-                             pickerView.center = CGPointMake(self.view.center.x,self.view.frame.size.height-pickerView.frame.size.height/2);
+                             pickerView.center = CGPointMake(self.view.center.x,screenRect.size.height-pickerView.frame.size.height/2);
                              [self.view layoutIfNeeded];
                          }];
         //picker is showing
@@ -2978,9 +3015,10 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 -(void) dismissPicker:(id) sender
 {
     NSLog(@"dismiss picker fired");
+    CGRect screenRect = [[UIScreen mainScreen] bounds];
     [UIView animateWithDuration:0.5
                      animations:^{
-                         pickerView.center = CGPointMake(self.view.center.x,self.view.frame.size.height+pickerView.frame.size.height);
+                         pickerView.center = CGPointMake(self.view.center.x,screenRect.size.height+pickerView.frame.size.height);
                          [self.view layoutIfNeeded];
                      }];
     _pickerShown = NO;
@@ -3026,6 +3064,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     PFUser* user = [[PFUser alloc] init];
     user.objectId = [NSString stringWithString:[PFUser currentUser].objectId];
     user.username = [NSString stringWithString:[PFUser currentUser].username];
+    [user setObject:[[PFUser currentUser] objectForKey:@"posting_name"] forKey:@"posting_name"];
     NSLog(@"after assigning user");
 
     //Create the default acl
@@ -3358,11 +3397,11 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         captionText = @"No caption.";
     [caption setBackgroundColor:[[UIColor blackColor] colorWithAlphaComponent:0.2]];
     
-    NSString* cap = [[NSString alloc] initWithString:caption.text];
+    NSString* cap = [[NSString alloc] initWithString:captionText];
     PFUser* user = [[PFUser alloc] init];
     user.objectId = [NSString stringWithString:[PFUser currentUser].objectId];
     user.username = [NSString stringWithString:[PFUser currentUser].username];
-
+    [user setObject:[[PFUser currentUser] objectForKey:@"posting_name"] forKey:@"posting_name"];
     //update the user's points total
     [PFCloud callFunctionInBackground:@"addToStreamUpdatePoints" withParameters:@{} block:^(id object, NSError *error) {}];
     

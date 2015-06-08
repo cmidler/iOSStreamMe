@@ -71,8 +71,12 @@
 		DEA50D251ACB95BF00D96F30 /* white-down-arrow@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = DEA50D231ACB95BF00D96F30 /* white-down-arrow@3x.png */; };
 		DEA691AF19CA384D0097BE65 /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = DE0051CD19B7CC300053D2EB /* libsqlite3.dylib */; };
 		DEA6944B1A11B51100E4D11F /* MainNavigationViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = DEA6944A1A11B51100E4D11F /* MainNavigationViewController.m */; };
+		DEA8CCC91B260F1000143766 /* PopToRootSlideSegue.m in Sources */ = {isa = PBXBuildFile; fileRef = DEA8CCC81B260F1000143766 /* PopToRootSlideSegue.m */; };
+		DEA8CCCC1B26262B00143766 /* shuffle@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = DEA8CCCA1B26262B00143766 /* shuffle@2x.png */; };
+		DEA8CCCD1B26262B00143766 /* shuffle@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = DEA8CCCB1B26262B00143766 /* shuffle@3x.png */; };
 		DEAD081D1B237006002AE7F1 /* gallery@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = DEAD081B1B237006002AE7F1 /* gallery@2x.png */; };
 		DEAD081E1B237006002AE7F1 /* gallery@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = DEAD081C1B237006002AE7F1 /* gallery@3x.png */; };
+		DEAD08211B237C3E002AE7F1 /* PopToRootFadeSegue.m in Sources */ = {isa = PBXBuildFile; fileRef = DEAD08201B237C3E002AE7F1 /* PopToRootFadeSegue.m */; };
 		DEB874591AC49351003B5996 /* MeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = DEB874581AC49351003B5996 /* MeViewController.m */; };
 		DEB8745F1AC496B8003B5996 /* CustomSegue.m in Sources */ = {isa = PBXBuildFile; fileRef = DEB8745E1AC496B8003B5996 /* CustomSegue.m */; };
 		DEB874621AC49C47003B5996 /* RightToLeftSegue.m in Sources */ = {isa = PBXBuildFile; fileRef = DEB874611AC49C47003B5996 /* RightToLeftSegue.m */; };
@@ -267,8 +271,14 @@
 		DEA694471A119CCD00E4D11F /* Accounts.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accounts.framework; path = System/Library/Frameworks/Accounts.framework; sourceTree = SDKROOT; };
 		DEA694491A11B51100E4D11F /* MainNavigationViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MainNavigationViewController.h; sourceTree = "<group>"; };
 		DEA6944A1A11B51100E4D11F /* MainNavigationViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MainNavigationViewController.m; sourceTree = "<group>"; };
+		DEA8CCC71B260F1000143766 /* PopToRootSlideSegue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PopToRootSlideSegue.h; sourceTree = "<group>"; };
+		DEA8CCC81B260F1000143766 /* PopToRootSlideSegue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PopToRootSlideSegue.m; sourceTree = "<group>"; };
+		DEA8CCCA1B26262B00143766 /* shuffle@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "shuffle@2x.png"; sourceTree = "<group>"; };
+		DEA8CCCB1B26262B00143766 /* shuffle@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "shuffle@3x.png"; sourceTree = "<group>"; };
 		DEAD081B1B237006002AE7F1 /* gallery@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "gallery@2x.png"; sourceTree = "<group>"; };
 		DEAD081C1B237006002AE7F1 /* gallery@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "gallery@3x.png"; sourceTree = "<group>"; };
+		DEAD081F1B237C3E002AE7F1 /* PopToRootFadeSegue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PopToRootFadeSegue.h; sourceTree = "<group>"; };
+		DEAD08201B237C3E002AE7F1 /* PopToRootFadeSegue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PopToRootFadeSegue.m; sourceTree = "<group>"; };
 		DEB874571AC49351003B5996 /* MeViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MeViewController.h; sourceTree = "<group>"; };
 		DEB874581AC49351003B5996 /* MeViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MeViewController.m; sourceTree = "<group>"; };
 		DEB8745D1AC496B8003B5996 /* CustomSegue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CustomSegue.h; sourceTree = "<group>"; };
@@ -448,6 +458,8 @@
 		DE0051C419B7C1770053D2EB /* Images */ = {
 			isa = PBXGroup;
 			children = (
+				DEA8CCCA1B26262B00143766 /* shuffle@2x.png */,
+				DEA8CCCB1B26262B00143766 /* shuffle@3x.png */,
 				DEAD081B1B237006002AE7F1 /* gallery@2x.png */,
 				DEAD081C1B237006002AE7F1 /* gallery@3x.png */,
 				DEDD89821B1D04E10042F347 /* forward_arrow@2x.png */,
@@ -564,6 +576,10 @@
 				DE8E51971AFAD8FE0079B1F7 /* PassthroughView.m */,
 				DEEB451C1ACAE71B0032F212 /* PopRevealSegue.h */,
 				DEEB451D1ACAE71B0032F212 /* PopRevealSegue.m */,
+				DEAD081F1B237C3E002AE7F1 /* PopToRootFadeSegue.h */,
+				DEAD08201B237C3E002AE7F1 /* PopToRootFadeSegue.m */,
+				DEA8CCC71B260F1000143766 /* PopToRootSlideSegue.h */,
+				DEA8CCC81B260F1000143766 /* PopToRootSlideSegue.m */,
 				DEEB45191ACAE6F20032F212 /* PushFadeSegue.h */,
 				DEEB451A1ACAE6F20032F212 /* PushFadeSegue.m */,
 				DEB874601AC49C47003B5996 /* RightToLeftSegue.h */,
@@ -827,6 +843,7 @@
 				DEBC57411AADE20D002F0E5E /* back_arrow@3x.png in Resources */,
 				DEBC572A1AAA648F002F0E5E /* trash@2x.png in Resources */,
 				DE7B4E4B1AA6489A000CC40B /* settings@2x.png in Resources */,
+				DEA8CCCD1B26262B00143766 /* shuffle@3x.png in Resources */,
 				DEB8747A1AC4E10A003B5996 /* cameraFlip@3x.png in Resources */,
 				DEB8749F1AC9E1E0003B5996 /* add-pictures@2x.png in Resources */,
 				DE6DBB511B0D0148009921B9 /* thick_plus_circle.png in Resources */,
@@ -847,6 +864,7 @@
 				DEBC57291AAA648F002F0E5E /* save@3x.png in Resources */,
 				DEB8749E1AC9E1E0003B5996 /* add-pictures-512.png in Resources */,
 				DE8E51811AF7DD840079B1F7 /* black_box@3x.png in Resources */,
+				DEA8CCCC1B26262B00143766 /* shuffle@2x.png in Resources */,
 				DEBC57221AAA648F002F0E5E /* contact_card@2x.png in Resources */,
 				DE29AB8A1A881EC8000B010B /* BlueGradient.png in Resources */,
 				DE6DBB4E1B0CFEEB009921B9 /* white_pictures@3x.png in Resources */,
@@ -969,9 +987,11 @@
 				DE502AB51ACCC32700410FE7 /* Stream.m in Sources */,
 				DEB8745F1AC496B8003B5996 /* CustomSegue.m in Sources */,
 				DE502AAB1ACC622F00410FE7 /* MainTutorialPageViewController.m in Sources */,
+				DEAD08211B237C3E002AE7F1 /* PopToRootFadeSegue.m in Sources */,
 				DE7AE43619B762C90001567E /* main.m in Sources */,
 				DE0051BE19B78F190053D2EB /* MainTableViewController.m in Sources */,
 				DEC67BA81AA8BE44004991C2 /* SettingsTableViewCell.m in Sources */,
+				DEA8CCC91B260F1000143766 /* PopToRootSlideSegue.m in Sources */,
 				DE8E518D1AF86FA50079B1F7 /* PopoverViewController.m in Sources */,
 				DEB874AE1ACA105F003B5996 /* ViewStreamCollectionViewController.m in Sources */,
 				DEB8746B1AC4BA5D003B5996 /* TopToBottomSegue.m in Sources */,

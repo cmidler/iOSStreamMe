@@ -18,11 +18,27 @@
     [super viewDidLoad];
     // This will remove extra separators from tableview
     meTableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
+    if ([self respondsToSelector:@selector(edgesForExtendedLayout)])
+        self.edgesForExtendedLayout = UIRectEdgeNone;
+    meTableView.contentInset = UIEdgeInsetsMake(self.navigationController.navigationBar.frame.size.height*3.0/2.0,0,0,0);
+    self.automaticallyAdjustsScrollViewInsets=NO;
     [self getPoints];
     meArray = @[@"Name:", @"Points:", @"Rank:"];
     _spinnerActive = YES;
     _points = 0;
     _name = [[PFUser currentUser] objectForKey:@"posting_name"];
+    
+    //setting up swipes
+    UISwipeGestureRecognizer * recognizer = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(myLeftAction:)];
+    [recognizer setDirection:(UISwipeGestureRecognizerDirectionLeft)];
+    //setting up swipes
+    UISwipeGestureRecognizer * rightRecognizer = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(myRightAction:)];
+    [rightRecognizer setDirection:(UISwipeGestureRecognizerDirectionRight)];
+    [self.view addGestureRecognizer:rightRecognizer];
+    [self.view addGestureRecognizer:recognizer];
+    
+    
+    
     //present an alert to tell the person to tap the screen to take the photo
     NSNumber *showPoints =
     [[NSUserDefaults standardUserDefaults] objectForKey:@"ShowPoints"];
@@ -44,6 +60,18 @@
         [alertController addAction:okAction];
         [self presentViewController:alertController animated:YES completion:nil];
     }
+}
+
+-(void) myLeftAction:(id) sender
+{
+    NSLog(@"left action swipe");
+    [self performSegueWithIdentifier:@"popSegue" sender:self];
+}
+
+-(void) myRightAction:(id) sender
+{
+    NSLog(@"right action swipe");
+    [self performSegueWithIdentifier:@"settingsSegue" sender:self];
 }
 
 //query to get points
@@ -107,7 +135,8 @@
     
     UIBarButtonItem *buttonLeft = [[UIBarButtonItem alloc] initWithImage:leftImage style:UIBarButtonItemStyleDone target:self action:@selector(settingsButton:)];
     self.navigationItem.leftBarButtonItem = buttonLeft;
-
+    NSLog(@"nav height is %f", self.navigationController.navigationBar.frame.size.height);
+    
 }
 
 -(void) streamButton:(id) sender
@@ -210,6 +239,7 @@
 
 -(void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath
 {
+   
     // Remove seperator inset
     if ([cell respondsToSelector:@selector(setSeparatorInset:)]) {
         [cell setSeparatorInset:UIEdgeInsetsZero];
@@ -224,6 +254,7 @@
     if ([cell respondsToSelector:@selector(setLayoutMargins:)]) {
         [cell setLayoutMargins:UIEdgeInsetsZero];
     }
+    
 }
 
 //Delegates for helping textview have placeholder text

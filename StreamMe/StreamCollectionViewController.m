@@ -33,6 +33,7 @@
     self.navigationItem.titleView=workaroundView;
     
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"back_arrow.png"] style:UIBarButtonItemStyleDone target:self action:@selector(backClicked:)];
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"shuffle.png"] style:UIBarButtonItemStyleDone target:self action:@selector(shuffleClicked:)];
     //see if we need to download more streams
     if(_streamObject.totalShares > streamShares.count)
     {
@@ -48,6 +49,10 @@
                                              selector:@selector(streamMonitor:)
                                                  name:@"streamCountDone"
                                                object:nil];
+    //setting up swipes
+    UISwipeGestureRecognizer * recognizer = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(myRightAction:)];
+    [recognizer setDirection:(UISwipeGestureRecognizerDirectionRight)];
+    [self.view addGestureRecognizer:recognizer];
 
     
 }
@@ -58,6 +63,19 @@
 }
 
 -(void) backClicked:(id)sender
+{
+    [self performSegueWithIdentifier:@"popSegue" sender:self];
+}
+
+-(void) shuffleClicked:(id)sender
+{
+    
+    //select random cell
+    _selectedCellIndex = arc4random_uniform((int)streamShares.count);
+    [self performSegueWithIdentifier:@"viewShareSegue" sender:self];
+}
+
+-(void) myRightAction:(id) sender
 {
     [self performSegueWithIdentifier:@"popSegue" sender:self];
 }

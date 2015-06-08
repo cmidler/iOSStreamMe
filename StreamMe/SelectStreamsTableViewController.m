@@ -148,7 +148,7 @@
     PFUser* user = [[PFUser alloc] init];
     user.objectId = [NSString stringWithString:[PFUser currentUser].objectId];
     user.username = [NSString stringWithString:[PFUser currentUser].username];
-
+    [user setObject:[[PFUser currentUser] objectForKey:@"posting_name"] forKey:@"posting_name"];
     //Create the default acl
     PFACL *defaultACL = [PFACL ACL];
     [defaultACL setReadAccess:true forUser:user];

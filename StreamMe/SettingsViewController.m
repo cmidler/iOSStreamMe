@@ -18,7 +18,9 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view.
     self.automaticallyAdjustsScrollViewInsets = NO;
-    
+    if ([self respondsToSelector:@selector(edgesForExtendedLayout)])
+        self.edgesForExtendedLayout = UIRectEdgeNone;
+    NSLog(@"nav height is %f", self.navigationController.navigationBar.frame.size.height);
     _spinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
     _spinner.color = [UIColor colorWithRed:0.0 green:122.0/255.0 blue:1.0 alpha:1.0];
     [self.view addSubview:_spinner];
@@ -31,10 +33,19 @@
     
     // This will remove extra separators from tableview
     self.settingsTableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
+    //setting up swipes
+    UISwipeGestureRecognizer * recognizer = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(myLeftAction:)];
+    [recognizer setDirection:(UISwipeGestureRecognizerDirectionLeft)];
+    [self.view addGestureRecognizer:recognizer];
     
     settings = @[@"Contact StreamMe",@"Logout"];
     images = @[[UIImage imageNamed:@"email.png"],[UIImage imageNamed:@"logout.png"]];
     [settingsTableView reloadData];
+}
+
+-(void) myLeftAction:(id) sender
+{
+    [self performSegueWithIdentifier:@"popSegue" sender:self];
 }
 
 -(void) doneSelected:(id)sender
@@ -148,7 +159,7 @@
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
-    return .1f;
+    return .00000001f;
 }
 
 -(void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath
@@ -167,6 +178,7 @@
     if ([cell respondsToSelector:@selector(setLayoutMargins:)]) {
         [cell setLayoutMargins:UIEdgeInsetsZero];
     }
+    
 }
 
 -(void) deleteAllTables

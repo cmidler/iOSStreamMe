@@ -27,5 +27,6 @@
 @property (strong, nonatomic) UIPageViewController *pageViewController;
 - (IBAction)loginAction:(id)sender;
 - (IBAction)registerAction:(id)sender;
+@property (nonatomic, readwrite) bool showTutorial;
 
 @end
