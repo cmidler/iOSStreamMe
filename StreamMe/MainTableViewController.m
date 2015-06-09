@@ -39,7 +39,8 @@
     
     // This will remove extra separators from tableview
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
-    
+    if ([self respondsToSelector:@selector(edgesForExtendedLayout)])
+        self.edgesForExtendedLayout = UIRectEdgeNone;
     
     //setting up title
     __block PFUser* user = [PFUser currentUser];
@@ -127,6 +128,7 @@
     _queue= dispatch_queue_create("user_queue", DISPATCH_QUEUE_SERIAL);
     _totalValidStreams = 0;
     _currentPage = _totalPages = 1;
+    _cachedStream = 0;
     _refreshingStreams = NO;
     _gettingLocation = NO;
     _isReloading = NO;
@@ -424,7 +426,7 @@
     if (motion == UIEventSubtypeMotionShake)
     {
         //if no bluetooth then just present the alert
-        if(!_central.bluetoothOn)
+        if(!_central.bluetoothOn && ([CLLocationManager authorizationStatus] == kCLAuthorizationStatusRestricted || [CLLocationManager authorizationStatus] == kCLAuthorizationStatusDenied))
         {
             [self presentNoBluetoothAlert];
             return;
@@ -493,8 +495,8 @@
 -(void) presentNoBluetoothAlert
 {
     UIAlertController *alertController = [UIAlertController
-                                          alertControllerWithTitle:@"Bluetooth Turned Off"
-                                          message:@"Bluetooth Is Turned Off. Please Go To Settings->Bluetooth and Make Sure Bluetooth Is Turned On!"
+                                          alertControllerWithTitle:@"Bluetooth And GPS Turned Off"
+                                          message:@"Turn on Bluetooth and GPS to see what's happening around you."
                                           preferredStyle:UIAlertControllerStyleAlert];
     UIAlertAction *okAction = [UIAlertAction
                                actionWithTitle:NSLocalizedString(@"Ok", @"Ok action")
@@ -504,20 +506,20 @@
                                    [self mainTutorial];
                                    return;
                                }];
-    /*UIAlertAction *settingsAction = [UIAlertAction
+    UIAlertAction *settingsAction = [UIAlertAction
                                      actionWithTitle:NSLocalizedString(@"Settings", @"Settings action")
                                      style:UIAlertActionStyleDefault
                                      handler:^(UIAlertAction *action)
                                      {
-                                         NSString* settingString = @"settings:";
-                                         NSLog(@"Settings String is %@", settingString);
+                                         NSURL *url = [NSURL URLWithString:UIApplicationOpenSettingsURLString];
                                          if (UIApplicationOpenSettingsURLString != NULL) {
-                                             [[UIApplication sharedApplication] openURL:[NSURL URLWithString:settingString]];
+                                             [[UIApplication sharedApplication] openURL:url];
                                          }
                                          return;
                                      }];
-    [alertController addAction:settingsAction];*/
     [alertController addAction:okAction];
+    [alertController addAction:settingsAction];
+    
     
     [self presentViewController:alertController animated:YES completion:nil];
     return;
@@ -1310,7 +1312,7 @@
 //on picture tap segue to view profile
 -(void) pictureTapDetected:(id) sender
 {
-    [self addStreamAction:self];
+    [self presentNoBluetoothAlert];
 }
 
 -(void) singlePictureTapDetected:(id) sender
@@ -1363,7 +1365,7 @@
 {
     [super viewWillAppear:animated];
     //if no bluetooth then just present the alert
-    if(!_central.bluetoothOn)
+    if(!_central.bluetoothOn && ([CLLocationManager authorizationStatus] == kCLAuthorizationStatusRestricted || [CLLocationManager authorizationStatus] == kCLAuthorizationStatusDenied))
     {
         [self presentNoBluetoothAlert];
         return;
@@ -1411,14 +1413,13 @@
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
-    
     //if bluetooth is turned off, hide everything
-    if(!_central.bluetoothOn)
+    if(!_central.bluetoothOn && ([CLLocationManager authorizationStatus] == kCLAuthorizationStatusRestricted || [CLLocationManager authorizationStatus] == kCLAuthorizationStatusDenied) )
     {
         // Display a message when the table is empty
-        UILabel *messageLabel = [[UILabel alloc] initWithFrame:CGRectMake(TABLE_VIEW_X_ORIGIN, streamsTableView.center.y, streamsTableView.bounds.size.width-TABLE_VIEW_X_ORIGIN*2, streamsTableView.bounds.size.height)]; //initWithFrame:CGRectMake(0, 0, streamsTableView.bounds.size.width, streamsTableView.bounds.size.height)];
+        UILabel *messageLabel = [[UILabel alloc] initWithFrame:CGRectMake(TABLE_VIEW_X_ORIGIN, self.view.center.y-(2*PICTURE_SIZE), streamsTableView.bounds.size.width-TABLE_VIEW_X_ORIGIN*2, self.view.bounds.size.height)]; //initWithFrame:CGRectMake(0, 0, streamsTableView.bounds.size.width, streamsTableView.bounds.size.height)];
         
-        UIImageView *picture = [[UIImageView alloc] initWithFrame:CGRectMake(streamsTableView.center.x-(PICTURE_SIZE/2), streamsTableView.center.y -(PICTURE_SIZE), PICTURE_SIZE, PICTURE_SIZE)];
+        /*UIImageView *picture = [[UIImageView alloc] initWithFrame:CGRectMake(streamsTableView.center.x-(PICTURE_SIZE/2), self.view.center.y -(2*PICTURE_SIZE), PICTURE_SIZE, PICTURE_SIZE)];
         picture.layer.cornerRadius = PICTURE_SIZE/2;
         picture.clipsToBounds = YES;
         //picture.contentMode = UIViewContentModeScaleToFill;
@@ -1427,23 +1428,35 @@
         UITapGestureRecognizer *pictureTap =  [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(pictureTapDetected:)];
         pictureTap.numberOfTapsRequired = 1;
         [picture setUserInteractionEnabled:YES];
-        [picture addGestureRecognizer:pictureTap];
+        [picture addGestureRecognizer:pictureTap];*/
         
         //bluetooth isn't on naturally
-        messageLabel.text = @"Your bluetooth is turned off!  Go to Settings->Bluetooth and make sure bluetooth is enabled to get the full functionality of this application! ";
+        messageLabel.text = @"Your location services are off.  Turn on GPS and Bluetooth for StreamMe to see what's happening right here and now!";
+        
         
         /*else
          messageLabel.text = @"You are currently undiscoverable and cannot see other profiles.  Toggle discoverable in settings to see other people!";*/
-        messageLabel.textColor = [UIColor blackColor];
+        messageLabel.textColor = [UIColor whiteColor];
         messageLabel.numberOfLines = 0;
         messageLabel.textAlignment = NSTextAlignmentCenter;
         messageLabel.font = [UIFont fontWithName:@"HelveticaNeue-Italic" size:20];
         [messageLabel sizeToFit];
         
         streamsTableView.backgroundView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, streamsTableView.bounds.size.width, streamsTableView.bounds.size.height)];
-        [streamsTableView.backgroundView addSubview:picture];
+        CGRect screenRect = [[UIScreen mainScreen] bounds];
+        UIGraphicsBeginImageContext(screenRect.size);
+        [[UIImage imageNamed:@"Default-736.png"] drawInRect:screenRect];
+        UIImage *bgImage = UIGraphicsGetImageFromCurrentImageContext();
+        UIGraphicsEndImageContext();
+        streamsTableView.backgroundView.backgroundColor = [UIColor colorWithPatternImage:bgImage];
+        //[streamsTableView.backgroundView addSubview:picture];
         [streamsTableView.backgroundView addSubview:messageLabel];
-        [streamsTableView sendSubviewToBack:picture];
+        UITapGestureRecognizer *pictureTap =  [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(pictureTapDetected:)];
+        pictureTap.numberOfTapsRequired = 1;
+        [streamsTableView.backgroundView setUserInteractionEnabled:YES];
+        [streamsTableView.backgroundView addGestureRecognizer:pictureTap];
+        
+        //[streamsTableView sendSubviewToBack:picture];
         self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
         return 0;
     }
@@ -1457,12 +1470,12 @@
     else if (_tableFirstLoad)
     {
         // Display a message when the table is empty
-        UILabel *messageLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, streamsTableView.center.y, streamsTableView.bounds.size.width, streamsTableView.bounds.size.height)];
+        UILabel *messageLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, self.view.center.y-(2*PICTURE_SIZE), streamsTableView.bounds.size.width, self.view.bounds.size.height)];
         messageLabel.text = @"Loading Streams...";
         
         /*else
          messageLabel.text = @"You are currently undiscoverable and cannot see other profiles.  Toggle discoverable in settings to see other people!";*/
-        messageLabel.textColor = [UIColor lightGrayColor];
+        messageLabel.textColor = [UIColor whiteColor];
         messageLabel.numberOfLines = 1;
         messageLabel.textAlignment = NSTextAlignmentCenter;
         messageLabel.font = [UIFont fontWithName:@"HelveticaNeue-Italic" size:20];
@@ -1471,14 +1484,20 @@
         messageLabel.center = streamsTableView.backgroundView.center;
         [streamsTableView.backgroundView addSubview:messageLabel];
         self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+        CGRect screenRect = [[UIScreen mainScreen] bounds];
+        UIGraphicsBeginImageContext(screenRect.size);
+        [[UIImage imageNamed:@"Default-736.png"] drawInRect:screenRect];
+        UIImage *bgImage = UIGraphicsGetImageFromCurrentImageContext();
+        UIGraphicsEndImageContext();
+        streamsTableView.backgroundView.backgroundColor = [UIColor colorWithPatternImage:bgImage];
         return 0;
     }
     else
     {
         // Display a message when the table is empty
-        UILabel *messageLabel = [[UILabel alloc] initWithFrame:CGRectMake(TABLE_VIEW_X_ORIGIN, streamsTableView.center.y, streamsTableView.bounds.size.width-TABLE_VIEW_X_ORIGIN*2, streamsTableView.bounds.size.height)]; //initWithFrame:CGRectMake(0, 0, streamsTableView.bounds.size.width, streamsTableView.bounds.size.height)];
+        UILabel *messageLabel = [[UILabel alloc] initWithFrame:CGRectMake(TABLE_VIEW_X_ORIGIN, self.view.center.y-(2*PICTURE_SIZE), streamsTableView.bounds.size.width-TABLE_VIEW_X_ORIGIN*2, self.view.bounds.size.height)]; //initWithFrame:CGRectMake(0, 0, streamsTableView.bounds.size.width, streamsTableView.bounds.size.height)];
         
-        UIImageView *picture = [[UIImageView alloc] initWithFrame:CGRectMake(streamsTableView.center.x-(PICTURE_SIZE/2), streamsTableView.center.y -(PICTURE_SIZE), PICTURE_SIZE, PICTURE_SIZE)];
+        /*UIImageView *picture = [[UIImageView alloc] initWithFrame:CGRectMake(streamsTableView.center.x-(PICTURE_SIZE/2), self.view.center.y -(2*PICTURE_SIZE), PICTURE_SIZE, PICTURE_SIZE)];
         picture.layer.cornerRadius = PICTURE_SIZE/2;
         picture.clipsToBounds = YES;
         //picture.contentMode = UIViewContentModeScaleToFill;
@@ -1487,22 +1506,27 @@
         UITapGestureRecognizer *pictureTap =  [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(pictureTapDetected:)];
         pictureTap.numberOfTapsRequired = 1;
         [picture setUserInteractionEnabled:YES];
-        [picture addGestureRecognizer:pictureTap];
+        [picture addGestureRecognizer:pictureTap];*/
         
         messageLabel.text = @"No streams around you.  Go ahead and start up the first one!";
-        
         /*else
          messageLabel.text = @"You are currently undiscoverable and cannot see other profiles.  Toggle discoverable in settings to see other people!";*/
-        messageLabel.textColor = [UIColor blackColor];
+        messageLabel.textColor = [UIColor whiteColor];
         messageLabel.numberOfLines = 0;
         messageLabel.textAlignment = NSTextAlignmentCenter;
         messageLabel.font = [UIFont fontWithName:@"HelveticaNeue-Italic" size:20];
         [messageLabel sizeToFit];
         
-        streamsTableView.backgroundView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, streamsTableView.bounds.size.width, streamsTableView.bounds.size.height)];
-        [streamsTableView.backgroundView addSubview:picture];
+        streamsTableView.backgroundView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, streamsTableView.bounds.size.width, self.view.bounds.size.height)];
+        CGRect screenRect = [[UIScreen mainScreen] bounds];
+        UIGraphicsBeginImageContext(screenRect.size);
+        [[UIImage imageNamed:@"Default-736.png"] drawInRect:screenRect];
+        UIImage *bgImage = UIGraphicsGetImageFromCurrentImageContext();
+        UIGraphicsEndImageContext();
+        streamsTableView.backgroundView.backgroundColor = [UIColor colorWithPatternImage:bgImage];
+        //[streamsTableView.backgroundView addSubview:picture];
         [streamsTableView.backgroundView addSubview:messageLabel];
-        [streamsTableView sendSubviewToBack:picture];
+        //[streamsTableView sendSubviewToBack:picture];
         self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
         return 0;
     }
@@ -2062,6 +2086,19 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         controller.streamObject = showStreamsArray[_selectedSectionIndex];
         controller.currentRow = _selectedCellIndex;
         _selectedStream = ((Stream*)showStreamsArray[_selectedSectionIndex]).stream;
+        
+        //check which stream is cached
+        if(_cachedStream && ![_cachedStream isEqual:showStreamsArray[_selectedSectionIndex]])
+        {
+            //go through the cached stream and release the streamshares
+            if(_cachedStream.streamShares && _cachedStream.streamShares.count)
+            {
+                PFObject* streamShare = [_cachedStream.streamShares firstObject];
+                NSMutableArray* streamShares = [[NSMutableArray alloc] initWithObjects:streamShare, nil];
+                _cachedStream.streamShares = streamShares;
+            }
+        }
+        _cachedStream = showStreamsArray[_selectedSectionIndex];
     }
     else if ([segue.identifier isEqualToString:@"chooseStreamsSegue"]){
         SelectStreamsTableViewController* controller = (SelectStreamsTableViewController*)segue.destinationViewController;
@@ -2076,7 +2113,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 }
 
 - (IBAction)addStreamAction:(id)sender {
-    if(!_central.bluetoothOn)
+    if(!_central.bluetoothOn && ([CLLocationManager authorizationStatus] == kCLAuthorizationStatusRestricted || [CLLocationManager authorizationStatus] == kCLAuthorizationStatusDenied))
     {
         [self presentNoBluetoothAlert];
         return;

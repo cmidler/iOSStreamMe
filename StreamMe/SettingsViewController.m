@@ -20,7 +20,7 @@
     self.automaticallyAdjustsScrollViewInsets = NO;
     if ([self respondsToSelector:@selector(edgesForExtendedLayout)])
         self.edgesForExtendedLayout = UIRectEdgeNone;
-    NSLog(@"nav height is %f", self.navigationController.navigationBar.frame.size.height);
+    //NSLog(@"nav height is %f", self.navigationController.navigationBar.frame.size.height);
     _spinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
     _spinner.color = [UIColor colorWithRed:0.0 green:122.0/255.0 blue:1.0 alpha:1.0];
     [self.view addSubview:_spinner];
@@ -150,7 +150,7 @@
     MFMailComposeViewController *mc = [[MFMailComposeViewController alloc] init];
     mc.mailComposeDelegate = self;
     [mc setSubject:emailTitle];
-    [mc setToRecipients:@[@"nick@streamme.co"]];
+    [mc setToRecipients:@[@"feedback@streamme.co"]];
     
     
     // Present mail view controller on screen

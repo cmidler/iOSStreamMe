@@ -74,6 +74,10 @@
 		DEA8CCC91B260F1000143766 /* PopToRootSlideSegue.m in Sources */ = {isa = PBXBuildFile; fileRef = DEA8CCC81B260F1000143766 /* PopToRootSlideSegue.m */; };
 		DEA8CCCC1B26262B00143766 /* shuffle@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = DEA8CCCA1B26262B00143766 /* shuffle@2x.png */; };
 		DEA8CCCD1B26262B00143766 /* shuffle@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = DEA8CCCB1B26262B00143766 /* shuffle@3x.png */; };
+		DEA8CCD01B264ABB00143766 /* ShowCommentsTableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = DEA8CCCF1B264ABB00143766 /* ShowCommentsTableViewController.m */; };
+		DEA8CCD31B264B0D00143766 /* ShowCommentsTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = DEA8CCD21B264B0D00143766 /* ShowCommentsTableViewCell.m */; };
+		DEA8CCD61B26517C00143766 /* compose@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = DEA8CCD41B26517C00143766 /* compose@2x.png */; };
+		DEA8CCD71B26517C00143766 /* compose@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = DEA8CCD51B26517C00143766 /* compose@3x.png */; };
 		DEAD081D1B237006002AE7F1 /* gallery@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = DEAD081B1B237006002AE7F1 /* gallery@2x.png */; };
 		DEAD081E1B237006002AE7F1 /* gallery@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = DEAD081C1B237006002AE7F1 /* gallery@3x.png */; };
 		DEAD08211B237C3E002AE7F1 /* PopToRootFadeSegue.m in Sources */ = {isa = PBXBuildFile; fileRef = DEAD08201B237C3E002AE7F1 /* PopToRootFadeSegue.m */; };
@@ -275,6 +279,12 @@
 		DEA8CCC81B260F1000143766 /* PopToRootSlideSegue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PopToRootSlideSegue.m; sourceTree = "<group>"; };
 		DEA8CCCA1B26262B00143766 /* shuffle@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "shuffle@2x.png"; sourceTree = "<group>"; };
 		DEA8CCCB1B26262B00143766 /* shuffle@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "shuffle@3x.png"; sourceTree = "<group>"; };
+		DEA8CCCE1B264ABB00143766 /* ShowCommentsTableViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ShowCommentsTableViewController.h; sourceTree = "<group>"; };
+		DEA8CCCF1B264ABB00143766 /* ShowCommentsTableViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ShowCommentsTableViewController.m; sourceTree = "<group>"; };
+		DEA8CCD11B264B0D00143766 /* ShowCommentsTableViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ShowCommentsTableViewCell.h; sourceTree = "<group>"; };
+		DEA8CCD21B264B0D00143766 /* ShowCommentsTableViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ShowCommentsTableViewCell.m; sourceTree = "<group>"; };
+		DEA8CCD41B26517C00143766 /* compose@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "compose@2x.png"; sourceTree = "<group>"; };
+		DEA8CCD51B26517C00143766 /* compose@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "compose@3x.png"; sourceTree = "<group>"; };
 		DEAD081B1B237006002AE7F1 /* gallery@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "gallery@2x.png"; sourceTree = "<group>"; };
 		DEAD081C1B237006002AE7F1 /* gallery@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "gallery@3x.png"; sourceTree = "<group>"; };
 		DEAD081F1B237C3E002AE7F1 /* PopToRootFadeSegue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PopToRootFadeSegue.h; sourceTree = "<group>"; };
@@ -447,6 +457,8 @@
 				DE502AA31ACC4F5000410FE7 /* SelectStreamsTableViewCell.m */,
 				DEC67BA61AA8BE44004991C2 /* SettingsTableViewCell.h */,
 				DEC67BA71AA8BE44004991C2 /* SettingsTableViewCell.m */,
+				DEA8CCD11B264B0D00143766 /* ShowCommentsTableViewCell.h */,
+				DEA8CCD21B264B0D00143766 /* ShowCommentsTableViewCell.m */,
 				DEB874931AC64A27003B5996 /* StreamCollectionViewCell.h */,
 				DEB874941AC64A27003B5996 /* StreamCollectionViewCell.m */,
 				DEB874AF1ACA1086003B5996 /* ViewStreamCollectionViewCell.h */,
@@ -458,6 +470,8 @@
 		DE0051C419B7C1770053D2EB /* Images */ = {
 			isa = PBXGroup;
 			children = (
+				DEA8CCD41B26517C00143766 /* compose@2x.png */,
+				DEA8CCD51B26517C00143766 /* compose@3x.png */,
 				DEA8CCCA1B26262B00143766 /* shuffle@2x.png */,
 				DEA8CCCB1B26262B00143766 /* shuffle@3x.png */,
 				DEAD081B1B237006002AE7F1 /* gallery@2x.png */,
@@ -688,6 +702,8 @@
 				DE502AA01ACC4F3100410FE7 /* SelectStreamsTableViewController.m */,
 				DEC67BA31AA8BDD1004991C2 /* SettingsViewController.h */,
 				DEC67BA41AA8BDD1004991C2 /* SettingsViewController.m */,
+				DEA8CCCE1B264ABB00143766 /* ShowCommentsTableViewController.h */,
+				DEA8CCCF1B264ABB00143766 /* ShowCommentsTableViewController.m */,
 				DEDD897F1B18A06D0042F347 /* StreamCollectionViewController.h */,
 				DEDD89801B18A06D0042F347 /* StreamCollectionViewController.m */,
 				DEB874AC1ACA105F003B5996 /* ViewStreamCollectionViewController.h */,
@@ -886,6 +902,7 @@
 				DE7AE44219B762C90001567E /* Images.xcassets in Resources */,
 				DEDD896E1B1678B30042F347 /* pictures-320.png in Resources */,
 				DEBC57371AAB5217002F0E5E /* Main.storyboard in Resources */,
+				DEA8CCD61B26517C00143766 /* compose@2x.png in Resources */,
 				DEA1D6741A77E3FA00292270 /* dashed_line_border.jpg in Resources */,
 				DEBC57271AAA648F002F0E5E /* phone@3x.png in Resources */,
 				DE8E518F1AF941420079B1F7 /* shutter.png in Resources */,
@@ -917,6 +934,7 @@
 				DEB874851AC4E5EC003B5996 /* noFlash@2x.png in Resources */,
 				DEB8748D1AC51036003B5996 /* timer@2x.png in Resources */,
 				DEBC572B1AAA648F002F0E5E /* trash@3x.png in Resources */,
+				DEA8CCD71B26517C00143766 /* compose@3x.png in Resources */,
 				DE29ABA01A8911EE000B010B /* whoYuBlueBanner@2x.png in Resources */,
 				DEB874AB1ACA06AD003B5996 /* add-pictures-128.png in Resources */,
 				DEC2ED541A7FD4E300B08A8B /* whoYuLogo.png in Resources */,
@@ -977,6 +995,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DEA8CCD31B264B0D00143766 /* ShowCommentsTableViewCell.m in Sources */,
 				DE502AA11ACC4F3100410FE7 /* SelectStreamsTableViewController.m in Sources */,
 				DEB874951AC64A27003B5996 /* StreamCollectionViewCell.m in Sources */,
 				DE7AE43A19B762C90001567E /* AppDelegate.m in Sources */,
@@ -1012,6 +1031,7 @@
 				DE0051F719B9FCCB0053D2EB /* BluetoothProfile.m in Sources */,
 				DEB874591AC49351003B5996 /* MeViewController.m in Sources */,
 				DEEB45151ACA5D870032F212 /* CustomFlowLayout.m in Sources */,
+				DEA8CCD01B264ABB00143766 /* ShowCommentsTableViewController.m in Sources */,
 				DE502AAE1ACC62AA00410FE7 /* MainTutorialContentViewController.m in Sources */,
 				DE502AA41ACC4F5000410FE7 /* SelectStreamsTableViewCell.m in Sources */,
 				DEB874621AC49C47003B5996 /* RightToLeftSegue.m in Sources */,

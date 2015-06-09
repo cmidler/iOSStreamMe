@@ -88,6 +88,7 @@
 @property (strong, nonatomic) UIActivityIndicatorView* activityIndicator;
 @property (strong, nonatomic) UIView* activityView;
 @property (nonatomic, readwrite) int totalValidStreams;
+@property (strong, nonatomic) Stream* cachedStream;
 @property (nonatomic, readwrite) bool downloadingStreams;
 @property (nonatomic, readwrite) bool loadingTableView;
 @property (nonatomic, readwrite) bool isPoppingBack;

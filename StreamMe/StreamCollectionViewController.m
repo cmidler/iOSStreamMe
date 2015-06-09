@@ -219,6 +219,8 @@
             for(UIView* view in [cell.shareImageView subviews])
                 if([view isKindOfClass:[UIActivityIndicatorView class]])
                     [view removeFromSuperview];
+            cell.shareImageView.image = [self imageWithImage:image scaledToFillSize:cell.frame.size];
+            
         }];
         
     }
@@ -280,7 +282,28 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 }
 
 
-
+- (UIImage *)imageWithImage:(UIImage *)image scaledToFillSize:(CGSize)size
+{
+    CGFloat scale = MAX(size.width/image.size.width, size.height/image.size.height);
+    //int imageOrientation = image.imageOrientation;
+    CGFloat width = image.size.width * scale;
+    CGFloat height = image.size.height * scale;
+    if(image.size.width>image.size.height)
+    {
+        width =image.size.height * scale;
+        height =image.size.width * scale;
+    }
+    CGRect imageRect = CGRectMake((size.width - width)/2.0f,
+                                  (size.height - height)/2.0f,
+                                  width,
+                                  height);
+    
+    UIGraphicsBeginImageContextWithOptions(size, NO, 0);
+    [image drawInRect:imageRect];
+    UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return newImage;
+}
 
 
 @end

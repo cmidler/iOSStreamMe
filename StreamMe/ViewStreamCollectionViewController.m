@@ -59,6 +59,7 @@
 
 -(void) viewWillDisappear:(BOOL)animated
 {
+    _navigationHidden = NO;
     [[UIApplication sharedApplication] setStatusBarHidden:NO
                                             withAnimation:UIStatusBarAnimationNone];
     UIGraphicsBeginImageContext(self.view.frame.size);
@@ -68,6 +69,7 @@
     [self.navigationController.navigationBar setBarTintColor:[UIColor colorWithPatternImage:image]];
     [self.navigationController.navigationBar setBackgroundColor:[UIColor colorWithPatternImage:image]];
     [self.navigationController.navigationBar setTranslucent:NO];
+    self.navigationController.navigationBar.hidden = NO;
 }
 
 
