@@ -40,7 +40,7 @@
 #define PICTURE_SIZE 100
 #define TABLE_VIEW_X_ORIGIN 16
 #define COLLECTION_VIEW_WIDTH 262.5 //260 for width and 2.5 for spacing between cells
-#define GPS_TIME 1
+#define GPS_TIME 2
 //#define TIMEOUT_TIMER_TIME 30
 @interface MainTableViewController : UITableViewController <UITextFieldDelegate,UINavigationControllerDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextViewDelegate, UIPickerViewDataSource, UIPickerViewDelegate,  UIPopoverPresentationControllerDelegate,CLLocationManagerDelegate>//UICollectionViewDataSource, UICollectionViewDelegate,
 {

@@ -14,17 +14,67 @@
 
 @implementation ViewStreamCollectionViewController
 @synthesize streamCollectionView;
+@synthesize composeComment;
+@synthesize toolBar;
+@synthesize lineView;
+@synthesize commentTextField;
+@synthesize commentView;
+@synthesize cancelCommentButton;
 - (void)viewDidLoad {
     [super viewDidLoad];
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(streamMonitor:)
                                                  name:@"streamCountDone"
                                                object:nil];
+    /*[[NSNotificationCenter defaultCenter] addObserver:self
+                                            selector:@selector(keyboardWasShown:)
+                                            name:UIKeyboardDidShowNotification
+                                            object:nil];*/
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(keyboardWillShow:)
+                                                 name:UIKeyboardWillChangeFrameNotification
+                                               object:nil];
+}
+
+- (void)keyboardWillShow:(NSNotification *)notification
+{
+    commentView.hidden = NO;
+    [self.view layoutIfNeeded];
+    // Get the size of the keyboard.
+    CGRect keyboard = [[[notification userInfo] objectForKey:UIKeyboardFrameBeginUserInfoKey] CGRectValue];
+    NSTimeInterval duration = [[[notification userInfo] objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
+    UIViewAnimationCurve curve = [[[notification userInfo] objectForKey:UIKeyboardAnimationCurveUserInfoKey] intValue];
+    CGRect screenRect = [[UIScreen mainScreen] bounds];
+    
+    NSLog(@"keyboard height is %f", keyboard.size.height);
+    
+    [UIView animateWithDuration:duration
+                     animations:^{
+                         [UIView setAnimationCurve:curve];
+                         //hack because it isn't giving the proper notification
+                         if(_didShowKeyboard)
+                         {
+                             if(keyboard.size.height == 224)
+                                 commentView.frame = CGRectMake(0, screenRect.size.height-keyboard.size.height-29-40, screenRect.size.width, 40);
+                             else
+                                 commentView.frame = CGRectMake(0, screenRect.size.height-keyboard.size.height+29-40, screenRect.size.width, 40);
+                         }
+                         else
+                             commentView.frame = CGRectMake(0, screenRect.size.height-keyboard.size.height-40, screenRect.size.width, 40);
+                         [self.view layoutIfNeeded];
+                     }];
+    _didShowKeyboard = YES;
 }
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
+}
+
+-(void) viewDidAppear:(BOOL)animated
+{
+    //get view original center
+    _originalCenter = self.view.center;
 }
 
 /* calling load values on notification since viewwillappear is not working */
@@ -55,7 +105,101 @@
     UIBarButtonItem *buttonLeft = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"back_arrow"] style:UIBarButtonItemStyleDone target:self action:@selector(backButton:)];
     self.navigationItem.leftBarButtonItem = buttonLeft;
     
+    [self setupToolbar];
+    
 }
+
+-(void) setupToolbar
+{
+    CGRect screenRect = [[UIScreen mainScreen] bounds];
+    toolBar = [[UIToolbar alloc] initWithFrame:CGRectMake(0, screenRect.size.height-TOOLBAR_HEIGHT, screenRect.size.width, TOOLBAR_HEIGHT)];
+    lineView = [[UIView alloc] initWithFrame:CGRectMake(0, screenRect.size.height-TOOLBAR_HEIGHT, screenRect.size.width, 1)];
+    lineView.backgroundColor = [UIColor whiteColor];
+    composeComment = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"compose.png"] style:UIBarButtonItemStyleDone target:self action:@selector(compose:)];
+    [composeComment setTintColor:[UIColor whiteColor]];
+    
+    //add the uibarbuttonitems to the toolbar
+    [toolBar setItems:[NSArray arrayWithObjects:composeComment,[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil], nil]];
+    
+    //setup the toolbar
+    [toolBar setBackgroundImage:[UIImage new]
+                  forToolbarPosition:UIBarPositionAny
+                          barMetrics:UIBarMetricsDefault];
+    [toolBar setShadowImage:[UIImage new]
+              forToolbarPosition:UIToolbarPositionAny];
+    [toolBar setBarStyle:UIBarStyleBlack];
+    [toolBar setBackgroundColor:[[UIColor blackColor] colorWithAlphaComponent:0.2]];
+    [toolBar setTranslucent:YES];
+    
+    
+    [self.view addSubview:lineView];
+    [self.view addSubview:toolBar];
+    [self.view bringSubviewToFront:lineView];
+    [self.view bringSubviewToFront:toolBar];
+    
+}
+
+-(void) compose:(id)sender
+{
+    NSLog(@"current row is %d", (int) _currentRow);
+    CGRect screenRect = [[UIScreen mainScreen] bounds];
+    
+    //create a text box and bring it up as the main view
+    commentTextField = [[UITextField alloc] initWithFrame:CGRectMake(0, 5, screenRect.size.width*3.0/4.0, 30)];
+    commentTextField.textColor = [UIColor whiteColor];
+    commentTextField.font = [UIFont fontWithName:@"Helvetica-Bold" size:14];
+    commentTextField.layer.cornerRadius = 5;
+    commentTextField.clipsToBounds = YES;
+    commentTextField.backgroundColor=[[UIColor grayColor] colorWithAlphaComponent:0.5];
+    commentTextField.text=@"Write a comment...";
+    commentTextField.delegate = self;
+    commentTextField.returnKeyType = UIReturnKeySend;
+    
+    //second one
+    cancelCommentButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    [cancelCommentButton addTarget:self
+                            action:@selector(cancelComment:)
+                  forControlEvents:UIControlEventTouchUpInside];
+    [cancelCommentButton setTitle:@"Cancel" forState:UIControlStateNormal];
+    [cancelCommentButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    cancelCommentButton.titleLabel.font = [UIFont fontWithName:@"Helvetica-Bold" size:14];
+    cancelCommentButton.backgroundColor = [UIColor clearColor];
+    cancelCommentButton.frame = CGRectMake(screenRect.size.width*3.0/4.0, 5, screenRect.size.width*1.0/4.0, 30.0);
+    cancelCommentButton.titleLabel.textAlignment = NSTextAlignmentRight;
+    commentView = [[UIView alloc] initWithFrame:CGRectMake(0, screenRect.size.height*3.0/4.0, screenRect.size.width, 40)];
+    commentView.backgroundColor = [UIColor blackColor];
+    [commentView addSubview:cancelCommentButton];
+    [commentView addSubview:commentTextField];
+    //[view addSubview:tf1];
+    commentView.hidden = YES;
+    [self.view addSubview:commentView];
+    _didShowKeyboard = NO;
+    [commentTextField becomeFirstResponder];
+    
+    
+}
+
+-(void) cancelComment:(id)sender
+{
+    [self dismissComment];
+}
+
+-(void) dismissComment
+{
+    [commentTextField resignFirstResponder];
+    commentTextField = nil;
+    cancelCommentButton = nil;
+    if(commentView && commentView.superview)
+       [commentView removeFromSuperview];
+    commentView = nil;
+    _didShowKeyboard = NO;
+    if(self.view.center.x != _originalCenter.x || self.view.center.y != _originalCenter.y)
+        self.view.center = _originalCenter;
+}
+
+
+
+
 
 -(void) viewWillDisappear:(BOOL)animated
 {
@@ -158,11 +302,14 @@
     cell.captionTextView.hidden = YES;
     cell.usernameLabel.hidden = YES;
     cell.createdLabel.hidden = YES;
+    toolBar.hidden = YES;
+    lineView.hidden = YES;
     cell.shareImageView.frame = CGRectMake(0, 0, width, height);
-    cell.usernameLabel.frame = CGRectMake(0, height-3.0/2.0*TOOLBAR_HEIGHT, width, TOOLBAR_HEIGHT/2+1);
-    cell.captionTextView.frame = CGRectMake(0,height-TOOLBAR_HEIGHT, width, TOOLBAR_HEIGHT);
-    cell.createdLabel.frame = CGRectMake(0, height-3.0/2.0*TOOLBAR_HEIGHT, width, TOOLBAR_HEIGHT/2+1);
-    [cell.shareImageView setContentMode:UIViewContentModeScaleToFill];
+    cell.usernameLabel.frame = CGRectMake(0, height-5.0/2.0*TOOLBAR_HEIGHT, width, TOOLBAR_HEIGHT/2+1);
+    cell.captionTextView.frame = CGRectMake(0,height-2*TOOLBAR_HEIGHT, width, TOOLBAR_HEIGHT);
+    cell.createdLabel.frame = CGRectMake(0, height-5.0/2.0*TOOLBAR_HEIGHT, width, TOOLBAR_HEIGHT/2+1);
+    
+    //[cell.shareImageView setContentMode:UIViewContentModeScaleToFill];
     cell.shareImageView.translatesAutoresizingMaskIntoConstraints = YES;
     cell.usernameLabel.translatesAutoresizingMaskIntoConstraints = YES;
     cell.createdLabel.translatesAutoresizingMaskIntoConstraints = YES;
@@ -171,6 +318,8 @@
     cell.captionTextView.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.2];
     cell.usernameLabel.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.2];
     cell.shareImageView.contentMode = UIViewContentModeScaleAspectFill;
+    
+    
     //we are in the beginning loading row
     if(indexPath.row < streamShares.count)
     {
@@ -180,6 +329,8 @@
             cell.captionTextView.hidden = NO;
             cell.usernameLabel.hidden = NO;
             cell.createdLabel.hidden = NO;
+            toolBar.hidden = NO;
+            lineView.hidden = NO;
         }
         PFObject* streamShare = streamShares[indexPath.row];
         PFObject* share = [streamShare objectForKey:@"share"];
@@ -235,6 +386,9 @@
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView{
     for (ViewStreamCollectionViewCell *cell in [streamCollectionView visibleCells]) {
         
+        NSIndexPath *indexPath = [streamCollectionView indexPathForCell:cell];
+        _currentRow = indexPath.row;
+        
         //don't do anything here until we initially scroll
         if(!_initialScrollDone)
             return;
@@ -252,12 +406,6 @@
                 //the section into the tableviewarray
                 [self loadSharesRight:_streamObject.stream limitOf:SHARES_PER_PAGE];
             }
-        }
-        else
-        {
-            //see if we have the first share in the array or not
-            NSIndexPath *indexPath = [streamCollectionView indexPathForCell:cell];
-            _currentRow = indexPath.row;
         }
     }
 }
@@ -339,19 +487,88 @@
     }];
 }
 
-/*-(UIImage*)imageWithImage: (UIImage*) sourceImage scaledToWidth: (float) i_width
+//Delegates for helping textview have placeholder text
+- (void)textFieldDidBeginEditing:(UITextField *)textField
 {
-    float oldWidth = sourceImage.size.width;
-    float scaleFactor = i_width / oldWidth;
+    /*if ([textField.text isEqualToString:@""] || [textField.text isEqualToString:@"Write a comment..."])
+    {
+        textField.text = @"";
+    }*/
+    [textField becomeFirstResponder];
+}
+
+//Continuation delegate for placeholder text
+- (void)textFieldDidEndEditing:(UITextField *)textField
+{
+    if ([textField.text isEqualToString:@""] || [textField.text isEqualToString:@"Write a comment..."])
+    {
+        textField.text = @"Write a comment...";
+    }
+    [textField resignFirstResponder];
+    [self dismissComment];
+}
+
+
+//used for updating status
+- (BOOL)textField:(UITextField *)textField
+shouldChangeCharactersInRange:(NSRange)range
+replacementString:(NSString *)text
+{
     
-    float newHeight = sourceImage.size.height * scaleFactor;
-    float newWidth = oldWidth * scaleFactor;
+    //check if they user is trying to enter too many characters
+    if([[textField text] length] - range.length + text.length > MAX_COMMENT_CHARS && ![text isEqualToString:@"\n"])
+    {
+        return NO;
+    }
     
-    UIGraphicsBeginImageContextWithOptions(CGSizeMake(newWidth, newHeight), NO, 0);
-    [sourceImage drawInRect:CGRectMake(0, 0, newWidth, newHeight)];
-    UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
-    UIGraphicsEndImageContext();
-    return newImage;
-}*/
+    if([textField.text isEqualToString:@"Write a comment..."])
+    {
+        textField.text = @"";
+    }
+    
+    //Make return key try to save the new status
+    if([text isEqualToString:@"\n"])
+    {
+        //save the new posting name
+        if(textField.text && !([textField.text isEqualToString:@""] || [textField.text isEqualToString:@"Write a comment..."]))
+        {
+            //save the comment
+            PFObject* comment = [PFObject objectWithClassName:@"Comment"];
+            PFUser* user = [PFUser currentUser];
+            comment[@"user"] = user;
+            NSString* postingName = [user objectForKey:@"posting_name"];
+            if(postingName)
+                comment[@"username"] = postingName;
+            else
+                comment[@"username"] = @"anon";
+            
+            //get the streamshare
+            PFObject* streamShare = [PFObject objectWithoutDataWithClassName:@"StreamShares" objectId: ((PFObject*)streamShares[_currentRow]).objectId];
+            NSLog(@"streamshare id is %@", streamShare.objectId);
+            comment[@"stream_share"] = streamShare;
+            comment[@"text"] = textField.text;
+            //Create the default acl
+            PFACL *defaultACL = [PFACL ACL];
+            [defaultACL setReadAccess:true forUser:user];
+            [defaultACL setWriteAccess:true forUser:user];
+            [defaultACL setPublicReadAccess:false];
+            [defaultACL setPublicWriteAccess:false];
+            [comment setACL:defaultACL];
+            
+            NSLog(@"comment is %@", comment);
+            
+            [comment saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
+                if(error)
+                {
+                    NSLog(@"error is %@", error.localizedDescription);
+                }
+            }];
+        }
+        [textField resignFirstResponder];
+        [self dismissComment];
+    }
+    return YES;
+}
+
 
 @end

@@ -542,6 +542,15 @@
 -(void) timerGPSFired
 {
     NSLog(@"timer gps fired");
+    @synchronized(self){
+        if(!_gettingLocation)
+        {
+            [_timerGPS invalidate];
+            return;
+        }
+        _gettingLocation = NO;
+        [_locationManager stopUpdatingLocation];
+    }
     if(_refreshingStreams)
         [[NSNotificationCenter defaultCenter] postNotificationName:@"updatedLocation" object:self];
     else
@@ -2899,7 +2908,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 
 -(void) publishNew
 {
-    
+    NSLog(@"publish new called");
     //start the timer
     //_timeoutTimer =[NSTimer scheduledTimerWithTimeInterval:TIMEOUT_TIMER_TIME target:self selector:@selector(timeoutTimerFired) userInfo:nil repeats:NO];
     
@@ -3677,36 +3686,50 @@ shouldChangeTextInRange:(NSRange)range
 - (void)locationManager:(CLLocationManager *)manager didFailWithError:(NSError *)error
 {
     NSLog(@"current location is %@ in failed with error", _currentLocation);
-    if(!_gettingLocation)
-        return;
-    [_locationManager stopUpdatingLocation];
-    
+    @synchronized(self){
+        if(!_gettingLocation)
+        {
+            [_timerGPS invalidate];
+            return;
+        }
+        _gettingLocation = NO;
+        [_locationManager stopUpdatingLocation];
+    }
     if(_refreshingStreams)
         [[NSNotificationCenter defaultCenter] postNotificationName:@"updatedLocation" object:self];
     else
         [[NSNotificationCenter defaultCenter] postNotificationName:@"updatedLocationForCreation" object:self];
     _refreshingStreams = NO;
-    _gettingLocation = NO;
+    
     [_timerGPS invalidate];
 }
 
 - (void)locationManager:(CLLocationManager *)manager didUpdateToLocation:(CLLocation *)newLocation fromLocation:(CLLocation *)oldLocation
 {
     NSLog(@"didUpdateToLocation: %@", newLocation);
-    if(!_gettingLocation)
-        return;
+    
     
     _currentLocation = newLocation;
     NSLog(@"current location is %@", _currentLocation);
     if(!_currentLocation)
         return;
-    [_locationManager stopUpdatingLocation];
+    
+    @synchronized(self){
+        if(!_gettingLocation)
+        {
+            [_timerGPS invalidate];
+            return;
+        }
+        _gettingLocation = NO;
+        [_locationManager stopUpdatingLocation];
+    }
+    
     if(_refreshingStreams)
         [[NSNotificationCenter defaultCenter] postNotificationName:@"updatedLocation" object:self];
     else
         [[NSNotificationCenter defaultCenter] postNotificationName:@"updatedLocationForCreation" object:self];
     _refreshingStreams = NO;
-    _gettingLocation = NO;
+    
     [_timerGPS invalidate];
     
 }

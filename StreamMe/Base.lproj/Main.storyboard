@@ -46,7 +46,7 @@
                     </navigationItem>
                     <connections>
                         <outlet property="activityIndicator" destination="6Ap-SQ-ELd" id="8Fc-ox-93u"/>
-                        <segue destination="QkY-hy-LKm" kind="modal" identifier="loggedInSegue" modalPresentationStyle="fullScreen" id="Cj0-gS-Wfy"/>
+                        <segue destination="QkY-hy-LKm" kind="modal" identifier="loggedInSegue" animates="NO" id="Cj0-gS-Wfy"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="x5A-6p-PRh" sceneMemberID="firstResponder"/>
@@ -174,6 +174,7 @@
         <!--Show Comments Table View Controller-->
         <scene sceneID="FcV-On-1G3">
             <objects>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="1M6-Rs-Nxf" userLabel="First Responder" sceneMemberID="firstResponder"/>
                 <tableViewController id="d43-4X-nFS" customClass="ShowCommentsTableViewController" sceneMemberID="viewController">
                     <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="88" sectionHeaderHeight="22" sectionFooterHeight="22" id="HYa-zX-vKE">
                         <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
@@ -218,7 +219,6 @@
                         </connections>
                     </tableView>
                 </tableViewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="1M6-Rs-Nxf" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="2481" y="827"/>
         </scene>
@@ -268,16 +268,9 @@
                             <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="shareCell" id="dKA-bU-FMv" customClass="ViewStreamCollectionViewCell">
                                 <autoresizingMask key="autoresizingMask"/>
                                 <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
-                                    <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                     <subviews>
-                                        <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="2sS-xs-SB1" customClass="PFImageView">
-                                            <rect key="frame" x="-135" y="0.0" width="320" height="427"/>
-                                            <constraints>
-                                                <constraint firstAttribute="width" constant="320" id="5fF-5r-v6T"/>
-                                                <constraint firstAttribute="width" secondItem="2sS-xs-SB1" secondAttribute="height" multiplier="3:4" id="zZl-bI-ReN"/>
-                                            </constraints>
-                                        </imageView>
                                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Username" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Lpa-ba-80M">
                                             <rect key="frame" x="4" y="29" width="42" height="21"/>
                                             <fontDescription key="fontDescription" type="system" pointSize="12"/>
@@ -297,6 +290,13 @@
                                             <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                             <nil key="highlightedColor"/>
                                         </label>
+                                        <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="2sS-xs-SB1" customClass="PFImageView">
+                                            <rect key="frame" x="0.0" y="0.0" width="320" height="427"/>
+                                            <constraints>
+                                                <constraint firstAttribute="width" constant="320" id="5fF-5r-v6T"/>
+                                                <constraint firstAttribute="width" secondItem="2sS-xs-SB1" secondAttribute="height" multiplier="3:4" id="zZl-bI-ReN"/>
+                                            </constraints>
+                                        </imageView>
                                     </subviews>
                                     <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                 </view>
@@ -304,6 +304,7 @@
                                     <constraint firstItem="2sS-xs-SB1" firstAttribute="top" secondItem="dKA-bU-FMv" secondAttribute="topMargin" constant="-8" id="YfK-mI-YCM"/>
                                     <constraint firstAttribute="centerX" secondItem="2sS-xs-SB1" secondAttribute="centerX" id="d89-aO-aHt"/>
                                 </constraints>
+                                <size key="customSize" width="320" height="568"/>
                                 <connections>
                                     <outlet property="captionTextView" destination="bTa-VC-4jX" id="koQ-i9-xWx"/>
                                     <outlet property="createdLabel" destination="2K3-of-rJC" id="LYm-aU-3l6"/>
@@ -603,7 +604,7 @@
         <scene sceneID="CtV-v5-uoh">
             <objects>
                 <navigationController restorationIdentifier="mainNavigationViewController" definesPresentationContext="YES" id="QkY-hy-LKm" customClass="MainNavigationViewController" sceneMemberID="viewController">
-                    <tabBarItem key="tabBarItem" title="In Range" image="AEEA1880-6822-44DC-BDAA-E1DFE8A016AE" id="QWG-JZ-FhN"/>
+                    <tabBarItem key="tabBarItem" title="In Range" image="82E818DB-4EBE-4412-A5E6-7171E0BA435C" id="QWG-JZ-FhN"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="10q-K2-WDE">
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
@@ -636,7 +637,7 @@
         </scene>
     </scenes>
     <resources>
-        <image name="AEEA1880-6822-44DC-BDAA-E1DFE8A016AE" width="16" height="16">
+        <image name="82E818DB-4EBE-4412-A5E6-7171E0BA435C" width="16" height="16">
             <mutableData key="keyedArchiveRepresentation">
 YnBsaXN0MDDUAQIDBAUGOzxYJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK0HCBEW
 GxwgISksLzU4VSRudWxs1AkKCwwNDg8QViRjbGFzc1xOU0ltYWdlRmxhZ3NWTlNSZXBzV05TQ29sb3KA
@@ -681,6 +682,6 @@ BdMF2AAAAAAAAAIBAAAAAAAAAD8AAAAAAAAAAAAAAAAAAAXaA
     <inferredMetricsTieBreakers>
         <segue reference="iUt-EC-Asr"/>
         <segue reference="Nc9-6w-rOu"/>
-        <segue reference="dV1-VP-Mzd"/>
+        <segue reference="l07-7M-4SB"/>
     </inferredMetricsTieBreakers>
 </document>
