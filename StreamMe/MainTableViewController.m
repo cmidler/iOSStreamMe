@@ -1734,7 +1734,7 @@
             cell.activityIndicator.hidden = NO;
             [cell.activityIndicator startAnimating];
             [cell bringSubviewToFront:cell.activityIndicator];
-            cellImageView.image = [UIImage imageNamed:@"pictures-320.png"];
+            //cellImageView.image = [UIImage imageNamed:@"pictures-320.png"];
             cellImageView.file = [share objectForKey:@"file"];
             [cell setUserInteractionEnabled:NO];
             [cell.shareImageView setUserInteractionEnabled:NO];
@@ -1749,7 +1749,6 @@
                 s.thumbnail = cellImageView.image = tmpImage;
                 [cell setUserInteractionEnabled:YES];
                 [cell.shareImageView setUserInteractionEnabled:YES];
-                cellImageView.backgroundColor = [UIColor blackColor];
                 cell.activityIndicator.hidden = YES;
                 [cell.activityIndicator stopAnimating];
             }];

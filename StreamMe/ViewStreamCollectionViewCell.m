@@ -10,6 +10,25 @@
 
 @implementation ViewStreamCollectionViewCell
 
+- (void)awakeFromNib
+{
+    [super awakeFromNib];
+    
+    NSLog(@"awaking from nib");
+    
+    //self.shareImageView.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
+    self.shareImageView.translatesAutoresizingMaskIntoConstraints = YES;
+    
+    //self.usernameLabel.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
+    self.usernameLabel.translatesAutoresizingMaskIntoConstraints = YES;
+    
+    //self.createdLabel.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
+    self.createdLabel.translatesAutoresizingMaskIntoConstraints = YES;
+    
+    //self.captionTextView.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
+    self.captionTextView.translatesAutoresizingMaskIntoConstraints = YES;
+    //self.shareImageView.hidden = YES;
+}
 
 /*- (void) layoutSubviews
 {
@@ -17,10 +36,4 @@
     NSLog(@"frame is %f, %f", self.contentView.frame.size.width, self.contentView.frame.size.height);
     self.frame = self.contentView.frame;
 }*/
-
-- (void)setSelected:(BOOL)selected animated:(BOOL)animated {
-    //[super setSelected:selected animated:animated];
-    //NSLog(@"Set selected in view streams");
-    // Configure the view for the selected state
-}
 @end

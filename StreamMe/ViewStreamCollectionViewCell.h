@@ -15,5 +15,4 @@
 @property (weak, nonatomic) IBOutlet UITextView *captionTextView;
 @property (weak, nonatomic) IBOutlet UILabel *createdLabel;
 
-
 @end

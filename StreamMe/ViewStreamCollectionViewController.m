@@ -13,6 +13,7 @@
 @end
 
 @implementation ViewStreamCollectionViewController
+@synthesize streamShares;
 @synthesize streamCollectionView;
 @synthesize composeComment;
 @synthesize toolBar;
@@ -20,6 +21,7 @@
 @synthesize commentTextField;
 @synthesize commentView;
 @synthesize cancelCommentButton;
+@synthesize showCommentsViewController;
 - (void)viewDidLoad {
     [super viewDidLoad];
     [[NSNotificationCenter defaultCenter] addObserver:self
@@ -34,6 +36,11 @@
                                              selector:@selector(keyboardWillShow:)
                                                  name:UIKeyboardWillChangeFrameNotification
                                                object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(cancelComment:)
+                                                 name:@"dismissComments"
+                                               object:nil];
 }
 
 - (void)keyboardWillShow:(NSNotification *)notification
@@ -44,10 +51,10 @@
     CGRect keyboard = [[[notification userInfo] objectForKey:UIKeyboardFrameBeginUserInfoKey] CGRectValue];
     NSTimeInterval duration = [[[notification userInfo] objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
     UIViewAnimationCurve curve = [[[notification userInfo] objectForKey:UIKeyboardAnimationCurveUserInfoKey] intValue];
-    CGRect screenRect = [[UIScreen mainScreen] bounds];
+    //CGRect screenRect = [[UIScreen mainScreen] bounds];
     
     NSLog(@"keyboard height is %f", keyboard.size.height);
-    
+    NSLog(@"did show keyboard is %d", _didShowKeyboard);
     [UIView animateWithDuration:duration
                      animations:^{
                          [UIView setAnimationCurve:curve];
@@ -55,12 +62,25 @@
                          if(_didShowKeyboard)
                          {
                              if(keyboard.size.height == 224)
-                                 commentView.frame = CGRectMake(0, screenRect.size.height-keyboard.size.height-29-40, screenRect.size.width, 40);
+                             {
+                                 ((ShowCommentsViewController*)showCommentsViewController).keyboardHeight = keyboard.size.height+QUICK_TYPE_OFFSET-TOOLBAR_HEIGHT;
+                                 [((ShowCommentsViewController*)showCommentsViewController) redoHeight];
+                                 //commentView.frame = CGRectMake(0, screenRect.size.height-keyboard.size.height-QUICK_TYPE_OFFSET-40, screenRect.size.width, 40);
+                                 
+                             }
                              else
-                                 commentView.frame = CGRectMake(0, screenRect.size.height-keyboard.size.height+29-40, screenRect.size.width, 40);
+                             {
+                                 ((ShowCommentsViewController*)showCommentsViewController).keyboardHeight = keyboard.size.height-QUICK_TYPE_OFFSET-TOOLBAR_HEIGHT;
+                                 [((ShowCommentsViewController*)showCommentsViewController) redoHeight];
+                                 //commentView.frame = CGRectMake(0, screenRect.size.height-keyboard.size.height+QUICK_TYPE_OFFSET-40, screenRect.size.width, 40);
+                             }
                          }
                          else
-                             commentView.frame = CGRectMake(0, screenRect.size.height-keyboard.size.height-40, screenRect.size.width, 40);
+                         {
+                             ((ShowCommentsViewController*)showCommentsViewController).keyboardHeight = keyboard.size.height-TOOLBAR_HEIGHT;
+                             [((ShowCommentsViewController*)showCommentsViewController) redoHeight];
+                             //commentView.frame = CGRectMake(0, screenRect.size.height-keyboard.size.height-40, screenRect.size.width, 40);
+                         }
                          [self.view layoutIfNeeded];
                      }];
     _didShowKeyboard = YES;
@@ -115,7 +135,7 @@
     toolBar = [[UIToolbar alloc] initWithFrame:CGRectMake(0, screenRect.size.height-TOOLBAR_HEIGHT, screenRect.size.width, TOOLBAR_HEIGHT)];
     lineView = [[UIView alloc] initWithFrame:CGRectMake(0, screenRect.size.height-TOOLBAR_HEIGHT, screenRect.size.width, 1)];
     lineView.backgroundColor = [UIColor whiteColor];
-    composeComment = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"compose.png"] style:UIBarButtonItemStyleDone target:self action:@selector(compose:)];
+    composeComment = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"compose.png"] style:UIBarButtonItemStyleDone target:self action:@selector(showComments:)];
     [composeComment setTintColor:[UIColor whiteColor]];
     
     //add the uibarbuttonitems to the toolbar
@@ -139,45 +159,23 @@
     
 }
 
--(void) compose:(id)sender
+-(void) showComments:(id)sender
 {
-    NSLog(@"current row is %d", (int) _currentRow);
-    CGRect screenRect = [[UIScreen mainScreen] bounds];
-    
-    //create a text box and bring it up as the main view
-    commentTextField = [[UITextField alloc] initWithFrame:CGRectMake(0, 5, screenRect.size.width*3.0/4.0, 30)];
-    commentTextField.textColor = [UIColor whiteColor];
-    commentTextField.font = [UIFont fontWithName:@"Helvetica-Bold" size:14];
-    commentTextField.layer.cornerRadius = 5;
-    commentTextField.clipsToBounds = YES;
-    commentTextField.backgroundColor=[[UIColor grayColor] colorWithAlphaComponent:0.5];
-    commentTextField.text=@"Write a comment...";
-    commentTextField.delegate = self;
-    commentTextField.returnKeyType = UIReturnKeySend;
-    
-    //second one
-    cancelCommentButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    [cancelCommentButton addTarget:self
-                            action:@selector(cancelComment:)
-                  forControlEvents:UIControlEventTouchUpInside];
-    [cancelCommentButton setTitle:@"Cancel" forState:UIControlStateNormal];
-    [cancelCommentButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-    cancelCommentButton.titleLabel.font = [UIFont fontWithName:@"Helvetica-Bold" size:14];
-    cancelCommentButton.backgroundColor = [UIColor clearColor];
-    cancelCommentButton.frame = CGRectMake(screenRect.size.width*3.0/4.0, 5, screenRect.size.width*1.0/4.0, 30.0);
-    cancelCommentButton.titleLabel.textAlignment = NSTextAlignmentRight;
-    commentView = [[UIView alloc] initWithFrame:CGRectMake(0, screenRect.size.height*3.0/4.0, screenRect.size.width, 40)];
-    commentView.backgroundColor = [UIColor blackColor];
-    [commentView addSubview:cancelCommentButton];
-    [commentView addSubview:commentTextField];
-    //[view addSubview:tf1];
-    commentView.hidden = YES;
-    [self.view addSubview:commentView];
+    showCommentsViewController = [self.storyboard instantiateViewControllerWithIdentifier:@"CommentsViewController"];
+    ((ShowCommentsViewController*)showCommentsViewController).keyboardHeight = 0;
+    //showCommentsViewController.streamShare = streamShares[_currentRow];
     _didShowKeyboard = NO;
-    [commentTextField becomeFirstResponder];
+    [self addChildViewController:showCommentsViewController];
+    [self.view addSubview:showCommentsViewController.view];
+    [self.showCommentsViewController didMoveToParentViewController:self];
+    //[self presentViewController:showCommentsViewController animated:YES completion:nil];
+    //showCommentsViewController.preferredContentSize = showCommentsViewController.view.frame.size;
+    [composeComment setTintColor:[UIColor grayColor]];
     
     
 }
+
+
 
 -(void) cancelComment:(id)sender
 {
@@ -186,11 +184,18 @@
 
 -(void) dismissComment
 {
+    [composeComment setTintColor:[UIColor whiteColor]];
     [commentTextField resignFirstResponder];
     commentTextField = nil;
     cancelCommentButton = nil;
     if(commentView && commentView.superview)
        [commentView removeFromSuperview];
+    if(showCommentsViewController)
+    {
+        [showCommentsViewController.view removeFromSuperview];
+        [showCommentsViewController removeFromParentViewController];
+    }
+    showCommentsViewController = nil;
     commentView = nil;
     _didShowKeyboard = NO;
     if(self.view.center.x != _originalCenter.x || self.view.center.y != _originalCenter.y)
@@ -309,16 +314,11 @@
     cell.captionTextView.frame = CGRectMake(0,height-2*TOOLBAR_HEIGHT, width, TOOLBAR_HEIGHT);
     cell.createdLabel.frame = CGRectMake(0, height-5.0/2.0*TOOLBAR_HEIGHT, width, TOOLBAR_HEIGHT/2+1);
     
-    //[cell.shareImageView setContentMode:UIViewContentModeScaleToFill];
-    cell.shareImageView.translatesAutoresizingMaskIntoConstraints = YES;
-    cell.usernameLabel.translatesAutoresizingMaskIntoConstraints = YES;
-    cell.createdLabel.translatesAutoresizingMaskIntoConstraints = YES;
-    cell.captionTextView.translatesAutoresizingMaskIntoConstraints = YES;
     cell.createdLabel.backgroundColor = [UIColor clearColor];
     cell.captionTextView.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.2];
     cell.usernameLabel.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.2];
     cell.shareImageView.contentMode = UIViewContentModeScaleAspectFill;
-    
+    [cell bringSubviewToFront:cell.createdLabel];
     
     //we are in the beginning loading row
     if(indexPath.row < streamShares.count)
@@ -368,6 +368,7 @@
             timeSince = [NSString stringWithFormat:@"%dm ago",(int) ceil(interval)];
         cell.createdLabel.text = timeSince;
         
+        NSLog(@"created label is %@", cell.createdLabel.text);
     }
     else
     {
@@ -407,6 +408,10 @@
                 [self loadSharesRight:_streamObject.stream limitOf:SHARES_PER_PAGE];
             }
         }
+        /*else if(showCommentsViewController)
+        {
+            showCommentsViewController.streamShare = streamShares[_currentRow];
+        }*/
     }
 }
 
@@ -460,11 +465,14 @@
         //change the boolean for downloading after
         _streamObject.isDownloadingAfter = YES;
     }
-    //now get the current streamshare
-    PFObject* streamShare = (PFObject*)[streamShares lastObject];
+    
+    NSMutableArray* streamShareIds = [[NSMutableArray alloc] init];
+    for(PFObject* streamShare in streamShares)
+        [streamShareIds addObject:streamShare.objectId];
+
     
     //load shares with a time greater than current share's
-    [PFCloud callFunctionInBackground:@"getSharesForStream" withParameters:@{@"streamId":stream.objectId, @"lastShareTime":streamShare.createdAt, @"maxShares":[NSNumber numberWithInt:limit], @"direction":@"right"} block:^(id object, NSError *error) {
+    [PFCloud callFunctionInBackground:@"getNewestSharesForStream" withParameters:@{@"streamId":_streamObject.stream.objectId, @"maxShares":[NSNumber numberWithInt:SHARES_PER_PAGE], @"streamShareIds":streamShareIds} block:^(id object, NSError *error) {
         if(error)
         {
             //change the boolean for downloading previous
@@ -498,7 +506,7 @@
 }
 
 //Continuation delegate for placeholder text
-- (void)textFieldDidEndEditing:(UITextField *)textField
+/*- (void)textFieldDidEndEditing:(UITextField *)textField
 {
     if ([textField.text isEqualToString:@""] || [textField.text isEqualToString:@"Write a comment..."])
     {
@@ -568,7 +576,7 @@ replacementString:(NSString *)text
         [self dismissComment];
     }
     return YES;
-}
+}*/
 
 
 @end

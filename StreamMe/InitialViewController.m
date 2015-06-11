@@ -204,6 +204,8 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
 
 -(void) loginUser:(PFUser*) user
 {
+    
+    NSLog(@"logging in user");
     UIAlertController *alertController = [UIAlertController
                                           alertControllerWithTitle:@"Error Logging In"
                                           message:@"An error happened while trying to login.  Check your internet connection and try again."
@@ -375,9 +377,10 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
             NSLog(@"object is %@", object);
             
             //see if there are objects
-            if(object == [NSNull null])
+            if(!object || object == [NSNull null])
             {
                 //register user
+                NSLog(@"object is null so register");
                 [self registerAction:self];
                 return;
             }
@@ -385,7 +388,7 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
             {
                 //we have the installation so it needs to be a login and not a register
                 PFUser* user = [((PFInstallation*)object) objectForKey:@"user"];
-                
+                NSLog(@"user is %@", user.objectId);
                 //if there is no postingname then we need to reset the password to nil on the server
                 NSString* postingName = [user objectForKey:@"posting_name"];
                 if(!postingName)
@@ -404,6 +407,7 @@ NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
                         if([object isEqualToString:@"Register"])
                         {
                             //register user
+                            NSLog(@"need to register user");
                             [self registerAction:self];
                             return;
                         }

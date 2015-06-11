@@ -20,9 +20,15 @@
 
 // called continuously as the rect changes
 - (NSArray *)layoutAttributesForElementsInRect:(CGRect)rect {
-    NSArray *attribs = [super layoutAttributesForElementsInRect:rect];
-    
-    return attribs;
+    NSArray *attributes = [super layoutAttributesForElementsInRect:rect];
+    NSMutableArray *newAttributes = [NSMutableArray arrayWithCapacity:attributes.count];
+    for (UICollectionViewLayoutAttributes *attribute in attributes) {
+        if ((attribute.frame.origin.x + attribute.frame.size.width <= self.collectionViewContentSize.width) &&
+            (attribute.frame.origin.y + attribute.frame.size.height <= self.collectionViewContentSize.height)) {
+            [newAttributes addObject:attribute];
+        }
+    }
+    return newAttributes;
 }
 
 // indicate that we want to redraw as we scroll
