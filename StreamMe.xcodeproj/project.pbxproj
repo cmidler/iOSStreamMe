@@ -78,6 +78,10 @@
 		DEA8CCD61B26517C00143766 /* compose@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = DEA8CCD41B26517C00143766 /* compose@2x.png */; };
 		DEA8CCD71B26517C00143766 /* compose@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = DEA8CCD51B26517C00143766 /* compose@3x.png */; };
 		DEA8CCDD1B27B15100143766 /* ShowCommentsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = DEA8CCDC1B27B15100143766 /* ShowCommentsViewController.m */; };
+		DEA8CCE31B29DAC000143766 /* comment@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = DEA8CCE11B29DAC000143766 /* comment@2x.png */; };
+		DEA8CCE41B29DAC000143766 /* comment@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = DEA8CCE21B29DAC000143766 /* comment@3x.png */; };
+		DEA8CCE71B29F6BA00143766 /* StreamShare.m in Sources */ = {isa = PBXBuildFile; fileRef = DEA8CCE61B29F6BA00143766 /* StreamShare.m */; };
+		DEA8CCEA1B29F7A400143766 /* Comment.m in Sources */ = {isa = PBXBuildFile; fileRef = DEA8CCE91B29F7A400143766 /* Comment.m */; };
 		DEAD081D1B237006002AE7F1 /* gallery@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = DEAD081B1B237006002AE7F1 /* gallery@2x.png */; };
 		DEAD081E1B237006002AE7F1 /* gallery@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = DEAD081C1B237006002AE7F1 /* gallery@3x.png */; };
 		DEAD08211B237C3E002AE7F1 /* PopToRootFadeSegue.m in Sources */ = {isa = PBXBuildFile; fileRef = DEAD08201B237C3E002AE7F1 /* PopToRootFadeSegue.m */; };
@@ -285,6 +289,12 @@
 		DEA8CCD51B26517C00143766 /* compose@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "compose@3x.png"; sourceTree = "<group>"; };
 		DEA8CCDB1B27B15100143766 /* ShowCommentsViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ShowCommentsViewController.h; sourceTree = "<group>"; };
 		DEA8CCDC1B27B15100143766 /* ShowCommentsViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ShowCommentsViewController.m; sourceTree = "<group>"; };
+		DEA8CCE11B29DAC000143766 /* comment@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "comment@2x.png"; sourceTree = "<group>"; };
+		DEA8CCE21B29DAC000143766 /* comment@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "comment@3x.png"; sourceTree = "<group>"; };
+		DEA8CCE51B29F6BA00143766 /* StreamShare.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StreamShare.h; sourceTree = "<group>"; };
+		DEA8CCE61B29F6BA00143766 /* StreamShare.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StreamShare.m; sourceTree = "<group>"; };
+		DEA8CCE81B29F7A400143766 /* Comment.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Comment.h; sourceTree = "<group>"; };
+		DEA8CCE91B29F7A400143766 /* Comment.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Comment.m; sourceTree = "<group>"; };
 		DEAD081B1B237006002AE7F1 /* gallery@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "gallery@2x.png"; sourceTree = "<group>"; };
 		DEAD081C1B237006002AE7F1 /* gallery@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "gallery@3x.png"; sourceTree = "<group>"; };
 		DEAD081F1B237C3E002AE7F1 /* PopToRootFadeSegue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PopToRootFadeSegue.h; sourceTree = "<group>"; };
@@ -470,6 +480,8 @@
 		DE0051C419B7C1770053D2EB /* Images */ = {
 			isa = PBXGroup;
 			children = (
+				DEA8CCE11B29DAC000143766 /* comment@2x.png */,
+				DEA8CCE21B29DAC000143766 /* comment@3x.png */,
 				DEA8CCD41B26517C00143766 /* compose@2x.png */,
 				DEA8CCD51B26517C00143766 /* compose@3x.png */,
 				DEA8CCCA1B26262B00143766 /* shuffle@2x.png */,
@@ -574,6 +586,8 @@
 		DE0051DA19B8CB010053D2EB /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				DEA8CCE81B29F7A400143766 /* Comment.h */,
+				DEA8CCE91B29F7A400143766 /* Comment.m */,
 				DEC0A55B1A59EA9200D17D8A /* CopyableLabel.h */,
 				DEC0A55C1A59EA9200D17D8A /* CopyableLabel.m */,
 				DEC0A5581A59E9C500D17D8A /* CopyableTextField.h */,
@@ -600,6 +614,8 @@
 				DEB874611AC49C47003B5996 /* RightToLeftSegue.m */,
 				DE502AB31ACCC32700410FE7 /* Stream.h */,
 				DE502AB41ACCC32700410FE7 /* Stream.m */,
+				DEA8CCE51B29F6BA00143766 /* StreamShare.h */,
+				DEA8CCE61B29F6BA00143766 /* StreamShare.m */,
 				DEB874691AC4BA5D003B5996 /* TopToBottomSegue.h */,
 				DEB8746A1AC4BA5D003B5996 /* TopToBottomSegue.m */,
 			);
@@ -862,10 +878,12 @@
 				DEA8CCCD1B26262B00143766 /* shuffle@3x.png in Resources */,
 				DEB8747A1AC4E10A003B5996 /* cameraFlip@3x.png in Resources */,
 				DEB8749F1AC9E1E0003B5996 /* add-pictures@2x.png in Resources */,
+				DEA8CCE31B29DAC000143766 /* comment@2x.png in Resources */,
 				DE6DBB511B0D0148009921B9 /* thick_plus_circle.png in Resources */,
 				DE29AB951A88FFC5000B010B /* whoYuBanner.WhiteLettering.png in Resources */,
 				DEB8749A1AC72C89003B5996 /* pictures-512.png in Resources */,
 				DE502AA71ACC588D00410FE7 /* add-pictures-white@2x.png in Resources */,
+				DEA8CCE41B29DAC000143766 /* comment@3x.png in Resources */,
 				DEB874831AC4E5EC003B5996 /* flash@2x.png in Resources */,
 				DED226C81AC0744400FFE6AD /* whoYuBannerWhiteLettering320x88@2x.png in Resources */,
 				DEC67BB11AA8C47C004991C2 /* people@2x.png in Resources */,
@@ -1002,6 +1020,7 @@
 				DE8E51981AFAD8FE0079B1F7 /* PassthroughView.m in Sources */,
 				DEA8CCDD1B27B15100143766 /* ShowCommentsViewController.m in Sources */,
 				DEEB451E1ACAE71B0032F212 /* PopRevealSegue.m in Sources */,
+				DEA8CCEA1B29F7A400143766 /* Comment.m in Sources */,
 				DEA6944B1A11B51100E4D11F /* MainNavigationViewController.m in Sources */,
 				DEC0A55D1A59EA9200D17D8A /* CopyableLabel.m in Sources */,
 				DE502AB51ACCC32700410FE7 /* Stream.m in Sources */,
@@ -1016,6 +1035,7 @@
 				DEB874AE1ACA105F003B5996 /* ViewStreamCollectionViewController.m in Sources */,
 				DEB8746B1AC4BA5D003B5996 /* TopToBottomSegue.m in Sources */,
 				DEEB451B1ACAE6F20032F212 /* PushFadeSegue.m in Sources */,
+				DEA8CCE71B29F6BA00143766 /* StreamShare.m in Sources */,
 				DE0051EA19B8FE560053D2EB /* CBCentralInterface.m in Sources */,
 				DEB874B11ACA1086003B5996 /* ViewStreamCollectionViewCell.m in Sources */,
 				DEB874651AC4AAF0003B5996 /* MeTableViewCell.m in Sources */,

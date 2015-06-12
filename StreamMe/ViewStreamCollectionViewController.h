@@ -14,10 +14,11 @@
 #import "ShowCommentsViewController.h"
 
 #define END_LOADING_SHARE_TAG 1111
+#define COLLECTION_VIEW_TAG 1024
 #define QUICK_TYPE_OFFSET 29
 //#define SHARES_PER_PAGE 25
 
-@interface ViewStreamCollectionViewController : UICollectionViewController<UITextFieldDelegate>
+@interface ViewStreamCollectionViewController : UICollectionViewController
 
 
     
@@ -33,9 +34,6 @@
 @property (strong, nonatomic) UIToolbar* toolBar;
 @property (strong, nonatomic) UIView* lineView;
 @property (strong, nonatomic) UIBarButtonItem *composeComment;
-@property (strong, nonatomic) UIView* commentView;
-@property (strong, nonatomic) UITextField* commentTextField;
-@property (strong, nonatomic) UIButton* cancelCommentButton;
 @property (nonatomic, readwrite) CGPoint originalCenter;
 @property (nonatomic, readwrite) bool didShowKeyboard;
 

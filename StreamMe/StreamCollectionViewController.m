@@ -95,10 +95,10 @@
     
     if(!_sortBy)
     {
-        _streamObject.streamShares = streamShares = [[NSMutableArray alloc] initWithArray: [streamShares sortedArrayUsingComparator: ^(PFObject* obj1, PFObject* obj2) {
+        _streamObject.streamShares = streamShares = [[NSMutableArray alloc] initWithArray: [streamShares sortedArrayUsingComparator: ^(StreamShare* obj1, StreamShare* obj2) {
             
             //compare on created at
-            return [obj1.createdAt compare:obj2.createdAt];
+            return [obj1.streamShare.createdAt compare:obj2.streamShare.createdAt];
         }]];
     }
     
@@ -116,8 +116,8 @@
 {
     //get an array of the streamshare ids
     NSMutableArray* streamShareIds = [[NSMutableArray alloc] init];
-    for(PFObject* streamShare in streamShares)
-        [streamShareIds addObject:streamShare.objectId];
+    for(StreamShare* streamShare in streamShares)
+        [streamShareIds addObject:streamShare.streamShare.objectId];
     
     if(!_sortBy)
         [self getNewestShares:streamShareIds];
@@ -140,19 +140,53 @@
     [PFCloud callFunctionInBackground:@"getNewestSharesForStream" withParameters:@{@"streamId":_streamObject.stream.objectId, @"maxShares":[NSNumber numberWithInt:SHARES_PER_PAGE], @"streamShareIds":streamShareIds} block:^(id object, NSError *error) {
         if(error)
         {
+            NSLog(@"error getting shares for stream");
             //change the boolean for downloading previous
             _streamObject.isDownloadingAfter = NO;
             return;
         }
         
+        //NSLog(@"object is %@", object);
+        NSLog(@"got newest streams!");
         //object returns an array of PFObjects
         NSArray* streamShareObjects = object;
-        for(PFObject* streamShare in streamShareObjects)
+        for(NSDictionary* dict in streamShareObjects)
         {
-            //NSLog(@"streamshare right is %@", streamShare.objectId);
-            if(![streamShares containsObject:streamShare])
-                [streamShares addObject:streamShare];
+            PFObject* newStreamShare = dict[@"stream_share"];
+            NSLog(@"new streamshare is %@", newStreamShare);
+            int i = 0;
+            //make sure we don't already have the stream share
+            for(StreamShare* streamShare in streamShares)
+            {
+                //NSLog(@"streamshare right is %@", streamShare.objectId);
+                PFObject* ssObject = streamShare.streamShare;
+                if([newStreamShare.objectId isEqualToString:ssObject.objectId])
+                {
+                    NSLog(@"breaking!");
+                    break;
+                }
+                i++;
+            }
+            
+            if(i!= streamShares.count)
+                continue;
+            
+            NSArray* comments = dict[@"comments"];
+            StreamShare* ss = [[StreamShare alloc] init];
+            ss.streamShare = newStreamShare;
+            for(NSDictionary* commentDict in comments)
+            {
+                Comment* comment = [[Comment alloc] init];
+                comment.text = commentDict[@"text"];
+                comment.postingName = commentDict[@"username"];
+                comment.createdAt = commentDict[@"createdAt"];
+                [ss.comments addObject:comment];
+            }
+            NSLog(@"adding new stream share to stream shares");
+            [streamShares addObject:ss];
+            
         }
+
         //change the boolean for downloading previous
         _streamObject.isDownloadingAfter = NO;
         //reload section
@@ -172,7 +206,7 @@
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
     //see if we have the share with the most recent time
-    PFObject* lastShare = [streamShares lastObject];
+    PFObject* lastShare = ((StreamShare*)[streamShares lastObject]).streamShare;
     NSDate* newestShareTime = _streamObject.newestShareCreationTime;
     bool hasNewestShare = NO;
     NSComparisonResult comp = [newestShareTime compare:lastShare.createdAt];
@@ -200,7 +234,7 @@
     if(indexPath.row < streamShares.count)
     {
         cell.tag = 0;
-        PFObject* streamShare = streamShares[indexPath.row];
+        PFObject* streamShare = ((StreamShare*)streamShares[indexPath.row]).streamShare;
         PFObject* share = [streamShare objectForKey:@"share"];
         cell.shareImageView.image = [UIImage imageNamed:@"pictures-320.png"];
         cell.shareImageView.file = [share objectForKey:@"file"];

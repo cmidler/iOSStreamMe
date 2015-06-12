@@ -10,13 +10,13 @@
 #import <Parse/Parse.h>
 #import "ShowCommentsTableViewCell.h"
 #import "ViewStreamCollectionViewController.h"
-
+#import "Stream.h"
 #define MAX_COMMENT_CHARS 140
 #define TOOLBAR_HEIGHT 44
 @interface ShowCommentsViewController : UIViewController
 
 -(void) redoHeight;
-
+@property (strong, nonatomic) NSMutableArray* comments;
 @property (weak, nonatomic) IBOutlet UIView *commentView;
 @property (weak, nonatomic) IBOutlet UITextField *commentTextField;
 @property (weak, nonatomic) IBOutlet UIButton *cancelCommentButton;

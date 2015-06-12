@@ -185,6 +185,13 @@
                                              selector:@selector(mainNotification:)
                                                  name:@"updatedLocationForCreation"
                                                object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(mainNotification:)
+                                                 name:@"popoverDismissed"
+                                               object:nil];
+    
+    
+    
     //authorization check
     if([CLLocationManager authorizationStatus] == kCLAuthorizationStatusNotDetermined)
     {
@@ -559,32 +566,6 @@
     [_timerGPS invalidate];
 }
 
-/*-(void) timeoutTimerFired
-{
-    NSLog(@"timer publish fired");
-    [_timeoutTimer invalidate];
-    NSLog(@"error saving share");
-    UIAlertController *alertController = [UIAlertController
-                                          alertControllerWithTitle:@"Timeout Occurred"
-                                          message:@"Your connection timed out.  Check your internet connection and try again."
-                                          preferredStyle:UIAlertControllerStyleAlert];
-    UIAlertAction *okAction = [UIAlertAction
-                               actionWithTitle:NSLocalizedString(@"Ok", @"Ok action")
-                               style:UIAlertActionStyleDefault
-                               handler:^(UIAlertAction *action)
-                               {
-                                   [activityView setHidden:YES];
-                                   [activityIndicator setHidden:YES];
-                                   [toolBar setHidden:NO];
-                                   [caption setHidden:NO];
-                                   return;
-                               }];
-    
-    [alertController addAction:okAction];
-    [customPicker presentViewController:alertController animated:YES completion:nil];
-    return;
-    
-}*/
 
 -(void) presentNoCameraAlert
 {
@@ -630,8 +611,8 @@
     if ([[notification name] isEqualToString:@"dismissPickerEvent"])
     {
         //fire this only if we are creating a stream
-        if(_creatingStream)
-            [self dismissPicker:self ];
+        //if(_creatingStream)
+        [self dismissPicker:self ];
     }
     else if ([[notification name] isEqualToString:@"dismissCameraEvent"])
     {
@@ -715,6 +696,19 @@
     else if ([[notification name] isEqualToString:@"updatedLocationForCreation"])
     {
         [self publishNew];
+    }
+    else if([[notification name] isEqualToString:@"popoverDismissed"])
+    {
+        //camera is open
+        if(_imagePickerOpen)
+        {
+            [[NSNotificationCenter defaultCenter] postNotificationName:@"dismissCameraPopover" object:self userInfo:nil];
+        }
+        else
+        {
+            _popoverOpen = NO;
+            [self mainTutorial];
+        }
     }
 }
 
@@ -804,7 +798,7 @@
             NSLog(@"error for find streams by gps is %@", error);
         }
     
-        [PFCloud callFunctionInBackground:@"getStreamsForUser" withParameters:parameters block:^(id object, NSError *error) {
+        [PFCloud callFunctionInBackground:@"getStreamsForUserWithLocation" withParameters:parameters block:^(id object, NSError *error) {
             if(error)
             {
                 _tableFirstLoad = NO;
@@ -830,10 +824,13 @@
                 PFObject* stream = [dict objectForKey:@"stream"];
                 PFObject* share = [dict objectForKey:@"share"];
                 PFObject* streamShare = [dict objectForKey:@"stream_share"];
+                NSArray* comments = [dict objectForKey:@"comments"];
                 streamShare[@"share"] = share;
+                NSLog(@"share id is %@", share.objectId);
                 NSString* username = [dict objectForKey:@"username"];
                 bool gotByBluetooth = ((NSNumber*)[dict objectForKey:@"gotByBluetooth"]).boolValue;
 
+                NSLog(@"Streamshare id is %@", streamShare.objectId);
                 //add id to the streamids array
                 [streamIds addObject:stream.objectId];
                 
@@ -846,11 +843,22 @@
                     newStream.stream = stream;
                     
                     //want to create an array of shares so we can lazy load the next ones
-                    [newStream.streamShares addObject:streamShare];
+                    StreamShare* ss = [[StreamShare alloc] init];
+                    ss.streamShare = streamShare;
+                    for(NSDictionary* commentDict in comments)
+                    {
+                        Comment* comment = [[Comment alloc] init];
+                        comment.text = commentDict[@"text"];
+                        comment.postingName = commentDict[@"username"];
+                        comment.createdAt = commentDict[@"createdAt"];
+                        [ss.comments addObject:comment];
+                    }
+                    [newStream.streamShares addObject:ss];
                     //add the username
                     newStream.username = username;
                     //newest time of streamShare
                     newStream.newestShareCreationTime = streamShare.createdAt;
+                    NSLog(@"stream share creation time is %@", streamShare.createdAt);
                     newStream.gotByBluetooth = gotByBluetooth;
                     
                     NSLog(@"got by bluetooth is %d", newStream.gotByBluetooth);
@@ -1231,6 +1239,7 @@
 //helper function to update the count of shares in the background for the list of provided stream ids
 -(void) countStreamShares:(NSArray*)streamIds
 {
+    NSLog(@"count stream shares called");
     //if no stream ids then return
     if(!streamIds.count)
     {
@@ -1248,6 +1257,7 @@
     //do background queries to update the amount of shares
     for(NSString* streamId in streamIds)
     {
+        NSLog(@"streamId is %@", streamId);
         [PFCloud callFunctionInBackground:@"countSharesForStreams" withParameters:@{@"streamId":streamId} block:^(id object, NSError *error) {
             //just return if an error
             if(error)
@@ -1730,20 +1740,25 @@
         }
         else
         {
-            PFObject* share = [s.streamShares[0] objectForKey:@"share"];
+            PFObject* share = [((StreamShare*)s.streamShares[0]).streamShare objectForKey:@"share"];
+            NSLog(@"share id before getting file %@", share.objectId);
             cell.activityIndicator.hidden = NO;
             [cell.activityIndicator startAnimating];
             [cell bringSubviewToFront:cell.activityIndicator];
-            //cellImageView.image = [UIImage imageNamed:@"pictures-320.png"];
+            cellImageView.file = nil;
+            cellImageView.image = [UIImage new];
+            NSLog(@"data is available for stream %@ %d",[s.stream objectForKey:@"name"],cellImageView.file.isDataAvailable );
+            
             cellImageView.file = [share objectForKey:@"file"];
+            //NSLog(@"file for stream %@ is %@", [s.stream objectForKey:@"name"], cellImageView.file);
             [cell setUserInteractionEnabled:NO];
-            [cell.shareImageView setUserInteractionEnabled:NO];
+            //[cell.shareImageView setUserInteractionEnabled:NO];
             NSLog(@"before loading image %@", [s.stream objectForKey:@"name"]);
             [cellImageView loadInBackground:^(UIImage *image, NSError *error) {
+                NSLog(@"loading stream %@", [s.stream objectForKey:@"name"]);
                 if(error)
                     NSLog(@"error loading pffile");
-                else
-                    NSLog(@"loading stream %@", [s.stream objectForKey:@"name"]);
+                
                 image = [self imageWithImage:image scaledToFillSize:cell.frame.size];
                 UIImage* tmpImage = [self fixOrientation:image withOrientation:image.imageOrientation];
                 s.thumbnail = cellImageView.image = tmpImage;
@@ -1751,6 +1766,7 @@
                 [cell.shareImageView setUserInteractionEnabled:YES];
                 cell.activityIndicator.hidden = YES;
                 [cell.activityIndicator stopAnimating];
+                cell.tag = STREAM_CELL_TAG;
             }];
         }
         if(isnan(interval) || interval<=0)
@@ -1779,13 +1795,16 @@
                     [view removeFromSuperview];
                 }
             }
-            UITapGestureRecognizer *pictureImageTap =  [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(singlePictureTapDetected:)];
-            pictureImageTap.numberOfTapsRequired = 1;
-            [cell setUserInteractionEnabled:YES];
-            [cell.shareImageView setUserInteractionEnabled:YES];
-            cellImageView.tag = indexPath.section;
-            [cellImageView addGestureRecognizer:pictureImageTap];
-            [cell setUserInteractionEnabled:YES];
+            if(cellImageView.image)
+            {
+                UITapGestureRecognizer *pictureImageTap =  [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(singlePictureTapDetected:)];
+                pictureImageTap.numberOfTapsRequired = 1;
+                [cell setUserInteractionEnabled:YES];
+                [cell.shareImageView setUserInteractionEnabled:YES];
+                cellImageView.tag = indexPath.section;
+                [cellImageView addGestureRecognizer:pictureImageTap];
+                [cell setUserInteractionEnabled:YES];
+            }
         }
         
             
@@ -2101,7 +2120,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
             //go through the cached stream and release the streamshares
             if(_cachedStream.streamShares && _cachedStream.streamShares.count)
             {
-                PFObject* streamShare = [_cachedStream.streamShares firstObject];
+                StreamShare* streamShare = [_cachedStream.streamShares firstObject];
                 NSMutableArray* streamShares = [[NSMutableArray alloc] initWithObjects:streamShare, nil];
                 _cachedStream.streamShares = streamShares;
             }
@@ -2272,12 +2291,12 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     caption.delegate = self;
     caption.text = @"Enter Caption:";
     caption.textColor = [UIColor whiteColor];
-    [caption.layer setBorderColor:[[[UIColor grayColor] colorWithAlphaComponent:0.5] CGColor]];
+    [caption.layer setBorderColor:[[UIColor whiteColor] CGColor]];
     [caption.layer setBorderWidth:2.0];
     //The rounded corner part, where you specify your view's corner radius:
-    caption.layer.cornerRadius = 10;
+    //caption.layer.cornerRadius = 10;
     caption.returnKeyType = UIReturnKeyDone;
-    [caption setBackgroundColor:[[UIColor blackColor] colorWithAlphaComponent:0.2]];
+    [caption setBackgroundColor:[UIColor blackColor]];
     
     //setup the toolbar
     toolBar = [[UIToolbar alloc] initWithFrame:CGRectMake(0, pickerHeight-TOOLBAR_HEIGHT, screenWidth, TOOLBAR_HEIGHT)];
@@ -2504,7 +2523,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         //also setup the pickerview
         [self setupPicker];
     }
-    
+    [toolBar setBackgroundColor:[UIColor blackColor]];
     
     [self popoverDismissed];
     
@@ -3015,7 +3034,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         [toolBar setItems:[NSArray arrayWithObjects:cancelButton,[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil], flashButton, [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil], flipButton, nil]];
         [flipButton setTintColor:[UIColor whiteColor]];
         [cancelButton setTintColor:[UIColor whiteColor]];
-        
+        [toolBar setBackgroundColor:[[UIColor blackColor] colorWithAlphaComponent:0.2]];
         
         //return to taking picture
         _isTakingPicture = YES;
@@ -3066,6 +3085,20 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                          pickerView.center = CGPointMake(self.view.center.x,screenRect.size.height+pickerView.frame.size.height);
                          [self.view layoutIfNeeded];
                      }];
+    
+    if(!_pickerShown)
+    {
+        if(caption.isHidden && toolBar.isHidden)
+        {
+            caption.hidden = NO;
+            toolBar.hidden = NO;
+        }
+        else if (!caption.isHidden && !toolBar.isHidden)
+        {
+            caption.hidden = YES;
+            toolBar.hidden = YES;
+        }
+    }
     _pickerShown = NO;
     
     //also need to now see if the time changed so get the expiration time in hours
@@ -3104,7 +3137,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     NSDate* endDate = [NSDate dateWithTimeIntervalSince1970:endTime];
     if(!caption.text.length || [caption.text isEqualToString:@"Enter Caption:"])
         caption.text = @"No caption.";
-    [caption setBackgroundColor: [[UIColor blackColor] colorWithAlphaComponent:0.2]];
+    [caption setBackgroundColor: [UIColor blackColor]];
     NSLog(@"before user");
     PFUser* user = [[PFUser alloc] init];
     user.objectId = [NSString stringWithString:[PFUser currentUser].objectId];
@@ -3305,7 +3338,9 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                     Stream* newStream = [[Stream alloc] init];
                     newStream.stream = stream;
                     //want to create an array of shares so we can lazy load the next ones
-                    [newStream.streamShares addObject:streamShare];
+                    StreamShare* ss = [[StreamShare alloc] init];
+                    ss.streamShare = streamShare;
+                    [newStream.streamShares addObject:ss];
                     newStream.username = [user objectForKey:@"posting_name"];
                     //newest time of streamshare
                     newStream.newestShareCreationTime = streamShare.createdAt;
@@ -3440,7 +3475,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
 {
     if(!captionText.length || [captionText isEqualToString:@"Enter Caption:"])
         captionText = @"No caption.";
-    [caption setBackgroundColor:[[UIColor blackColor] colorWithAlphaComponent:0.2]];
+    [caption setBackgroundColor:[UIColor blackColor]];
     
     NSString* cap = [[NSString alloc] initWithString:captionText];
     PFUser* user = [[PFUser alloc] init];
@@ -3765,6 +3800,7 @@ didChangeAuthorizationStatus:(CLAuthorizationStatus)status
 
 - (void)popoverPresentationControllerDidDismissPopover:(UIPopoverPresentationController *)popoverPresentationController
 {
+    NSLog(@"popover did dismiss");
     _popoverOpen = NO;
     [self mainTutorial];
     

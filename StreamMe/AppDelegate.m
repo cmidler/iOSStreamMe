@@ -13,10 +13,12 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+    
     [Parse setApplicationId:@"kS3R0NQNdM1tIUJvRJjuIROjKnqWCEHG6qNPo1R7"
                   clientKey:@"opUN4DvIo77ZD5TdDHyr78h2HhhMJFmrBkbws6Ww"];
     [PFUser enableRevocableSessionInBackground];
     [PFAnalytics trackAppOpenedWithLaunchOptions:launchOptions];
+    [PFImageView class];
     [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleLightContent];
     
     //setting up page controls

@@ -18,6 +18,8 @@
 @synthesize commentTextField;
 @synthesize commentView;
 @synthesize cancelCommentButton;
+@synthesize comments;
+
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
@@ -25,12 +27,29 @@
     if ([self respondsToSelector:@selector(edgesForExtendedLayout)])
         self.edgesForExtendedLayout = UIRectEdgeNone;
     
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(reloadComments:)
+                                                 name:@"changeComments"
+                                               object:nil];
     
     [self setupTextFieldView];
-    
+    if(!comments || !comments.count)
+        [self getComments];
     
     NSLog(@"show comments loaded");
 }
+
+-(void) getComments
+{
+    NSLog(@"get comments");
+}
+
+- (void) reloadComments:(NSNotification *) notification
+{
+    NSLog(@"comments are %@", comments);
+    [commentsTableView reloadData];
+}
+
 
 -(void) setupTextFieldView
 {
@@ -97,16 +116,50 @@
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
 
     // Return the number of rows in the section.
-    return 1;
+    commentsTableView.backgroundColor = [UIColor blackColor];
+    if(comments.count)
+    {
+        commentsTableView.backgroundView = nil;
+        return comments.count;
+    }
+    CGRect screenRect = [[UIScreen mainScreen] bounds];
+    commentsTableView.backgroundView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, screenRect.size.width, 100)];
+    UILabel *messageLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 25, screenRect.size.width, 50)];
+    messageLabel.text = @"No Comments...";
+    
+    /*else
+     messageLabel.text = @"You are currently undiscoverable and cannot see other profiles.  Toggle discoverable in settings to see other people!";*/
+    messageLabel.textColor = [UIColor whiteColor];
+    messageLabel.numberOfLines = 1;
+    messageLabel.textAlignment = NSTextAlignmentCenter;
+    messageLabel.font = [UIFont fontWithName:@"HelveticaNeue-Italic" size:24];
+    [messageLabel sizeToFit];
+
+    [commentsTableView.backgroundView addSubview: messageLabel];
+    
+    return 0;
 }
 
 
- - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
- UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"commentCell" forIndexPath:indexPath];
+ - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+     ShowCommentsTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"commentCell" forIndexPath:indexPath];
+    Comment* comment = comments[indexPath.row];
+    cell.usernameLabel.text = [NSString stringWithFormat:@"From: %@",comment.postingName ];
+    cell.commentLabel.text = comment.text;
+    NSTimeInterval interval = [[NSDate date] timeIntervalSinceDate:comment.createdAt];
+    NSLog(@"created at is %@", comment.createdAt);
+    interval = interval/60;//let's get minutes accuracy
+    //if more 30 minutes left then say less than the rounded up hour
+    if(interval > 1440)
+        cell.timeLabel.text = [NSString stringWithFormat:@"%dd ago",(int) floor(interval/1440)];
+    else if(interval>60)
+        cell.timeLabel.text = [NSString stringWithFormat:@"%dh ago",(int) floor(interval/60)];
+    else
+        cell.timeLabel.text = [NSString stringWithFormat:@"%dm ago",(int) ceil(interval)];
+    
  
- // Configure the cell...
- 
- return cell;
+    return cell;
  }
 
 
@@ -233,7 +286,7 @@ replacementString:(NSString *)text
             ViewStreamCollectionViewController* pvc = (ViewStreamCollectionViewController*)[self parentViewController];
             
             
-            streamShare = [PFObject objectWithoutDataWithClassName:@"StreamShares" objectId: ((PFObject*)pvc.streamShares[pvc.currentRow]).objectId];
+            streamShare = [PFObject objectWithoutDataWithClassName:@"StreamShares" objectId: ((StreamShare*)pvc.streamShares[pvc.currentRow]).streamShare.objectId];
             NSLog(@"streamshare id is %@", streamShare.objectId);
             comment[@"stream_share"] = streamShare;
             comment[@"text"] = textField.text;
@@ -267,6 +320,8 @@ replacementString:(NSString *)text
     [self redoHeight];
 }
 
+
+
 -(void) redoHeight
 {
     //NSLog(@"key path is %@", keyPath);
@@ -276,12 +331,19 @@ replacementString:(NSString *)text
     frame.size = self.commentsTableView.contentSize;
     CGRect screenRect = [[UIScreen mainScreen] bounds];
     CGFloat screenHeight = screenRect.size.height;
-    CGFloat MAX_HEIGHT = screenHeight-TOOLBAR_HEIGHT-40-_keyboardHeight;
+    ViewStreamCollectionViewController* pvc = (ViewStreamCollectionViewController*)[self parentViewController];
+    CGFloat MAX_HEIGHT = screenHeight-TOOLBAR_HEIGHT-40-_keyboardHeight-pvc.navigationController.navigationBar.frame.size.height;
+    CGFloat MIN_HEIGHT = 100;
     
     if(MAX_HEIGHT < frame.size.height)
     {
         [_tableViewHeightConstraint setConstant:MAX_HEIGHT];
         frame.size.height = MAX_HEIGHT;
+    }
+    else if(MIN_HEIGHT> frame.size.height)
+    {
+        [_tableViewHeightConstraint setConstant:MIN_HEIGHT];
+        frame.size.height = MIN_HEIGHT;
     }
     else
         [_tableViewHeightConstraint setConstant:frame.size.height];

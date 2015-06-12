@@ -18,9 +18,6 @@
 @synthesize composeComment;
 @synthesize toolBar;
 @synthesize lineView;
-@synthesize commentTextField;
-@synthesize commentView;
-@synthesize cancelCommentButton;
 @synthesize showCommentsViewController;
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -45,7 +42,6 @@
 
 - (void)keyboardWillShow:(NSNotification *)notification
 {
-    commentView.hidden = NO;
     [self.view layoutIfNeeded];
     // Get the size of the keyboard.
     CGRect keyboard = [[[notification userInfo] objectForKey:UIKeyboardFrameBeginUserInfoKey] CGRectValue];
@@ -116,10 +112,10 @@
     [self.navigationController.navigationBar setBackgroundImage:[UIImage new] forBarPosition:UIBarPositionAny barMetrics:UIBarMetricsDefault];
     [self.navigationController.navigationBar setShadowImage:[UIImage new]];
     //[self.navigationController.navigationBar setBarStyle:UIBarStyleBlack];
-    [self.navigationController.navigationBar setBackgroundColor:[[UIColor blackColor] colorWithAlphaComponent:0.2]];
+    [self.navigationController.navigationBar setBackgroundColor:[UIColor blackColor]];
     [self.navigationController.navigationBar setTranslucent:YES];
 
-    [self.navigationController.navigationBar setBarTintColor:[[UIColor blackColor] colorWithAlphaComponent:0.2]];
+    [self.navigationController.navigationBar setBarTintColor:[UIColor blackColor]];
     UIBarButtonItem *buttonRight = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"gallery.png"] style:UIBarButtonItemStyleDone target:self action:@selector(galleryButton:)];
     self.navigationItem.rightBarButtonItem = buttonRight;
     UIBarButtonItem *buttonLeft = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"back_arrow"] style:UIBarButtonItemStyleDone target:self action:@selector(backButton:)];
@@ -135,7 +131,7 @@
     toolBar = [[UIToolbar alloc] initWithFrame:CGRectMake(0, screenRect.size.height-TOOLBAR_HEIGHT, screenRect.size.width, TOOLBAR_HEIGHT)];
     lineView = [[UIView alloc] initWithFrame:CGRectMake(0, screenRect.size.height-TOOLBAR_HEIGHT, screenRect.size.width, 1)];
     lineView.backgroundColor = [UIColor whiteColor];
-    composeComment = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"compose.png"] style:UIBarButtonItemStyleDone target:self action:@selector(showComments:)];
+    composeComment = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"comment.png"] style:UIBarButtonItemStyleDone target:self action:@selector(showComments:)];
     [composeComment setTintColor:[UIColor whiteColor]];
     
     //add the uibarbuttonitems to the toolbar
@@ -148,7 +144,7 @@
     [toolBar setShadowImage:[UIImage new]
               forToolbarPosition:UIToolbarPositionAny];
     [toolBar setBarStyle:UIBarStyleBlack];
-    [toolBar setBackgroundColor:[[UIColor blackColor] colorWithAlphaComponent:0.2]];
+    [toolBar setBackgroundColor:[UIColor blackColor]];
     [toolBar setTranslucent:YES];
     
     
@@ -161,7 +157,14 @@
 
 -(void) showComments:(id)sender
 {
+    if(showCommentsViewController)
+    {
+        [self dismissComment];
+        return;
+    }
+    
     showCommentsViewController = [self.storyboard instantiateViewControllerWithIdentifier:@"CommentsViewController"];
+    ((ShowCommentsViewController*)showCommentsViewController).comments = ((StreamShare*)streamShares[_currentRow]).comments;
     ((ShowCommentsViewController*)showCommentsViewController).keyboardHeight = 0;
     //showCommentsViewController.streamShare = streamShares[_currentRow];
     _didShowKeyboard = NO;
@@ -170,7 +173,7 @@
     [self.showCommentsViewController didMoveToParentViewController:self];
     //[self presentViewController:showCommentsViewController animated:YES completion:nil];
     //showCommentsViewController.preferredContentSize = showCommentsViewController.view.frame.size;
-    [composeComment setTintColor:[UIColor grayColor]];
+    [composeComment setTintColor:[UIColor colorWithRed:0.0 green:122.0/255.0 blue:1.0 alpha:1.0]];
     
     
 }
@@ -185,18 +188,14 @@
 -(void) dismissComment
 {
     [composeComment setTintColor:[UIColor whiteColor]];
-    [commentTextField resignFirstResponder];
-    commentTextField = nil;
-    cancelCommentButton = nil;
-    if(commentView && commentView.superview)
-       [commentView removeFromSuperview];
+    NSLog(@"show comments view controller is %@", showCommentsViewController);
     if(showCommentsViewController)
     {
         [showCommentsViewController.view removeFromSuperview];
         [showCommentsViewController removeFromParentViewController];
+        showCommentsViewController = nil;
     }
-    showCommentsViewController = nil;
-    commentView = nil;
+    
     _didShowKeyboard = NO;
     if(self.view.center.x != _originalCenter.x || self.view.center.y != _originalCenter.y)
         self.view.center = _originalCenter;
@@ -237,11 +236,13 @@
 
 -(void) backButton:(id) sender
 {
+    [self dismissComment];
     [self performSegueWithIdentifier:@"popSegue" sender:self];
 }
 
 -(void) galleryButton:(id) sender
 {
+    [self dismissComment];
     UITapGestureRecognizer *gesture = (UITapGestureRecognizer *) sender;
     _currentRow = (int)gesture.view.tag;
     
@@ -251,12 +252,21 @@
 -(void) pictureTapped:(id) sender
 {
     NSLog(@"picture is tapped");
+    
+    if(showCommentsViewController)
+    {
+        [((ShowCommentsViewController*)showCommentsViewController) cancelComment:self];
+        return;
+    }
+    
     //[self toggleHideNavigation];
     UITapGestureRecognizer *gesture = (UITapGestureRecognizer *) sender;
     _currentRow = (int)gesture.view.tag;
 
     _navigationHidden = !_navigationHidden;
     [self.navigationController.navigationBar setHidden:_navigationHidden];
+    
+    
     [streamCollectionView reloadData];
     
     //[self performSegueWithIdentifier:@"popSegue" sender:self];
@@ -287,7 +297,7 @@
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
     //see if we have the share with the most recent time
-    PFObject* lastShare = [streamShares lastObject];
+    PFObject* lastShare = ((StreamShare*)[streamShares lastObject]).streamShare;
     NSDate* newestShareTime = _streamObject.newestShareCreationTime;
     bool hasNewestShare = NO;
     if(NSOrderedSame == ([newestShareTime compare:lastShare.createdAt]))
@@ -315,8 +325,8 @@
     cell.createdLabel.frame = CGRectMake(0, height-5.0/2.0*TOOLBAR_HEIGHT, width, TOOLBAR_HEIGHT/2+1);
     
     cell.createdLabel.backgroundColor = [UIColor clearColor];
-    cell.captionTextView.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.2];
-    cell.usernameLabel.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.2];
+    cell.captionTextView.backgroundColor = [UIColor blackColor];
+    cell.usernameLabel.backgroundColor = [UIColor blackColor];
     cell.shareImageView.contentMode = UIViewContentModeScaleAspectFill;
     [cell bringSubviewToFront:cell.createdLabel];
     
@@ -332,7 +342,7 @@
             toolBar.hidden = NO;
             lineView.hidden = NO;
         }
-        PFObject* streamShare = streamShares[indexPath.row];
+        PFObject* streamShare = ((StreamShare*)streamShares[indexPath.row]).streamShare;
         PFObject* share = [streamShare objectForKey:@"share"];
         NSLog(@"caption is %@", [share objectForKey:@"caption"]);
             cell.shareImageView.image = [UIImage imageNamed:@"pictures-512.png"];
@@ -347,6 +357,13 @@
                 for(UIView* view in [cell.shareImageView subviews])
                     if([view isKindOfClass:[UIActivityIndicatorView class]])
                         [view removeFromSuperview];
+                if(cell.tag == END_LOADING_SHARE_TAG && showCommentsViewController)
+                {
+                    NSLog(@"showing comments fired");
+                    ((ShowCommentsViewController*)showCommentsViewController).comments = ((StreamShare*)streamShares[_currentRow]).comments;
+                    [[NSNotificationCenter defaultCenter] postNotificationName:@"changeComments" object:self];
+                }
+                cell.tag = COLLECTION_VIEW_TAG;
                 //CGRect screenRect = [[UIScreen mainScreen] bounds];
                 //cell.shareImageView.image = [self imageWithImage:image scaledToWidth:screenRect.size.width];
                 
@@ -385,14 +402,11 @@
 }
 
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView{
+    
+    NSLog(@"visible cell count is %d", (int) [streamCollectionView visibleCells].count);
     for (ViewStreamCollectionViewCell *cell in [streamCollectionView visibleCells]) {
         
-        NSIndexPath *indexPath = [streamCollectionView indexPathForCell:cell];
-        _currentRow = indexPath.row;
-        
-        //don't do anything here until we initially scroll
-        if(!_initialScrollDone)
-            return;
+        //NSLog(@"current row RIGHT NOW IS %d", (int) _currentRow);
         
         
         //checking if we hit a loading row.  If so, we want to increment the current page, and get the new users
@@ -408,12 +422,51 @@
                 [self loadSharesRight:_streamObject.stream limitOf:SHARES_PER_PAGE];
             }
         }
-        /*else if(showCommentsViewController)
+    }
+    
+    double delayInSeconds = 0.3;
+    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, delayInSeconds * NSEC_PER_SEC);
+    dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
+        //code to be executed on the main queue after delay
+        [self getCurrentRow];
+    });
+}
+
+-(void) getCurrentRow
+{
+    NSInteger originalRow = _currentRow;
+    NSLog(@"visible cell count is %d", (int) [streamCollectionView visibleCells].count);
+    for (ViewStreamCollectionViewCell *cell in [streamCollectionView visibleCells]) {
+        
+        NSIndexPath *indexPath = [streamCollectionView indexPathForCell:cell];
+        NSLog(@"cell index is %d",(int) indexPath.row);
+        if([streamCollectionView visibleCells].count>1)
         {
-            showCommentsViewController.streamShare = streamShares[_currentRow];
-        }*/
+            if(indexPath.row != originalRow)
+            {
+                _currentRow = indexPath.row;
+                if(cell.tag != END_LOADING_SHARE_TAG)
+                {
+                    NSLog(@"showing comments fired");
+                    ((ShowCommentsViewController*)showCommentsViewController).comments = ((StreamShare*)streamShares[_currentRow]).comments;
+                    [[NSNotificationCenter defaultCenter] postNotificationName:@"changeComments" object:self];
+                }
+            }
+        }
+        else
+        {
+            _currentRow = indexPath.row;
+            if(cell.tag != END_LOADING_SHARE_TAG)
+            {
+                NSLog(@"showing comments fired");
+                ((ShowCommentsViewController*)showCommentsViewController).comments = ((StreamShare*)streamShares[_currentRow]).comments;
+                [[NSNotificationCenter defaultCenter] postNotificationName:@"changeComments" object:self];
+            }
+            
+        }
     }
 }
+
 
 -(void) reloadDataFunction:(int)rows
 {
@@ -467,116 +520,69 @@
     }
     
     NSMutableArray* streamShareIds = [[NSMutableArray alloc] init];
-    for(PFObject* streamShare in streamShares)
-        [streamShareIds addObject:streamShare.objectId];
+    for(StreamShare* streamShare in streamShares)
+        [streamShareIds addObject:streamShare.streamShare.objectId];
 
-    
+    NSLog(@"about to get newest shares for stream");
     //load shares with a time greater than current share's
     [PFCloud callFunctionInBackground:@"getNewestSharesForStream" withParameters:@{@"streamId":_streamObject.stream.objectId, @"maxShares":[NSNumber numberWithInt:SHARES_PER_PAGE], @"streamShareIds":streamShareIds} block:^(id object, NSError *error) {
         if(error)
         {
+            NSLog(@"error getting shares for stream");
             //change the boolean for downloading previous
             _streamObject.isDownloadingAfter = NO;
             return;
         }
         
+        NSInteger originalCount = streamShares.count;
+        
+        //NSLog(@"object is %@", object);
+        NSLog(@"got newest streams!");
         //object returns an array of PFObjects
         NSArray* streamShareObjects = object;
-        for(PFObject* streamShare in streamShareObjects)
+        for(NSDictionary* dict in streamShareObjects)
         {
-            NSLog(@"streamshare right is %@", streamShare.objectId);
-            if(![streamShares containsObject:streamShare])
-                [streamShares addObject:streamShare];
+            PFObject* newStreamShare = dict[@"stream_share"];
+            NSLog(@"new streamshare is %@", newStreamShare);
+            int i = 0;
+            //make sure we don't already have the stream share
+            for(StreamShare* streamShare in streamShares)
+            {
+                //NSLog(@"streamshare right is %@", streamShare.objectId);
+                PFObject* ssObject = streamShare.streamShare;
+                if([newStreamShare.objectId isEqualToString:ssObject.objectId])
+                {
+                    NSLog(@"breaking!");
+                    break;
+                }
+                i++;
+            }
+            
+            if(i!= streamShares.count)
+                continue;
+            
+            NSArray* comments = dict[@"comments"];
+            StreamShare* ss = [[StreamShare alloc] init];
+            ss.streamShare = newStreamShare;
+            for(NSDictionary* commentDict in comments)
+            {
+                Comment* comment = [[Comment alloc] init];
+                comment.text = commentDict[@"text"];
+                comment.postingName = commentDict[@"username"];
+                comment.createdAt = commentDict[@"createdAt"];
+                [ss.comments addObject:comment];
+            }
+            NSLog(@"adding new stream share to stream shares");
+            [streamShares addObject:ss];
+        
         }
         //change the boolean for downloading previous
         _streamObject.isDownloadingAfter = NO;
         //reload section
-        [self reloadDataFunction:0];
+        if(originalCount < streamShares.count)
+            [self reloadDataFunction:0];
     }];
 }
-
-//Delegates for helping textview have placeholder text
-- (void)textFieldDidBeginEditing:(UITextField *)textField
-{
-    /*if ([textField.text isEqualToString:@""] || [textField.text isEqualToString:@"Write a comment..."])
-    {
-        textField.text = @"";
-    }*/
-    [textField becomeFirstResponder];
-}
-
-//Continuation delegate for placeholder text
-/*- (void)textFieldDidEndEditing:(UITextField *)textField
-{
-    if ([textField.text isEqualToString:@""] || [textField.text isEqualToString:@"Write a comment..."])
-    {
-        textField.text = @"Write a comment...";
-    }
-    [textField resignFirstResponder];
-    [self dismissComment];
-}
-
-
-//used for updating status
-- (BOOL)textField:(UITextField *)textField
-shouldChangeCharactersInRange:(NSRange)range
-replacementString:(NSString *)text
-{
-    
-    //check if they user is trying to enter too many characters
-    if([[textField text] length] - range.length + text.length > MAX_COMMENT_CHARS && ![text isEqualToString:@"\n"])
-    {
-        return NO;
-    }
-    
-    if([textField.text isEqualToString:@"Write a comment..."])
-    {
-        textField.text = @"";
-    }
-    
-    //Make return key try to save the new status
-    if([text isEqualToString:@"\n"])
-    {
-        //save the new posting name
-        if(textField.text && !([textField.text isEqualToString:@""] || [textField.text isEqualToString:@"Write a comment..."]))
-        {
-            //save the comment
-            PFObject* comment = [PFObject objectWithClassName:@"Comment"];
-            PFUser* user = [PFUser currentUser];
-            comment[@"user"] = user;
-            NSString* postingName = [user objectForKey:@"posting_name"];
-            if(postingName)
-                comment[@"username"] = postingName;
-            else
-                comment[@"username"] = @"anon";
-            
-            //get the streamshare
-            PFObject* streamShare = [PFObject objectWithoutDataWithClassName:@"StreamShares" objectId: ((PFObject*)streamShares[_currentRow]).objectId];
-            NSLog(@"streamshare id is %@", streamShare.objectId);
-            comment[@"stream_share"] = streamShare;
-            comment[@"text"] = textField.text;
-            //Create the default acl
-            PFACL *defaultACL = [PFACL ACL];
-            [defaultACL setReadAccess:true forUser:user];
-            [defaultACL setWriteAccess:true forUser:user];
-            [defaultACL setPublicReadAccess:false];
-            [defaultACL setPublicWriteAccess:false];
-            [comment setACL:defaultACL];
-            
-            NSLog(@"comment is %@", comment);
-            
-            [comment saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
-                if(error)
-                {
-                    NSLog(@"error is %@", error.localizedDescription);
-                }
-            }];
-        }
-        [textField resignFirstResponder];
-        [self dismissComment];
-    }
-    return YES;
-}*/
 
 
 @end
