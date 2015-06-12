@@ -16,6 +16,7 @@
 @synthesize streamShares;
 @synthesize streamCollectionView;
 @synthesize composeComment;
+@synthesize commentCount;
 @synthesize toolBar;
 @synthesize lineView;
 @synthesize showCommentsViewController;
@@ -37,6 +38,10 @@
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(cancelComment:)
                                                  name:@"dismissComments"
+                                               object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(setCommentCountTotal:)
+                                                 name:@"addedComment"
                                                object:nil];
 }
 
@@ -71,16 +76,27 @@
                                  //commentView.frame = CGRectMake(0, screenRect.size.height-keyboard.size.height+QUICK_TYPE_OFFSET-40, screenRect.size.width, 40);
                              }
                          }
+                         //means we are dismissing keyboard
+                         else if(((ShowCommentsViewController*)showCommentsViewController).keyboardHeight)
+                         {
+                             ((ShowCommentsViewController*)showCommentsViewController).keyboardHeight = 0;
+                             [((ShowCommentsViewController*)showCommentsViewController) redoHeight];
+                             [self.view layoutIfNeeded];
+                             return;
+                         }
                          else
                          {
                              ((ShowCommentsViewController*)showCommentsViewController).keyboardHeight = keyboard.size.height-TOOLBAR_HEIGHT;
                              [((ShowCommentsViewController*)showCommentsViewController) redoHeight];
                              //commentView.frame = CGRectMake(0, screenRect.size.height-keyboard.size.height-40, screenRect.size.width, 40);
                          }
+                         _didShowKeyboard = YES;
                          [self.view layoutIfNeeded];
                      }];
-    _didShowKeyboard = YES;
+    
 }
+
+
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
@@ -134,8 +150,21 @@
     composeComment = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"comment.png"] style:UIBarButtonItemStyleDone target:self action:@selector(showComments:)];
     [composeComment setTintColor:[UIColor whiteColor]];
     
+    
+    int countComment = ((NSNumber*)[((StreamShare*)streamShares[_currentRow]).streamShare objectForKey:@"commentTotal"]).intValue;
+    NSString* comment = [NSString stringWithFormat:@"%d Comments", countComment ];
+    if(countComment == 1)
+        comment = @"1 Comment";
+    else if (!countComment)
+        comment = @"No Comments";
+    
+    commentCount = [[UIBarButtonItem alloc] initWithTitle:comment style:UIBarButtonItemStyleDone target:self action:@selector(showComments:)];
+    UIFont * font = [UIFont boldSystemFontOfSize:12];
+    NSDictionary * attributes = @{NSFontAttributeName: font};
+    [commentCount setTitleTextAttributes:attributes forState:UIControlStateNormal];
+    [commentCount setTintColor:[UIColor whiteColor]];
     //add the uibarbuttonitems to the toolbar
-    [toolBar setItems:[NSArray arrayWithObjects:composeComment,[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil], nil]];
+    [toolBar setItems:[NSArray arrayWithObjects:composeComment,[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil], commentCount, nil]];
     
     //setup the toolbar
     [toolBar setBackgroundImage:[UIImage new]
@@ -150,8 +179,51 @@
     
     [self.view addSubview:lineView];
     [self.view addSubview:toolBar];
-    [self.view bringSubviewToFront:lineView];
     [self.view bringSubviewToFront:toolBar];
+    [self.view bringSubviewToFront:lineView];
+    
+}
+
+//set the comment for the current row
+-(void) setCommentCountTotal:(NSNotification *) notification
+{
+    PFObject* streamShare = ((StreamShare*)streamShares[_currentRow]).streamShare;
+    int countComment = ((NSNumber*)[streamShare objectForKey:@"commentTotal"]).intValue;
+    
+    NSLog(@"setting comment count is %d", countComment);
+    
+    NSString* comment = [NSString stringWithFormat:@"%d Comments", countComment ];
+    if(countComment == 1)
+        comment = @"1 Comment";
+    else if (!countComment)
+        comment = @"No Comments";
+    
+    [commentCount setTitle:comment];
+    
+    //Now in background get the current comment count
+    [PFCloud callFunctionInBackground:@"countCommentsForStreamShare" withParameters:@{@"streamShareId":streamShare.objectId} block:^(id object, NSError *error) {
+        if(error)
+        {
+            return;
+        }
+        [streamShare setObject:object forKey:@"commentTotal"];
+        
+        
+        PFObject* streamShare = ((StreamShare*)streamShares[_currentRow]).streamShare;
+        int countComment = ((NSNumber*)[streamShare objectForKey:@"commentTotal"]).intValue;
+        
+        NSLog(@"setting comment count is %d", countComment);
+        
+        NSString* comment = [NSString stringWithFormat:@"%d Comments", countComment ];
+        if(countComment == 1)
+            comment = @"1 Comment";
+        else if (!countComment)
+            comment = @"No Comments";
+        
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"changeComments" object:self];
+        
+        
+    }];
     
 }
 
@@ -174,7 +246,7 @@
     //[self presentViewController:showCommentsViewController animated:YES completion:nil];
     //showCommentsViewController.preferredContentSize = showCommentsViewController.view.frame.size;
     [composeComment setTintColor:[UIColor colorWithRed:0.0 green:122.0/255.0 blue:1.0 alpha:1.0]];
-    
+    [commentCount setTintColor:[UIColor colorWithRed:0.0 green:122.0/255.0 blue:1.0 alpha:1.0]];
     
 }
 
@@ -188,6 +260,7 @@
 -(void) dismissComment
 {
     [composeComment setTintColor:[UIColor whiteColor]];
+    [commentCount setTintColor:[UIColor whiteColor]];
     NSLog(@"show comments view controller is %@", showCommentsViewController);
     if(showCommentsViewController)
     {
@@ -357,18 +430,23 @@
                 for(UIView* view in [cell.shareImageView subviews])
                     if([view isKindOfClass:[UIActivityIndicatorView class]])
                         [view removeFromSuperview];
-                if(cell.tag == END_LOADING_SHARE_TAG && showCommentsViewController)
+                if(cell.tag == END_LOADING_SHARE_TAG)
                 {
-                    NSLog(@"showing comments fired");
-                    ((ShowCommentsViewController*)showCommentsViewController).comments = ((StreamShare*)streamShares[_currentRow]).comments;
-                    [[NSNotificationCenter defaultCenter] postNotificationName:@"changeComments" object:self];
+                    //reset comment count
+                    [self setCommentCountTotal:nil];
+                    if(showCommentsViewController)
+                    {
+                        NSLog(@"showing comments fired");
+                        ((ShowCommentsViewController*)showCommentsViewController).comments = ((StreamShare*)streamShares[_currentRow]).comments;
+                        [[NSNotificationCenter defaultCenter] postNotificationName:@"changeComments" object:self];
+                    }
                 }
                 cell.tag = COLLECTION_VIEW_TAG;
                 //CGRect screenRect = [[UIScreen mainScreen] bounds];
                 //cell.shareImageView.image = [self imageWithImage:image scaledToWidth:screenRect.size.width];
                 
         }];
-        cell.usernameLabel.text = [NSString stringWithFormat:@"From: %@",[share objectForKey:@"username"] ];
+        cell.usernameLabel.text = [NSString stringWithFormat:@"  From: %@",[share objectForKey:@"username"] ];
         cell.captionTextView.text = [share objectForKey:@"caption"];
         cell.captionTextView.textAlignment = NSTextAlignmentCenter;
         NSString* timeSince;
@@ -389,6 +467,11 @@
     }
     else
     {
+        if(!_navigationHidden)
+        {
+            toolBar.hidden = NO;
+            lineView.hidden = NO;
+        }
         cell.tag = END_LOADING_SHARE_TAG;
         cell.shareImageView.image = [UIImage imageNamed:@"pictures-512.png"];
         UIActivityIndicatorView* collectionActivityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
@@ -447,6 +530,8 @@
                 _currentRow = indexPath.row;
                 if(cell.tag != END_LOADING_SHARE_TAG)
                 {
+                    //reset comment count
+                    [self setCommentCountTotal:nil];
                     NSLog(@"showing comments fired");
                     ((ShowCommentsViewController*)showCommentsViewController).comments = ((StreamShare*)streamShares[_currentRow]).comments;
                     [[NSNotificationCenter defaultCenter] postNotificationName:@"changeComments" object:self];
@@ -458,6 +543,8 @@
             _currentRow = indexPath.row;
             if(cell.tag != END_LOADING_SHARE_TAG)
             {
+                //reset comment count
+                [self setCommentCountTotal:nil];
                 NSLog(@"showing comments fired");
                 ((ShowCommentsViewController*)showCommentsViewController).comments = ((StreamShare*)streamShares[_currentRow]).comments;
                 [[NSNotificationCenter defaultCenter] postNotificationName:@"changeComments" object:self];
@@ -465,6 +552,9 @@
             
         }
     }
+    
+    
+    
 }
 
 
@@ -570,6 +660,7 @@
                 comment.text = commentDict[@"text"];
                 comment.postingName = commentDict[@"username"];
                 comment.createdAt = commentDict[@"createdAt"];
+                comment.commentId = commentDict[@"commentId"];
                 [ss.comments addObject:comment];
             }
             NSLog(@"adding new stream share to stream shares");

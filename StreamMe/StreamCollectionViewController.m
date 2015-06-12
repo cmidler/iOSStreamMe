@@ -180,6 +180,7 @@
                 comment.text = commentDict[@"text"];
                 comment.postingName = commentDict[@"username"];
                 comment.createdAt = commentDict[@"createdAt"];
+                comment.commentId = commentDict[@"commentId"];
                 [ss.comments addObject:comment];
             }
             NSLog(@"adding new stream share to stream shares");

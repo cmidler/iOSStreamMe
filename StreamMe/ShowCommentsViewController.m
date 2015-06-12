@@ -39,14 +39,59 @@
     NSLog(@"show comments loaded");
 }
 
+-(void) getMoreComments:(id) sender
+{
+    [self getComments];
+}
+
 -(void) getComments
 {
     NSLog(@"get comments");
+    
+    NSMutableArray* commentIds = [[NSMutableArray alloc] init];
+    //get array of commentIds
+    for(Comment* comment in comments)
+        [commentIds addObject:comment.commentId];
+    ViewStreamCollectionViewController* pvc = (ViewStreamCollectionViewController*)[self parentViewController];
+    
+    
+    PFObject* streamShareObj = [PFObject objectWithoutDataWithClassName:@"StreamShares" objectId: ((StreamShare*)pvc.streamShares[pvc.currentRow]).streamShare.objectId];
+    [PFCloud callFunctionInBackground:@"getNewestCommentsForStreamShare" withParameters:@{@"streamShareId":streamShareObj.objectId, @"commentIds":commentIds} block:^(id object, NSError *error) {
+        if(error)
+        {
+            NSLog(@"error getting streamshares");
+            return;
+        }
+        
+        NSArray* newComments = object;
+        PFObject* newStreamShare = [PFObject objectWithoutDataWithClassName:@"StreamShares" objectId: ((StreamShare*)pvc.streamShares[pvc.currentRow]).streamShare.objectId];
+        if([newStreamShare.objectId isEqualToString:streamShareObj.objectId])
+        {
+            for(NSDictionary* commentDict in newComments)
+            {
+                Comment* comment = [[Comment alloc] init];
+                comment.text = commentDict[@"text"];
+                comment.postingName = commentDict[@"username"];
+                comment.createdAt = commentDict[@"createdAt"];
+                comment.commentId = commentDict[@"commentId"];
+                [comments addObject:comment];
+            }
+            [self reloadComments:nil];
+        }
+        
+    }];
 }
 
 - (void) reloadComments:(NSNotification *) notification
 {
     NSLog(@"comments are %@", comments);
+    
+    comments = [NSMutableArray arrayWithArray:[comments sortedArrayUsingComparator: ^(Comment* obj1, Comment* obj2) {
+        
+        //compare on created at
+        return [obj1.createdAt compare:obj2.createdAt];
+    }]];
+    
     [commentsTableView reloadData];
 }
 
@@ -69,7 +114,7 @@
     //second one
     cancelCommentButton.titleLabel.font = [UIFont fontWithName:@"Helvetica-Bold" size:14];
     cancelCommentButton.backgroundColor = [UIColor clearColor];
-    cancelCommentButton.frame = CGRectMake(screenRect.size.width*3.0/4.0, 5, screenRect.size.width*1.0/4.0, 30.0);
+    cancelCommentButton.frame = CGRectMake(screenRect.size.width*3.0/4.0, 5, screenRect.size.width*1.0/4.0-5, 30.0);
     cancelCommentButton.titleLabel.textAlignment = NSTextAlignmentRight;
     commentView.backgroundColor = [UIColor blackColor];
     
@@ -119,8 +164,13 @@
     commentsTableView.backgroundColor = [UIColor blackColor];
     if(comments.count)
     {
+        
         commentsTableView.backgroundView = nil;
-        return comments.count;
+        ViewStreamCollectionViewController* pvc = (ViewStreamCollectionViewController*)[self parentViewController];
+        PFObject* streamShareObj = ((StreamShare*)pvc.streamShares[pvc.currentRow]).streamShare;
+        if(((NSNumber*)[streamShareObj objectForKey:@"commentTotal"]).intValue > comments.count)
+            return comments.count + 1;
+        else return comments.count;
     }
     CGRect screenRect = [[UIScreen mainScreen] bounds];
     commentsTableView.backgroundView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, screenRect.size.width, 100)];
@@ -144,21 +194,38 @@
  - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
      ShowCommentsTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"commentCell" forIndexPath:indexPath];
-    Comment* comment = comments[indexPath.row];
-    cell.usernameLabel.text = [NSString stringWithFormat:@"From: %@",comment.postingName ];
-    cell.commentLabel.text = comment.text;
-    NSTimeInterval interval = [[NSDate date] timeIntervalSinceDate:comment.createdAt];
-    NSLog(@"created at is %@", comment.createdAt);
-    interval = interval/60;//let's get minutes accuracy
-    //if more 30 minutes left then say less than the rounded up hour
-    if(interval > 1440)
-        cell.timeLabel.text = [NSString stringWithFormat:@"%dd ago",(int) floor(interval/1440)];
-    else if(interval>60)
-        cell.timeLabel.text = [NSString stringWithFormat:@"%dh ago",(int) floor(interval/60)];
+    cell.moreButton.hidden = YES;
+    cell.commentLabel.hidden = YES;
+    cell.usernameLabel.hidden = YES;
+    cell.timeLabel.hidden = YES;
+    [cell setUserInteractionEnabled:NO];
+    if(indexPath.row < comments.count)
+    {
+        cell.commentLabel.hidden = NO;
+        cell.usernameLabel.hidden = NO;
+        cell.timeLabel.hidden = NO;
+        Comment* comment = comments[indexPath.row];
+        cell.usernameLabel.text = [NSString stringWithFormat:@"From: %@",comment.postingName ];
+        cell.commentLabel.text = comment.text;
+        NSTimeInterval interval = [[NSDate date] timeIntervalSinceDate:comment.createdAt];
+        NSLog(@"created at is %@", comment.createdAt);
+        interval = interval/60;//let's get minutes accuracy
+        //if more 30 minutes left then say less than the rounded up hour
+        if(interval > 1440)
+            cell.timeLabel.text = [NSString stringWithFormat:@"%dd ago",(int) floor(interval/1440)];
+        else if(interval>60)
+            cell.timeLabel.text = [NSString stringWithFormat:@"%dh ago",(int) floor(interval/60)];
+        else
+            cell.timeLabel.text = [NSString stringWithFormat:@"%dm ago",(int) ceil(interval)];
+    }
     else
-        cell.timeLabel.text = [NSString stringWithFormat:@"%dm ago",(int) ceil(interval)];
-    
- 
+    {
+        cell.moreButton.hidden = NO;
+        [cell setUserInteractionEnabled:YES];
+        [cell.moreButton addTarget:self
+                            action:@selector(getMoreComments:)
+                    forControlEvents:UIControlEventTouchUpInside];
+    }
     return cell;
  }
 
@@ -182,49 +249,25 @@
     }
     
 }
-/*
- // Override to support conditional editing of the table view.
- - (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
- // Return NO if you do not want the specified item to be editable.
- return YES;
- }
- */
 
-/*
- // Override to support editing the table view.
- - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
- if (editingStyle == UITableViewCellEditingStyleDelete) {
- // Delete the row from the data source
- [tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
- } else if (editingStyle == UITableViewCellEditingStyleInsert) {
- // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
- }
- }
- */
+-(UIView*)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
+{
+    if(!comments.count)
+        return nil;
+    UILabel *label = [[UILabel alloc] init];
+    label.text=@"Comments";
+    label.textColor = [UIColor whiteColor];
+    label.font = [UIFont boldSystemFontOfSize:20.0];
+    label.backgroundColor=[UIColor clearColor];
+    label.textAlignment=NSTextAlignmentCenter;
+    return label;
+}
 
-/*
- // Override to support rearranging the table view.
- - (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath {
- }
- */
+-(CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+    return TABLE_VIEW_BAR_HEIGHT;
+}
 
-/*
- // Override to support conditional rearranging of the table view.
- - (BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath {
- // Return NO if you do not want the item to be re-orderable.
- return YES;
- }
- */
-
-/*
- #pragma mark - Navigation
- 
- // In a storyboard-based application, you will often want to do a little preparation before navigation
- - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
- // Get the new view controller using [segue destinationViewController].
- // Pass the selected object to the new view controller.
- }
- */
 
 //Delegates for helping textview have placeholder text
 - (void)textFieldDidBeginEditing:(UITextField *)textField
@@ -245,7 +288,7 @@
         textField.text = @"Write a comment...";
     }
     //[textField resignFirstResponder];
-    [self cancelComment:self];
+    //[self cancelComment:self];
 }
 
 
@@ -277,10 +320,10 @@ replacementString:(NSString *)text
             PFUser* user = [PFUser currentUser];
             comment[@"user"] = user;
             NSString* postingName = [user objectForKey:@"posting_name"];
-            if(postingName)
-                comment[@"username"] = postingName;
-            else
-                comment[@"username"] = @"anon";
+            if(!postingName)
+                postingName = @"anon";
+            comment[@"username"] = postingName;
+            
             
             //get the streamshare
             ViewStreamCollectionViewController* pvc = (ViewStreamCollectionViewController*)[self parentViewController];
@@ -299,16 +342,44 @@ replacementString:(NSString *)text
             [comment setACL:defaultACL];
             
             NSLog(@"comment is %@", comment);
+            //creating comment object to add to comments
+            Comment* commentObj = [[Comment alloc] init];
+            commentObj.text = textField.text;
+            commentObj.postingName = postingName;
+            if(comment.createdAt)
+                commentObj.createdAt = comment.createdAt;
+            else
+                commentObj.createdAt = [NSDate date];
+            if(comment.objectId)
+                commentObj.commentId = comment.objectId;
             
             [comment saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
                 if(error)
                 {
                     NSLog(@"error is %@", error.localizedDescription);
+                    return;
                 }
+                
+                //refresh to get the object id and created at properly
+                [comment fetchIfNeededInBackgroundWithBlock:^(PFObject *object, NSError *error)
+                 {
+                     commentObj.createdAt = object.createdAt;
+                     commentObj.commentId = object.objectId;
+                 }];
             }];
+            
+            [comments addObject:commentObj];
+            [self reloadComments:nil];
+            pvc.didShowKeyboard = NO;
+            int countComment = ((NSNumber*)[((StreamShare*)pvc.streamShares[pvc.currentRow]).streamShare objectForKey:@"commentTotal"]).intValue +1;
+            NSLog(@"count comment is %d", countComment);
+            [((StreamShare*)pvc.streamShares[pvc.currentRow]).streamShare setObject:[NSNumber numberWithInt:countComment ] forKey:@"commentTotal"];
+            textField.text = @"Write a comment...";
+            [textField resignFirstResponder];
+            [[NSNotificationCenter defaultCenter] postNotificationName:@"addedComment" object:self];
+            
         }
-        //[textField resignFirstResponder];
-        [self cancelComment:self];
+        //[self cancelComment:self];
         //[self dismissComment];
     }
     return YES;
@@ -322,6 +393,7 @@ replacementString:(NSString *)text
 
 
 
+
 -(void) redoHeight
 {
     //NSLog(@"key path is %@", keyPath);
@@ -331,6 +403,7 @@ replacementString:(NSString *)text
     frame.size = self.commentsTableView.contentSize;
     CGRect screenRect = [[UIScreen mainScreen] bounds];
     CGFloat screenHeight = screenRect.size.height;
+    NSLog(@"keyboard height is %f", _keyboardHeight);
     ViewStreamCollectionViewController* pvc = (ViewStreamCollectionViewController*)[self parentViewController];
     CGFloat MAX_HEIGHT = screenHeight-TOOLBAR_HEIGHT-40-_keyboardHeight-pvc.navigationController.navigationBar.frame.size.height;
     CGFloat MIN_HEIGHT = 100;

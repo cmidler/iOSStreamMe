@@ -34,6 +34,7 @@
 @property (strong, nonatomic) UIToolbar* toolBar;
 @property (strong, nonatomic) UIView* lineView;
 @property (strong, nonatomic) UIBarButtonItem *composeComment;
+@property (strong, nonatomic) UIBarButtonItem* commentCount;
 @property (nonatomic, readwrite) CGPoint originalCenter;
 @property (nonatomic, readwrite) bool didShowKeyboard;
 

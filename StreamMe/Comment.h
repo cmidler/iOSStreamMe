@@ -13,5 +13,5 @@
 @property (strong, nonatomic) NSString* text;
 @property (strong, nonatomic) NSString* postingName;
 @property (strong, nonatomic) NSDate* createdAt;
-
+@property (strong, nonatomic) NSString* commentId;
 @end

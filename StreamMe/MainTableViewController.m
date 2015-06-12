@@ -851,6 +851,7 @@
                         comment.text = commentDict[@"text"];
                         comment.postingName = commentDict[@"username"];
                         comment.createdAt = commentDict[@"createdAt"];
+                        comment.commentId = commentDict[@"commentId"];
                         [ss.comments addObject:comment];
                     }
                     [newStream.streamShares addObject:ss];
@@ -2121,6 +2122,18 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
             if(_cachedStream.streamShares && _cachedStream.streamShares.count)
             {
                 StreamShare* streamShare = [_cachedStream.streamShares firstObject];
+                //make sure we cache at most 10 comments
+                NSMutableArray* comments = [[NSMutableArray alloc] init];
+                int i = 0;
+                for(Comment* comment in streamShare.comments)
+                {
+                    if(i == 10)
+                        break;
+                    [comments addObject:comment];
+                    i++;
+                }
+                streamShare.comments = comments;
+                
                 NSMutableArray* streamShares = [[NSMutableArray alloc] initWithObjects:streamShare, nil];
                 _cachedStream.streamShares = streamShares;
             }
@@ -3254,6 +3267,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
             streamShare[@"share"] = share;
             streamShare[@"user"] = user;
             streamShare[@"isIgnored"] = [NSNumber numberWithBool:NO];
+            streamShare[@"commentTotal"] = [NSNumber numberWithInt:0];
             [streamShare setACL:defaultACL];
             
             [streamShare saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
@@ -3533,6 +3547,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     streamShare[@"share"] = share;
     streamShare[@"user"] = user;
     streamShare[@"isIgnored"] = [NSNumber numberWithBool:NO];
+    streamShare[@"commentTotal"] = [NSNumber numberWithInt:0];
     [streamShare setACL:defaultACL];
     
     //upload and don't care about an error for now

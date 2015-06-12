@@ -200,6 +200,7 @@
         streamShare[@"share"] = share;
         streamShare[@"user"] = user;
         streamShare[@"isIgnored"] = [NSNumber numberWithBool:NO];
+        streamShare[@"commentTotal"] = [NSNumber numberWithInt:0];
         [streamShare setACL:defaultACL];
         [pfObjects addObject:streamShare];
         [streamIds addObject:streamObject.stream.objectId];

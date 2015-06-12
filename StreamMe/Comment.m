@@ -15,6 +15,7 @@
     if (self) {
         _text = [[NSString alloc] init];
         _postingName = [[NSString alloc]init];
+        _commentId = [[NSString alloc] init];
     }
     return self;
 }
