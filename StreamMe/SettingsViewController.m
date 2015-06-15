@@ -91,7 +91,7 @@
 {
     UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
     //[tableView dequeueReusableCellWithIdentifier:@"menuCell" forIndexPath:indexPath];
-    [cell setSelectionStyle:UITableViewCellSelectionStyleDefault];
+    [cell setSelectionStyle:UITableViewCellSelectionStyleNone];
     
     switch (indexPath.row) {
         case 0:
@@ -99,16 +99,39 @@
             break;
         case 1:
         {
-            [PFUser logOut];
-            //reset the central and peripheral and store user profile
-            AppDelegate *appDelegate = [[UIApplication sharedApplication] delegate];
-            [[appDelegate central] stopScanningForUserProfiles];
-            [[appDelegate peripheral] stopAdvertisingProfile];
-            [[appDelegate streams] removeAllObjects];
-            //delete all items in database
-            [self deleteAllTables];
+            UIAlertController *alertController = [UIAlertController
+                                                  alertControllerWithTitle:@"Logout"
+                                                  message:@"Do you really wish to logout?"
+                                                  preferredStyle:UIAlertControllerStyleActionSheet];
+            UIAlertAction *cancelAction = [UIAlertAction
+                                           actionWithTitle:NSLocalizedString(@"Cancel", @"Cancel action")
+                                           style:UIAlertActionStyleCancel
+                                           handler:^(UIAlertAction *action)
+                                           {
+                                               NSLog(@"Cancel action");
+                                               return;
+                                           }];
             
-            [self performSegueWithIdentifier:@"logoutSegue" sender:self];
+            UIAlertAction *logoutAction = [UIAlertAction
+                                       actionWithTitle:NSLocalizedString(@"Logout", @"Logout action")
+                                       style:UIAlertActionStyleDefault
+                                       handler:^(UIAlertAction *action)
+                                       {
+                                           [PFUser logOut];
+                                           //reset the central and peripheral and store user profile
+                                           AppDelegate *appDelegate = [[UIApplication sharedApplication] delegate];
+                                           [[appDelegate central] stopScanningForUserProfiles];
+                                           [[appDelegate peripheral] stopAdvertisingProfile];
+                                           [[appDelegate streams] removeAllObjects];
+                                           //delete all items in database
+                                           [self deleteAllTables];
+                                           
+                                           [self performSegueWithIdentifier:@"logoutSegue" sender:self];
+                                       }];
+            
+            [alertController addAction:cancelAction];
+            [alertController addAction:logoutAction];
+            [self presentViewController:alertController animated:YES completion:nil];
             break;
         }
         default:
@@ -117,6 +140,8 @@
     [settingsTableView reloadData];
     
 }
+
+
 
 - (void) mailComposeController:(MFMailComposeViewController *)controller didFinishWithResult:(MFMailComposeResult)result error:(NSError *)error
 {

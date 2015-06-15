@@ -20,7 +20,7 @@
     meTableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     if ([self respondsToSelector:@selector(edgesForExtendedLayout)])
         self.edgesForExtendedLayout = UIRectEdgeNone;
-    meTableView.contentInset = UIEdgeInsetsMake(self.navigationController.navigationBar.frame.size.height*3.0/2.0,0,0,0);
+    meTableView.contentInset = UIEdgeInsetsMake(self.navigationController.navigationBar.frame.size.height,0,0,0);
     self.automaticallyAdjustsScrollViewInsets=NO;
     [self getPoints];
     meArray = @[@"Name:", @"Points:", @"Rank:"];

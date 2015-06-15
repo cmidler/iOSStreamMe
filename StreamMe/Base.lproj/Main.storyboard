@@ -433,7 +433,7 @@
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Label" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="6Np-1z-jSa">
                                                     <rect key="frame" x="38" y="0.0" width="274" height="44.5"/>
                                                     <fontDescription key="fontDescription" type="boldSystem" pointSize="14"/>
-                                                    <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                                    <color key="textColor" red="0.40000000600000002" green="0.80000001190000003" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                             </subviews>
@@ -642,7 +642,7 @@
         <scene sceneID="CtV-v5-uoh">
             <objects>
                 <navigationController restorationIdentifier="mainNavigationViewController" definesPresentationContext="YES" id="QkY-hy-LKm" customClass="MainNavigationViewController" sceneMemberID="viewController">
-                    <tabBarItem key="tabBarItem" title="In Range" image="5790B1D4-63AF-4502-A15F-2D8BC9857576" id="QWG-JZ-FhN"/>
+                    <tabBarItem key="tabBarItem" title="In Range" image="4F2253A4-3707-4548-AD89-934D3F86125D" id="QWG-JZ-FhN"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="10q-K2-WDE">
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
@@ -675,7 +675,7 @@
         </scene>
     </scenes>
     <resources>
-        <image name="5790B1D4-63AF-4502-A15F-2D8BC9857576" width="16" height="16">
+        <image name="4F2253A4-3707-4548-AD89-934D3F86125D" width="16" height="16">
             <mutableData key="keyedArchiveRepresentation">
 YnBsaXN0MDDUAQIDBAUGOzxYJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK0HCBEW
 GxwgISksLzU4VSRudWxs1AkKCwwNDg8QViRjbGFzc1xOU0ltYWdlRmxhZ3NWTlNSZXBzV05TQ29sb3KA
@@ -718,8 +718,8 @@ BdMF2AAAAAAAAAIBAAAAAAAAAD8AAAAAAAAAAAAAAAAAAAXaA
         <simulatedScreenMetrics key="destination" type="retina4"/>
     </simulatedMetricsContainer>
     <inferredMetricsTieBreakers>
-        <segue reference="rPK-9O-WPJ"/>
-        <segue reference="l07-7M-4SB"/>
+        <segue reference="iUt-EC-Asr"/>
+        <segue reference="L5U-gO-Szg"/>
         <segue reference="0cF-gm-gik"/>
     </inferredMetricsTieBreakers>
 </document>
