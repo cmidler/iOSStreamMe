@@ -137,7 +137,7 @@
     }
     
     //load shares with a time greater than current share's
-    [PFCloud callFunctionInBackground:@"getNewestSharesForStream" withParameters:@{@"streamId":_streamObject.stream.objectId, @"maxShares":[NSNumber numberWithInt:SHARES_PER_PAGE], @"streamShareIds":streamShareIds} block:^(id object, NSError *error) {
+    [PFCloud callFunctionInBackground:@"getNewestSharesForStream" withParameters:@{@"streamId":_streamObject.stream.objectId, @"maxShares":[NSNumber numberWithInt:SHARES_PER_PAGE], @"streamShareIds":streamShareIds, @"orderBy":@"old"} block:^(id object, NSError *error) {
         if(error)
         {
             NSLog(@"error getting shares for stream");
@@ -172,8 +172,10 @@
                 continue;
             
             NSArray* comments = dict[@"comments"];
+            int likeValue = ((NSNumber*)[dict objectForKey:@"likeValue"]).intValue;
             StreamShare* ss = [[StreamShare alloc] init];
             ss.streamShare = newStreamShare;
+            ss.likeValue = likeValue;
             for(NSDictionary* commentDict in comments)
             {
                 Comment* comment = [[Comment alloc] init];
@@ -207,15 +209,17 @@
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
     //see if we have the share with the most recent time
-    PFObject* lastShare = ((StreamShare*)[streamShares lastObject]).streamShare;
+    NSDate* newestTime = _streamObject.stream.createdAt;
+    for(StreamShare* ss in streamShares)
+    {
+        if(NSOrderedAscending == ([newestTime compare:ss.streamShare.createdAt]))
+            newestTime = ss.streamShare.createdAt;
+    }
     NSDate* newestShareTime = _streamObject.newestShareCreationTime;
     bool hasNewestShare = NO;
-    NSComparisonResult comp = [newestShareTime compare:lastShare.createdAt];
+    NSComparisonResult comp = [newestShareTime compare:newestTime];
     if(NSOrderedSame == comp || NSOrderedAscending == comp)
-    {
         hasNewestShare = YES;
-    }
-
     
     return streamShares.count+!hasNewestShare;
     

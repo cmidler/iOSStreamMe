@@ -818,13 +818,18 @@
             //have array of streams in streams array
             for(Stream* s in streams)
                 [streamObjects addObject:s.stream.objectId];
+            
+            NSLog(@"new streams length is %d", (int) newStreams.count);
+            
             //see if the array already contains it before we add it
             for(NSDictionary* dict in newStreams)
             {
                 PFObject* stream = [dict objectForKey:@"stream"];
                 PFObject* share = [dict objectForKey:@"share"];
                 PFObject* streamShare = [dict objectForKey:@"stream_share"];
+                NSLog(@"like total is %d", ((NSNumber*)[streamShare objectForKey:@"likeTotal"]).intValue);
                 NSArray* comments = [dict objectForKey:@"comments"];
+                int likeValue = ((NSNumber*)[dict objectForKey:@"likeValue"]).intValue;
                 streamShare[@"share"] = share;
                 NSLog(@"share id is %@", share.objectId);
                 NSString* username = [dict objectForKey:@"username"];
@@ -845,6 +850,7 @@
                     //want to create an array of shares so we can lazy load the next ones
                     StreamShare* ss = [[StreamShare alloc] init];
                     ss.streamShare = streamShare;
+                    ss.likeValue = likeValue;
                     for(NSDictionary* commentDict in comments)
                     {
                         Comment* comment = [[Comment alloc] init];

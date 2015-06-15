@@ -211,8 +211,12 @@
                                                     <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
-                                                <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="hge-6R-qeE">
-                                                    <rect key="frame" x="40" y="29" width="240" height="50.5"/>
+                                                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="hge-6R-qeE">
+                                                    <rect key="frame" x="40" y="19" width="240" height="50.5"/>
+                                                    <constraints>
+                                                        <constraint firstAttribute="height" constant="50.5" id="irZ-nO-d7M"/>
+                                                        <constraint firstAttribute="width" constant="240" id="w02-vz-xF8"/>
+                                                    </constraints>
                                                     <fontDescription key="fontDescription" type="boldSystem" pointSize="17"/>
                                                     <state key="normal" title="More">
                                                         <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
@@ -226,7 +230,9 @@
                                                 <constraint firstItem="U8g-Ta-F56" firstAttribute="leading" secondItem="LnK-RA-1IQ" secondAttribute="leadingMargin" id="EAz-8o-6ia"/>
                                                 <constraint firstItem="xK5-5v-0aH" firstAttribute="trailing" secondItem="LnK-RA-1IQ" secondAttribute="trailingMargin" id="brY-JS-kbi"/>
                                                 <constraint firstItem="xK5-5v-0aH" firstAttribute="top" secondItem="LnK-RA-1IQ" secondAttribute="topMargin" constant="-8" id="dNg-d7-CEB"/>
+                                                <constraint firstAttribute="centerX" secondItem="hge-6R-qeE" secondAttribute="centerX" id="gT5-SQ-MlH"/>
                                                 <constraint firstItem="U8g-Ta-F56" firstAttribute="top" secondItem="LnK-RA-1IQ" secondAttribute="topMargin" constant="-8" id="lTL-Oa-Tyt"/>
+                                                <constraint firstAttribute="centerY" secondItem="hge-6R-qeE" secondAttribute="centerY" constant="-0.5" id="q8C-mr-MsK"/>
                                             </constraints>
                                         </tableViewCellContentView>
                                         <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
@@ -339,7 +345,7 @@
         <scene sceneID="swj-pd-Dpm">
             <objects>
                 <collectionViewController automaticallyAdjustsScrollViewInsets="NO" id="o3D-1M-WIy" customClass="ViewStreamCollectionViewController" sceneMemberID="viewController">
-                    <collectionView key="view" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" bounces="NO" pagingEnabled="YES" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" dataMode="prototypes" id="teI-cR-OBS">
+                    <collectionView key="view" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" pagingEnabled="YES" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" dataMode="prototypes" id="teI-cR-OBS">
                         <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <collectionViewLayout key="collectionViewLayout" id="cbO-4x-gQ2" customClass="CustomFlowLayout"/>
@@ -636,7 +642,7 @@
         <scene sceneID="CtV-v5-uoh">
             <objects>
                 <navigationController restorationIdentifier="mainNavigationViewController" definesPresentationContext="YES" id="QkY-hy-LKm" customClass="MainNavigationViewController" sceneMemberID="viewController">
-                    <tabBarItem key="tabBarItem" title="In Range" image="F604C1EC-C59A-4EEE-BBC0-1EE7A50F48D7" id="QWG-JZ-FhN"/>
+                    <tabBarItem key="tabBarItem" title="In Range" image="5790B1D4-63AF-4502-A15F-2D8BC9857576" id="QWG-JZ-FhN"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="10q-K2-WDE">
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
@@ -669,7 +675,7 @@
         </scene>
     </scenes>
     <resources>
-        <image name="F604C1EC-C59A-4EEE-BBC0-1EE7A50F48D7" width="16" height="16">
+        <image name="5790B1D4-63AF-4502-A15F-2D8BC9857576" width="16" height="16">
             <mutableData key="keyedArchiveRepresentation">
 YnBsaXN0MDDUAQIDBAUGOzxYJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK0HCBEW
 GxwgISksLzU4VSRudWxs1AkKCwwNDg8QViRjbGFzc1xOU0ltYWdlRmxhZ3NWTlNSZXBzV05TQ29sb3KA

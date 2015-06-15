@@ -199,6 +199,7 @@
     cell.usernameLabel.hidden = YES;
     cell.timeLabel.hidden = YES;
     [cell setUserInteractionEnabled:NO];
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
     if(indexPath.row < comments.count)
     {
         cell.commentLabel.hidden = NO;
@@ -225,6 +226,7 @@
         [cell.moreButton addTarget:self
                             action:@selector(getMoreComments:)
                     forControlEvents:UIControlEventTouchUpInside];
+        [self drawDashedBorderAroundView:cell.moreButton];
     }
     return cell;
  }
@@ -437,6 +439,53 @@ replacementString:(NSString *)text
     [self.view layoutIfNeeded];
 }
 
+- (void)drawDashedBorderAroundView:(UIView *)v
+{
+    //border definitions
+    CGFloat cornerRadius = 10;
+    CGFloat borderWidth = 2;
+    NSInteger dashPattern1 = 8;
+    NSInteger dashPattern2 = 8;
+    UIColor *lineColor = [UIColor whiteColor];
+    
+    //drawing
+    CGRect frame = v.bounds;
+    
+    CAShapeLayer *_shapeLayer = [CAShapeLayer layer];
+    
+    //creating a path
+    CGMutablePathRef path = CGPathCreateMutable();
+    
+    //drawing a border around a view
+    CGPathMoveToPoint(path, NULL, 0, frame.size.height - cornerRadius);
+    CGPathAddLineToPoint(path, NULL, 0, cornerRadius);
+    CGPathAddArc(path, NULL, cornerRadius, cornerRadius, cornerRadius, M_PI, -M_PI_2, NO);
+    CGPathAddLineToPoint(path, NULL, frame.size.width - cornerRadius, 0);
+    CGPathAddArc(path, NULL, frame.size.width - cornerRadius, cornerRadius, cornerRadius, -M_PI_2, 0, NO);
+    CGPathAddLineToPoint(path, NULL, frame.size.width, frame.size.height - cornerRadius);
+    CGPathAddArc(path, NULL, frame.size.width - cornerRadius, frame.size.height - cornerRadius, cornerRadius, 0, M_PI_2, NO);
+    CGPathAddLineToPoint(path, NULL, cornerRadius, frame.size.height);
+    CGPathAddArc(path, NULL, cornerRadius, frame.size.height - cornerRadius, cornerRadius, M_PI_2, M_PI, NO);
+    
+    //path is set as the _shapeLayer object's path
+    _shapeLayer.path = path;
+    CGPathRelease(path);
+    
+    _shapeLayer.backgroundColor = [[UIColor clearColor] CGColor];
+    _shapeLayer.frame = frame;
+    _shapeLayer.masksToBounds = NO;
+    [_shapeLayer setValue:[NSNumber numberWithBool:NO] forKey:@"isCircle"];
+    _shapeLayer.fillColor = [[UIColor clearColor] CGColor];
+    _shapeLayer.strokeColor = [lineColor CGColor];
+    _shapeLayer.lineWidth = borderWidth;
+    _shapeLayer.lineDashPattern = [NSArray arrayWithObjects:[NSNumber numberWithInteger:dashPattern1], [NSNumber numberWithInteger:dashPattern2], nil];
+    _shapeLayer.lineCap = kCALineCapRound;
+    
+    //_shapeLayer is added as a sublayer of the view, the border is visible
+    [_shapeLayer removeFromSuperlayer];
+    [v.layer addSublayer:_shapeLayer];
+    v.layer.cornerRadius = cornerRadius;
+}
 
 
 @end

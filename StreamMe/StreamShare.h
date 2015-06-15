@@ -12,5 +12,7 @@
 @interface StreamShare : NSObject
 @property (strong, nonatomic) PFObject* streamShare;
 @property (strong, nonatomic) NSMutableArray* comments;
- 
+@property (nonatomic, readwrite) int likeValue;
+@property (strong, nonatomic) UIImage* fixedImage;
+@property (nonatomic, readwrite) UIViewContentMode contentMode;
 @end

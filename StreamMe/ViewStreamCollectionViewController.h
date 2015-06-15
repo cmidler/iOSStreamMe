@@ -35,6 +35,8 @@
 @property (strong, nonatomic) UIView* lineView;
 @property (strong, nonatomic) UIBarButtonItem *composeComment;
 @property (strong, nonatomic) UIBarButtonItem* commentCount;
+@property (strong, nonatomic) UIBarButtonItem* upvote;
+@property (strong, nonatomic) UIBarButtonItem* downvote;
 @property (nonatomic, readwrite) CGPoint originalCenter;
 @property (nonatomic, readwrite) bool didShowKeyboard;
 

@@ -13,6 +13,9 @@
     self = [super init];
     if (self) {
         _comments = [[NSMutableArray alloc] init];
+        _likeValue = 0;
+        _fixedImage = nil;
+        _contentMode = UIViewContentModeScaleAspectFill;
     }
     return self;
 }
