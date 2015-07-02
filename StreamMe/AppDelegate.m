@@ -138,6 +138,47 @@
     if(data && data.length)
     {
         
+        //check if userstream is already in local database
+        MainDatabase* md = [MainDatabase shared];
+        __block bool inQueue = YES;
+        __block bool hasStream = NO;
+        [md.queue inDatabase:^(FMDatabase *db) {
+            
+            
+            //need to delete the peripherals that are about to expire
+            NSString *streamSQL = @"SELECT FROM streams WHERE stream_id = ?";
+            NSArray* values = @[data];
+            FMResultSet *s = [db executeQuery:streamSQL withArgumentsInArray:values];
+            //get the peripheral ids
+            while([s next])
+            {
+                hasStream = YES;
+                NSLog(@"found stream");
+            }
+            
+            if(!hasStream)
+            {
+                double currentTime = [[NSDate date] timeIntervalSince1970];
+                NSString *insertStreamSQL = @"INSERT INTO streams (stream_id, CREATED_TIME) VALUES (?,?)";
+                NSArray* streamValues = @[data, [NSNumber numberWithDouble:currentTime]];
+                [db executeUpdate:insertStreamSQL withArgumentsInArray:streamValues];
+            }
+            
+            inQueue = NO;
+        }];
+        
+        while(inQueue)
+            ;
+        
+        if(hasStream)
+        {
+            PFInstallation *currentInstallation = [PFInstallation currentInstallation];
+            currentInstallation.badge = 0;
+            [currentInstallation saveEventually];
+            return;
+
+        }
+        
         //query my userstreams to see if I already have a userstream for it
         PFQuery* query = [PFQuery queryWithClassName:@"UserStream"];
         PFObject * stream = [PFObject objectWithoutDataWithClassName:@"Stream" objectId:data];
@@ -155,8 +196,7 @@
                     
                     //send push to users
                     //get nearby user streams first
-                    MainDatabase* md = [MainDatabase shared];
-                    __block bool inQueue = YES;
+                    inQueue = YES;
                     NSMutableArray* userIds = [[NSMutableArray alloc] init];
                     [md.queue inDatabase:^(FMDatabase *db) {
                         
@@ -213,6 +253,45 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))handler {
     //see if the push is telling me about a new userstream
     if(data && data.length)
     {
+        //check if userstream is already in local database
+        MainDatabase* md = [MainDatabase shared];
+        __block bool inQueue = YES;
+        __block bool hasStream = NO;
+        [md.queue inDatabase:^(FMDatabase *db) {
+            
+            
+            //need to delete the peripherals that are about to expire
+            NSString *streamSQL = @"SELECT FROM streams WHERE stream_id = ?";
+            NSArray* values = @[data];
+            FMResultSet *s = [db executeQuery:streamSQL withArgumentsInArray:values];
+            //get the peripheral ids
+            while([s next])
+            {
+                hasStream = YES;
+                NSLog(@"found stream");
+            }
+            if(!hasStream)
+            {
+                double currentTime = [[NSDate date] timeIntervalSince1970];
+                NSString *insertStreamSQL = @"INSERT INTO streams (stream_id, CREATED_TIME) VALUES (?,?)";
+                NSArray* streamValues = @[data, [NSNumber numberWithDouble:currentTime]];
+                [db executeUpdate:insertStreamSQL withArgumentsInArray:streamValues];
+            }
+            inQueue = NO;
+        }];
+        
+        while(inQueue)
+            ;
+        
+        if(hasStream)
+        {
+            PFInstallation *currentInstallation = [PFInstallation currentInstallation];
+            currentInstallation.badge = 0;
+            [currentInstallation saveEventually];
+            return;
+            
+        }
+        
         //query my userstreams to see if I already have a userstream for it
         PFQuery* query = [PFQuery queryWithClassName:@"UserStream"];
         PFObject * stream = [PFObject objectWithoutDataWithClassName:@"Stream" objectId:data];
@@ -231,8 +310,7 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))handler {
                     
                     //send push to users
                     //get nearby user streams first
-                    MainDatabase* md = [MainDatabase shared];
-                    __block bool inQueue = YES;
+                    inQueue = YES;
                     NSMutableArray* userIds = [[NSMutableArray alloc] init];
                     [md.queue inDatabase:^(FMDatabase *db) {
                         
@@ -279,6 +357,8 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))handler {
             [db executeUpdate:userString withArgumentsInArray:nil];
             NSString* timerString = @"CREATE TABLE IF NOT EXISTS TIMER (ID INTEGER PRIMARY KEY AUTOINCREMENT, LAST_TIME_STORED DOUBLE)";
             [db executeUpdate:timerString];
+            NSString* streamString = @"CREATE TABLE IF NOT EXISTS STREAMS (ID INTEGER PRIMARY KEY AUTOINCREMENT, STREAM_ID TEXT, CREATED_TIME DOUBLE)";
+            [db executeUpdate:streamString];
             NSString* timerInsert = @"INSERT INTO timer (LAST_TIME_STORED) VALUES (?)";
             NSArray* timeValues = @[[NSNumber numberWithDouble:[[NSDate date] timeIntervalSince1970]]];
             [db executeUpdate:timerInsert withArgumentsInArray:timeValues];

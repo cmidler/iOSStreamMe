@@ -7,7 +7,9 @@
 //
 
 #import <UIKit/UIKit.h>
+#import <MobileCoreServices/MobileCoreServices.h>
 #import "PopoverViewController.h"
 @interface CustomPickerViewController : UIImagePickerController<UIPopoverPresentationControllerDelegate>
 @property (nonatomic, readwrite) bool canTakePicture;
+@property (nonatomic, readwrite) bool takingVideo;
 @end

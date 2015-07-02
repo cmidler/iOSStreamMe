@@ -30,6 +30,7 @@
 #define LEVEL_NINE  "Too Powerful"
 #define LEVEL_TEN   "Wow... just wow."
 #define MAX_NAME_CHARS 24
+#define TITLE_HEIGHT 44
 
 
 @interface MeViewController : UIViewController

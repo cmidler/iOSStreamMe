@@ -1697,7 +1697,12 @@
             
             int miles = floor(distanceInMeters*0.000621371192);//meters to miles conversion
             if(!miles)
-                distance.text = @"< 1 Mile Away";
+            {
+                if(distanceInMeters < 500)
+                    distance.text = @"Right Here!";
+                else
+                    distance.text = @"< 1 Mile Away";
+            }
             else if (miles ==1)
                 distance.text = @"1 Mile Away";
             else
@@ -2268,6 +2273,10 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     customPicker.sourceType = UIImagePickerControllerSourceTypeCamera;
     customPicker.showsCameraControls = NO;
     customPicker.canTakePicture = YES;
+    /*customPicker.videoMaximumDuration = 5.0f;
+    customPicker.videoQuality = UIImagePickerControllerQualityTypeHigh;
+    customPicker.mediaTypes = [NSArray arrayWithObject:(NSString *)kUTTypeMovie];*/
+    
     
     //helper variables
     CGRect screenRect = [[UIScreen mainScreen] bounds];
@@ -2360,10 +2369,12 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
         //present an alert to tell the person to tap the screen to take the photo
         NSNumber *showTouchScreenForPhoto =
         [[NSUserDefaults standardUserDefaults] objectForKey:@"ShowTouchScreenForPhoto"];
+        /*NSNumber *showTouchScreenForVideo =
+        [[NSUserDefaults standardUserDefaults] objectForKey:@"ShowTouchScreenForVideo"];*/
         if (showTouchScreenForPhoto == nil) {
             UIAlertController *alertController = [UIAlertController
-                                                  alertControllerWithTitle:@"Take A Photo"
-                                                  message:@"To take a photograph with the camera just tap anywhere on the screen!"
+                                                  alertControllerWithTitle:@"Take A Photo or Video"
+                                                  message:@"To take a photograph with the camera just tap anywhere on the screen!"//Double tap to take a video!"
                                                   preferredStyle:UIAlertControllerStyleAlert];
             UIAlertAction *okAction = [UIAlertAction
                                        actionWithTitle:NSLocalizedString(@"Ok", @"Ok action")
@@ -2372,7 +2383,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                                        {
                                            UIAlertController *alertController = [UIAlertController
                                                                                  alertControllerWithTitle:@"Fast Open And Close The Camera"
-                                                                                 message:@"Shake your phone to quickly open and close the camera.  This also allows you to share to multiple screens!"
+                                                                                 message:@"Shake your phone to quickly open and close the camera.  This also allows you to share to multiple streams!"
                                                                                  preferredStyle:UIAlertControllerStyleAlert];
                                            UIAlertAction *okAction = [UIAlertAction
                                                                       actionWithTitle:NSLocalizedString(@"Ok", @"Ok action")
@@ -2381,6 +2392,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                                                                       {
                                                                           NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
                                                                           [defaults setObject:@"YES" forKey:@"ShowTouchScreenForPhoto"];
+                                                                          //[defaults setObject:@"YES" forKey:@"ShowTouchScreenForVideo"];
                                                                           [defaults synchronize];
                                                                           return;
                                                                       }];
@@ -2393,10 +2405,40 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
             
             [customPicker presentViewController:alertController animated:YES completion:nil];
         }
+        /*else if(showTouchScreenForVideo == nil)
+        {
+            UIAlertController *alertController = [UIAlertController
+                                                  alertControllerWithTitle:@"You Can Now Take Video Too!"
+                                                  message:@"Double tap the screen to start taking a video. Single tap to stop the video early."
+                                                  preferredStyle:UIAlertControllerStyleAlert];
+            UIAlertAction *okAction = [UIAlertAction
+                                       actionWithTitle:NSLocalizedString(@"Ok", @"Ok action")
+                                       style:UIAlertActionStyleDefault
+                                       handler:^(UIAlertAction *action)
+                                       {
+                                            NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+                                            [defaults setObject:@"YES" forKey:@"ShowTouchScreenForVideo"];
+                                            [defaults synchronize];
+                                            return;
+                                           
+                                       }];
+            [alertController addAction:okAction];
+            
+            [customPicker presentViewController:alertController animated:YES completion:nil];
+        }*/
     }];
 }
 
+
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info {
+    
+    NSLog(@"did finish picking media");
+    if(customPicker.takingVideo)
+    {
+        NSLog(@"finished video");
+        return;
+    }
+    
      //figure out the image
     UIImage* originalImage =[info objectForKey:UIImagePickerControllerOriginalImage];
     [NSThread detachNewThreadSelector:@selector(useImage:) toTarget:self withObject:originalImage];
@@ -2414,7 +2456,8 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     CGRect screenRect = [[UIScreen mainScreen] bounds];
     float screenWidth = screenRect.size.width;
     _expirationTime = ((NSNumber*)[[PFUser currentUser] objectForKey:@"streamTimeHours"]).floatValue;
-    
+    if(!_expirationTime)
+        _expirationTime = 2.0f;
     
     CGFloat imageHeight = originalImage.size.height;
     CGFloat imageWidth = originalImage.size.width;
@@ -2667,6 +2710,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     if(showedAddToStreamTutorial && !_creatingStream)
         return;
     
+    toolBar.hidden = NO;
     //Ok, we need to show some tutorial
     UIView* barButtonView;
     UIBarButtonItem* selectedButton;
@@ -3107,6 +3151,7 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     
     if(!_pickerShown)
     {
+        
         if(caption.isHidden && toolBar.isHidden)
         {
             caption.hidden = NO;
@@ -3383,6 +3428,11 @@ didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
                         //delete all expired user ids
                         NSString *deleteSQL = @"DELETE FROM user WHERE time_since_update < ? AND is_me != ?";
                          NSArray* values = @[[NSNumber numberWithDouble:expirationTime], [NSNumber numberWithInt:1]];
+                        [db executeUpdate:deleteSQL withArgumentsInArray:values];
+                        
+                        //delete all expired streams
+                        deleteSQL = @"DELETE FROM streams WHERE created_time < ?";
+                        values = @[[NSNumber numberWithDouble:expirationTime+TIMEOUT_TIME/2]];
                         [db executeUpdate:deleteSQL withArgumentsInArray:values];
                         
                         //need to delete the peripherals that are about to expire

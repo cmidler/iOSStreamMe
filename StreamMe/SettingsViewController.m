@@ -208,7 +208,7 @@
 
 -(void) deleteAllTables
 {
-    NSString *deleteSQL = @"DELETE from USER;";
+    NSString *deleteSQL = @"DELETE from USER; DELETE from STREAMS;";
     //get the main database
     MainDatabase* md = [MainDatabase shared];
     [md.queue inDatabase:^(FMDatabase *db) {

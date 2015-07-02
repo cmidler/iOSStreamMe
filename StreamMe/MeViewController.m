@@ -20,7 +20,7 @@
     meTableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     if ([self respondsToSelector:@selector(edgesForExtendedLayout)])
         self.edgesForExtendedLayout = UIRectEdgeNone;
-    meTableView.contentInset = UIEdgeInsetsMake(self.navigationController.navigationBar.frame.size.height,0,0,0);
+    //meTableView.contentInset = UIEdgeInsetsMake(self.navigationController.navigationBar.frame.size.height,0,0,0);
     self.automaticallyAdjustsScrollViewInsets=NO;
     [self getPoints];
     meArray = @[@"Name:", @"Points:", @"Rank:"];
@@ -160,10 +160,24 @@
     return 1;
 }
 
-- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
+/*- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
 {
     return @"You!";
     //return [NSString stringWithFormat:@"%@", [[PFUser currentUser] objectForKey:@"posting_name"]];
+}*/
+
+//creating the header view so that we can have edit buttons as well
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
+    //create the view to hold all of the other views
+    UIView *headerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, tableView.frame.size.width, TITLE_HEIGHT)];
+    
+    //create the title with the name of the stream
+    UILabel *title = [[UILabel alloc] initWithFrame:CGRectMake(5, 5, tableView.frame.size.width-10, TITLE_HEIGHT-10)];
+    title.font = [UIFont boldSystemFontOfSize:17.0];
+    title.textColor = [UIColor whiteColor];
+    title.text = @"You!";
+    [headerView addSubview:title];
+    return headerView;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
@@ -179,6 +193,12 @@
     static NSString *CellIdentifier = @"meCell";
     MeTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier forIndexPath:indexPath];
     cell.separatorInset = UIEdgeInsetsZero;
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    [cell.nameTextField.layer setBorderColor: [[UIColor whiteColor] CGColor]];
+    [cell.nameTextField.layer setBorderWidth:1.0];
+    [cell.nameTextField setBorderStyle:UITextBorderStyleRoundedRect];
+    cell.nameTextField.layer.cornerRadius = 10;
+    cell.nameTextField.clipsToBounds = YES;
     if(_spinnerActive)
         cell.activityIndicator.hidden = NO;
     else
@@ -233,8 +253,21 @@
     return cell;
 }
 
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    MeTableViewCell *cell = (MeTableViewCell*)[tableView cellForRowAtIndexPath:indexPath];
+    UITableViewCell * tCell = [tableView cellForRowAtIndexPath:indexPath];
+    //[tableView dequeueReusableCellWithIdentifier:@"menuCell" forIndexPath:indexPath];
+    [tCell setSelectionStyle:UITableViewCellSelectionStyleNone];
+    if(!indexPath.row)
+    {
+        [cell.nameTextField becomeFirstResponder];
+    }
+}
+
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
-    return .0000001f;
+    return TITLE_HEIGHT;
 }
 
 -(void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath

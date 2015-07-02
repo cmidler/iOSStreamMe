@@ -255,6 +255,12 @@
         NSString *deleteSQL = @"DELETE FROM user WHERE peripheral_id != ? AND time_since_update < ? AND is_me != ?";
         values = @[peripheral.identifier.UUIDString,[NSNumber numberWithDouble:expirationTime], [NSNumber numberWithInt:1]];
         [db executeUpdate:deleteSQL withArgumentsInArray:values];
+        
+        //delete all expired streams
+        deleteSQL = @"DELETE FROM streams WHERE created_time < ?";
+        values = @[[NSNumber numberWithDouble:expirationTime+TIMEOUT_TIME/2]];
+        [db executeUpdate:deleteSQL withArgumentsInArray:values];
+        
         inQueue = NO;
     }];
     
